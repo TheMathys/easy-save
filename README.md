@@ -17,3 +17,10 @@ Toute issue ou PR doit respecter l’ensemble de ces critères avant d’être c
 
 📄 La DoD est définie ici :  
 ➡️ [docs/DoD.md](docs/DoD.md)
+
+## Template des pull requests
+
+Afin d'uniformiser les pull requests du projet on apliquera une template de pull requests.terminée.
+
+📄 La template des pull requests est définie ici :  
+➡️ [docs/PULL_REQUEST_TEMPLATE.md](docs/PULL_REQUEST_TEMPLATE.md)
