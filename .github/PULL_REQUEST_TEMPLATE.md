@@ -4,7 +4,7 @@ Exemple de description.
 
 ## Liens vers les issues
 
-- Closes #5 
+- Closes #ISSUE_ID
 
 ## Type de changement
 
