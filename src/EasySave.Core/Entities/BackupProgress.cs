@@ -12,7 +12,7 @@ namespace EasySave.Core.Entities
         public string BackupName { get; init; } = string.Empty;
 
         /// <summary>Timestamp of the last action.</summary>
-        public DateTime LastActionTimestamp { get; init; }
+        public DateTime LastActionTimestamp { get; set; }
 
         /// <summary>Job state (Active, Inactive, etc.).</summary>
         public BackupState State { get; init; }
