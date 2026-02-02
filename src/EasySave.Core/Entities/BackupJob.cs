@@ -11,13 +11,13 @@ namespace EasySave.Core.Entities
         public int Id { get; set; }
     
         ///<summary>Name of the backup</summary>
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = string.Empty;
     
-        ///<summary>Source of the file</summary>
-        public string SourcePath { get; set; } = "";
+        ///<summary>Source of the directory</summary>
+        public string SourcePath { get; set; } = string.Empty;
     
-        ///<summary>Path to the saved file</summary>
-        public string TargetPath { get; set; } = "";  
+        ///<summary>Path to the directoy</summary>
+        public string TargetPath { get; set; } = string.Empty;  
     
         ///<summary>Type of backup</summary>
         public BackupType Type { get; set; }
