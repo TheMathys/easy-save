@@ -1,12 +1,25 @@
 ﻿using EasySave.Core.Enums;
 
-namespace EasySave.Core.Entities;
-
-public class BackupJob
+namespace EasySave.Core.Entities
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = ""; // Name of the backup
-    public string SourcePath { get; set; } = ""; // Source of the file
-    public string TargetPath { get; set; } = ""; // Path to the saved file 
-    public BackupType Type { get; set; } // Type of backup
+    /// <summary>
+    /// Backup job.
+    /// </summary>
+    public class BackupJob
+    {
+        ///<summary>Unique job identifier ranging from 1 to 5</summary>
+        public int Id { get; set; }
+    
+        ///<summary>Name of the backup</summary>
+        public string Name { get; set; } = "";
+    
+        ///<summary>Source of the file</summary>
+        public string SourcePath { get; set; } = "";
+    
+        ///<summary>Path to the saved file</summary>
+        public string TargetPath { get; set; } = "";  
+    
+        ///<summary>Type of backup</summary>
+        public BackupType Type { get; set; }
+    }
 }
