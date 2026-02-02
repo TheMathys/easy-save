@@ -1,8 +1,3 @@
-# Template des pull requests (PR)
-
-Ce document est une **template des pull requests** du projet. Elle s’applique à **toutes les Pull Requests**, quel que soit leur type (feature, bug, refactor, documentation).
-
-```
 ## Description
 
 Exemple de description.
@@ -26,6 +21,3 @@ Exemple de description.
 - [ ] Le comportement a été vérifié manuellement (si applicable)
 - [ ] La documentation / README / commentaires sont à jour
 - [ ] Pas de fichiers temporaires ou de debug dans le diff
-```
-
-Cette template permet d'uniformiser les pull requests.
