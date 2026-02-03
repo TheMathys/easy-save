@@ -12,14 +12,13 @@ namespace EasySave.Core.Interfaces
     public interface IBackupStrategy
     {
         /// <summary>
-        /// Get the eligible files according to the backup type (complete or differential)
+        /// Retrieves the files eligible for backup based on the backup type (full or differential).
         /// </summary>
-        /// <param name="job"></param>
-        /// <param name="files"></param>
-        /// <param name="differentialSinceUtc"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public IAsyncEnumerable<FileItem> GetEligibleFilesAsync(BackupJob job, IAsyncEnumerable<FileItem> files,
-            DateTime? differentialSinceUtc, CancellationToken ct);
+        /// <param name="job">The backup job configuration.</param>
+        /// <param name="files">The list of source files to evaluate.</param>
+        /// <param name="differentialSinceUtc">The reference date for differential backups (UTC). Null for full backups.</param>
+        /// <param name="ct">The token used to observe cancellation requests.</param>
+        /// <returns>An asynchronous stream of files that should be included in the backup.</returns>
+        public IAsyncEnumerable<FileItem> GetEligibleFilesAsync(BackupJob job, IAsyncEnumerable<FileItem> files, DateTime? differentialSinceUtc, CancellationToken ct);
     }
 }

@@ -3,15 +3,15 @@
 namespace EasySave.Core.Interfaces
 {
     /// <summary>
-    /// Returns the strategy according to the type
+    /// Provides the appropriate backup strategy based on the specified backup type.
     /// </summary>
     public interface IBackupStrategyFactory
     {
         /// <summary>
-        /// Give the strategy according to the backup type
+        /// Retrieves the backup strategy that corresponds to the given backup type.
         /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
+        /// <param name="type">The backup type used to determine which strategy to return.</param>
+        /// <returns>The corresponding <see cref="IBackupStrategy"/> implementation.</returns>
         public IBackupStrategy GetStrategy(BackupType type);
     }
 }

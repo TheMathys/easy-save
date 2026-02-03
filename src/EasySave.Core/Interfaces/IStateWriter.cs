@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using EasySave.Core.Models;
+using EasySave.Core.Entities;
 
 namespace EasySave.Core.Interfaces
 {
