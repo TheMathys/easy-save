@@ -15,7 +15,7 @@ namespace EasySave.Core.Interfaces
         /// Loads the backup configuration from persistent storage.
         /// </summary>
         /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
-        public Task LoadAsync(CancellationToken cancellationToken);
+        public Task<BackupConfiguration?> LoadAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Saves the provided backup configuration to persistent storage.
