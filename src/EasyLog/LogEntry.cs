@@ -12,19 +12,19 @@ namespace EasyLog
     /// </summary>
     public class LogEntry
     {
-        public DateTime Timestamp { get; } // Get-only to respect the read-only nature of log entries.
-        public string BackupName { get;}
-        public string SourcePath { get;}
-        public string DestinationPath { get;}
-        public long FileSizeBytes { get;}
-        public TimeSpan TrasnferTimeMs { get;}
+        public DateTime TimeStamp { get; } // Date and time of the log entry
+        public string BackupName { get; } // Name of the backup job
+        public string SourcePath { get; } // Source path of the backup
+        public string DestinationPath { get; } // Destination path of the backup
+        public long FileSizeBytes { get; } // Size of the file transferred in bytes
+        public TimeSpan TrasnferTimeMs { get; } // Time taken to transfer the file
 
         /// <summary>
         /// Initializes a new instance of the LogEntry class.
         /// </summary>
-        public LogEntry(string backupName, string sourcePath, string destinationPath,long fileSizeBytes, TimeSpan transferTimeMs)
+        public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath,long fileSizeBytes, TimeSpan transferTimeMs)
         {
-            Timestamp = DateTime.UtcNow;
+            TimeStamp = timeStamp;
             BackupName = backupName;
             SourcePath = sourcePath;
             DestinationPath = destinationPath;
