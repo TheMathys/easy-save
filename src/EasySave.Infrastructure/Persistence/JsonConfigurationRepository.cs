@@ -13,7 +13,7 @@ namespace EasySave.Infrastructure.Persistence
     {
         private readonly string _configDirectory;
         private readonly string _configFilePath;
-        private static readonly SemaphoreSlim _configUpdateLock = new(1, 1);
+        private readonly SemaphoreSlim _configUpdateLock = new(1, 1);
 
         /// <summary>
         /// JSON serialization options (indented output, camelCase naming).
