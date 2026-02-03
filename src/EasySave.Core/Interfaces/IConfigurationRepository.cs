@@ -5,6 +5,10 @@ using EasySave.Core.Entities;
 
 namespace EasySave.Core.Interfaces
 {
+    /// <summary>
+    /// Defines the loading and saving of the configuration (list of jobs, log/status directory,
+    /// date of last full backup per job).
+    /// </summary>
     public interface IConfigurationRepository
     {
         /// <summary>
