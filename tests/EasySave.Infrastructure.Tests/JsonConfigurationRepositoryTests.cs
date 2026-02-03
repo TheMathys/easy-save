@@ -45,25 +45,25 @@ namespace EasySave.Infrastructure.Tests
                 var originalConfig = new BackupConfiguration
                 {
                     LogAndStateDirectory = Path.Combine(tempDir, "logs"),
-                    Jobs = new List<BackupJob>
-                {
-                    new()
+                    Jobs = System.Array.AsReadOnly(new[]
                     {
-                        Id = 1,
-                        Name = "Job1",
-                        SourcePath = @"C:\Source1",
-                        TargetPath = @"D:\Target1",
-                        Type = BackupType.Full
-                    },
-                    new()
-                    {
-                        Id = 2,
-                        Name = "Job2",
-                        SourcePath = @"C:\Source2",
-                        TargetPath = @"D:\Target2",
-                        Type = BackupType.Differential
-                    }
-                },
+                        new BackupJob
+                        {
+                            Id = 1,
+                            Name = "Job1",
+                            SourcePath = @"C:\Source1",
+                            TargetPath = @"D:\Target1",
+                            Type = BackupType.Full
+                        },
+                        new BackupJob
+                        {
+                            Id = 2,
+                            Name = "Job2",
+                            SourcePath = @"C:\Source2",
+                            TargetPath = @"D:\Target2",
+                            Type = BackupType.Differential
+                        }
+                    }),
                     LastFullBackupUtcByJobId = new Dictionary<int, DateTime>
                     {
                         [1] = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc)
@@ -96,8 +96,8 @@ namespace EasySave.Infrastructure.Tests
 
                 foreach (var kvp in originalConfig.LastFullBackupUtcByJobId)
                 {
-                    Assert.True(loadedConfig.LastFullBackupUtcByJobId.ContainsKey(kvp.Key));
-                    Assert.Equal(kvp.Value, loadedConfig.LastFullBackupUtcByJobId[kvp.Key]);
+                    Assert.True(loadedConfig.LastFullBackupUtcByJobId.TryGetValue(kvp.Key, out var actualValue));
+                    Assert.Equal(kvp.Value, actualValue);
                 }
             }
             finally

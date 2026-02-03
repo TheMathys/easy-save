@@ -13,6 +13,7 @@ namespace EasySave.Infrastructure.Persistence
     {
         private readonly string _configDirectory;
         private readonly string _configFilePath;
+        private static readonly SemaphoreSlim _configUpdateLock = new(1, 1);
 
         /// <summary>
         /// JSON serialization options (indented output, camelCase naming).
@@ -50,8 +51,18 @@ namespace EasySave.Infrastructure.Persistence
             if (!File.Exists(_configFilePath))
                 return null;
 
-            var json = await File.ReadAllTextAsync(_configFilePath, cancellationToken).ConfigureAwait(false);
-            var dto = JsonSerializer.Deserialize<ConfigDto>(json, JsonOptions);
+            ConfigDto? dto;
+            try
+            {
+                var json = await File.ReadAllTextAsync(_configFilePath, cancellationToken).ConfigureAwait(false);
+                dto = JsonSerializer.Deserialize<ConfigDto>(json, JsonOptions);
+            }
+            catch (JsonException)
+            {
+                // Malformed JSON: return null as per method documentation.
+                return null;
+            }
+
             if (dto == null) return null;
 
             var jobs = dto.Jobs?.Select((j, i) => new BackupJob
@@ -60,7 +71,7 @@ namespace EasySave.Infrastructure.Persistence
                 Name = j.Name ?? "",
                 SourcePath = j.SourcePath ?? "",
                 TargetPath = j.TargetPath ?? "",
-                Type = j.Type == "Differential"
+                Type = string.Equals(j.Type, "Differential", StringComparison.OrdinalIgnoreCase)
                     ? Core.Enums.BackupType.Differential
                     : Core.Enums.BackupType.Full
             }).ToList() ?? new List<BackupJob>();
@@ -78,18 +89,18 @@ namespace EasySave.Infrastructure.Persistence
         /// <summary>
         /// Saves the backup configuration to the JSON file.
         /// </summary>
-        /// <param name="configuration">Configuration to persist.</param>
+        /// <param name="backupConfiguration">Configuration to persist.</param>
         /// <param name="cancellationToken">
         /// Token used to cancel the asynchronous operation.
         /// </param>
-        public async Task SaveAsync(BackupConfiguration configuration, CancellationToken cancellationToken = default)
+        public async Task SaveAsync(BackupConfiguration backupConfiguration, CancellationToken cancellationToken = default)
         {
             Directory.CreateDirectory(_configDirectory);
 
             var dto = new ConfigDto
             {
-                LogAndStateDirectory = configuration.LogAndStateDirectory,
-                Jobs = configuration.Jobs.Select(j => new JobDto
+                LogAndStateDirectory = backupConfiguration.LogAndStateDirectory,
+                Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
                     Name = j.Name,
@@ -99,7 +110,7 @@ namespace EasySave.Infrastructure.Persistence
                         ? "Differential"
                         : "Full"
                 }).ToList(),
-                LastFullBackupUtcByJobId = configuration.LastFullBackupUtcByJobId
+                LastFullBackupUtcByJobId = backupConfiguration.LastFullBackupUtcByJobId
                     .ToDictionary(k => k.Key, v => v.Value)
             };
 
@@ -120,22 +131,26 @@ namespace EasySave.Infrastructure.Persistence
             DateTime utc,
             CancellationToken cancellationToken = default)
         {
-            var config = await LoadAsync(cancellationToken).ConfigureAwait(false);
-            if (config == null) return;
-
-            var dict = config.LastFullBackupUtcByJobId
-                .ToDictionary(k => k.Key, v => v.Value);
-
-            dict[jobId] = utc;
-
-            var updated = new BackupConfiguration
+            await _configUpdateLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                LogAndStateDirectory = config.LogAndStateDirectory,
-                Jobs = config.Jobs,
-                LastFullBackupUtcByJobId = dict
-            };
-
-            await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
+                var config = await LoadAsync(cancellationToken).ConfigureAwait(false);
+                if (config == null) return;
+                var dict = config.LastFullBackupUtcByJobId
+                    .ToDictionary(k => k.Key, v => v.Value);
+                dict[jobId] = utc;
+                var updated = new BackupConfiguration
+                {
+                    LogAndStateDirectory = config.LogAndStateDirectory,
+                    Jobs = config.Jobs,
+                    LastFullBackupUtcByJobId = dict
+                };
+                await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _configUpdateLock.Release();
+            }
         }
 
         /// <summary>
