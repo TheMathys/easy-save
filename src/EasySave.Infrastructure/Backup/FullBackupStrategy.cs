@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace EasySave.Infrastructure.Backup
 {
+    /// <summary>
+    /// Full backup strategy: all files are eligible.
+    /// </summary>
     public sealed class FullBackupStrategy : IBackupStrategy
     {
         public async IAsyncEnumerable<FileItem> GetEligibleFilesAsync(
