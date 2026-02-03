@@ -1,0 +1,24 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Restore dependencies
+      run: dotnet restore EasySave.sln
+    - name: Build
+      run: dotnet build EasySave.sln --no-restore
+    - name: Test
+      run: dotnet test EasySave.sln --no-build --verbosity normal
