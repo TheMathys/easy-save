@@ -6,33 +6,30 @@ using EasySave.Core.Entities;
 namespace EasySave.Core.Interfaces
 {
     /// <summary>
-    /// Defines the loading and saving of the configuration (list of jobs, log/status directory,
-    /// date of last full backup per job).
+    /// Defines methods for loading and saving the backup configuration,
+    /// including the list of jobs, log/status directory, and the date of the last full backup for each job.
     /// </summary>
     public interface IConfigurationRepository
     {
         /// <summary>
-        /// Load the file configuration
+        /// Loads the backup configuration from persistent storage.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
         public Task LoadAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Save the configuration
+        /// Saves the provided backup configuration to persistent storage.
         /// </summary>
-        /// <param name="backupConfiguration"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="backupConfiguration">The configuration data to save.</param>
+        /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
         public Task SaveAsync(BackupConfiguration backupConfiguration, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Update the date
+        /// Updates the date of the last full backup for the specified job.
         /// </summary>
-        /// <param name="jobId"></param>
-        /// <param name="utc"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task UpdateLastFullBackuoAsync(int jobId, DateTime utc, CancellationToken cancellationToken);
+        /// <param name="jobId">The unique identifier of the job to update.</param>
+        /// <param name="utc">The date and time (in UTC) of the last full backup.</param>
+        /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
+        public Task UpdateLastFullBackupAsync(int jobId, DateTime utc, CancellationToken cancellationToken);
     }
 }
