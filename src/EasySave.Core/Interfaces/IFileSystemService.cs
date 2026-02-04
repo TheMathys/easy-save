@@ -12,13 +12,14 @@ namespace EasySave.Core.Interfaces
 	/// </summary>
 	public interface IFileSystemService
 	{
-		/// <summary>
-		/// Recursively enumerates all files in a source directory.
-		/// Returns an async stream to process files one by one without loading everything into memory.
-		/// </summary>
-		/// <param name="sourceDirectory">The root directory path to scan.</param>
-		/// <returns>An async stream of <see cref="FileItem"/>.</returns>
-		IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourceDirectory);
+        /// <summary>
+        /// Recursively enumerates all files in a source directory.
+        /// Returns an async stream to process files one by one without loading everything into memory.
+        /// </summary>
+        /// <param name="sourcePath">The root directory path to scan.</param>
+        /// <param name="cancellationToken">Token to cancel the enumeration operation.</param>
+        /// <returns>An async stream of <see cref="FileItem"/>.</returns>
+        IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Asynchronously copies a single file from source to destination.
