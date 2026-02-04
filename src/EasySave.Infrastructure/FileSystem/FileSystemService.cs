@@ -19,19 +19,22 @@ namespace EasySave.Infrastructure.FileSystem
     {
         public void EnsureDirectoryExists(string directoryPath)
         {
-            // vérifie que le répertoire existe
+            // Check if directory exists before attempting creation
             FileInfo fi = new FileInfo(directoryPath);
             if (!fi.Directory.Exists)
             {
+                // Directory.CreateDirectory creates all parent directories atomically
                 Directory.CreateDirectory(directoryPath);
             }
         }
 
         public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            // Early exit if source doesn't exist
             if (!Directory.Exists(sourcePath))
                 yield break;
 
+            // Stack-based DFS traversal (memory efficient for deep hierarchies)
             var stack = new Stack<string>();
             stack.Push(sourcePath);
 
@@ -40,6 +43,7 @@ namespace EasySave.Infrastructure.FileSystem
                 cancellationToken.ThrowIfCancellationRequested();
                 var current = stack.Pop();
 
+                // Yield all files in current directory
                 foreach (var file in Directory.EnumerateFiles(current))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -48,6 +52,7 @@ namespace EasySave.Infrastructure.FileSystem
                     yield return new FileItem(relativePath, file, fi.LastWriteTimeUtc);
                 }
 
+                // Push subdirectories for recursive traversal
                 foreach (var dir in Directory.EnumerateDirectories(current))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -55,6 +60,7 @@ namespace EasySave.Infrastructure.FileSystem
                 }
             }
 
+            // Allow async method completion (no-op for yield return)
             await Task.CompletedTask.ConfigureAwait(false);
         }
 
@@ -84,6 +90,7 @@ namespace EasySave.Infrastructure.FileSystem
             var stopwatch = Stopwatch.StartNew();
             try
             {
+                // Ensure destination parent directory exists
                 string? dir = Path.GetDirectoryName(destinationPath);
                 if (!string.IsNullOrEmpty(dir))
                 {
