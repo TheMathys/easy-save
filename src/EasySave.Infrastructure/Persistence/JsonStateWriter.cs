@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Core.Interfaces;
 using EasySave.Core.Models;
+using EasySave.Core.Entities;
 
 namespace EasySave.Infrastructure.Persistence
 {
