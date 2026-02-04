@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Infrastructure.Persistence;
-using Xunit;
 
 namespace EasySave.Infrastructure.Tests
 {
