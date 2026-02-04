@@ -13,8 +13,8 @@ using FileItem = EasySave.Core.Models.FileItem;
 namespace EasySave.Infrastructure.Backup
 {
     /// <summary>
-    /// Exécute les travaux de sauvegarde de manière séquentielle : log, état temps réel, stratégie complète/différentielle.
-    /// Progression par taille (octets) avec ETA et rapport pendant la copie d'un fichier.
+    /// Executes backup jobs sequentially: logging, real-time state, full/differential strategy.
+    /// Progress by size (bytes) with ETA and report during file copy.
     /// </summary>
     public sealed class BackupExecutor : IBackupExecutor
     {
