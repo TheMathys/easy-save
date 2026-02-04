@@ -42,6 +42,7 @@ jobs:
       with:
         files: '**/*.trx'
         fail_on: test failures
+        compare_to_earlier_commit: false
 
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
