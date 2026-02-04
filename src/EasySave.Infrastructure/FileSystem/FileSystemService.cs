@@ -5,10 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using EasySave.Core.Interfaces;
-using EasySave.Core.Models;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace EasySave.Infrastructure.FileSystem
 {
@@ -66,21 +63,18 @@ namespace EasySave.Infrastructure.FileSystem
 
         public long GetFileSize(string path)
         {
-            // donne la taille du fichier
             FileInfo fi = new FileInfo(path);
             return fi.Length;
         }
 
         public DateTime GetLastWriteTimeUtc(string path)
         {
-            // donne la dernière date d'écriture
             FileInfo fi = new FileInfo(path);
             return fi.LastWriteTimeUtc;
         }
 
         public string GetUncPath(string path)
         {
-            // donne le chemin universel windows
             FileInfo fi = new FileInfo(path);
             return fi.FullName;
         }
