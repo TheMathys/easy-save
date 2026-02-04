@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using EasySave.Core.Interfaces;
 using EasySave.Core.Models;
 using EasySave.Infrastructure.FileSystem;
+using Xunit;
 
 namespace EasySave.Infrastructure.Tests;
 
