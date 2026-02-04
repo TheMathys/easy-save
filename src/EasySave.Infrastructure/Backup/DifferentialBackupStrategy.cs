@@ -12,7 +12,7 @@ namespace EasySave.Infrastructure.Backup
     {
         public async IAsyncEnumerable<FileItem> GetEligibleFilesAsync(BackupJob job, IAsyncEnumerable<FileItem> files, DateTime? differentialSinceUtc, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            var since = differentialSinceUtc ?? DateTime.MinValue;
+            DateTime since = differentialSinceUtc ?? DateTime.MinValue;
 
             await foreach (var file in files.WithCancellation(ct))
             {
