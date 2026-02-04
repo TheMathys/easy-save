@@ -17,14 +17,14 @@ namespace EasySave.Infrastructure.FileSystem
     /// </summary>
     public sealed class FileSystemService : IFileSystemService
     {
-        public Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public void EnsureDirectoryExists(string directoryPath)
         {
-            throw new NotImplementedException();
+            // vérifie que le répertoire existe
+            FileInfo fi = new FileInfo(directoryPath);
+            if (!fi.Directory.Exists)
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
         }
 
         public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -60,20 +60,26 @@ namespace EasySave.Infrastructure.FileSystem
 
         public long GetFileSize(string path)
         {
-            throw new NotImplementedException();
+            // donne la taille du fichier
+            FileInfo fi = new FileInfo(path);
+            return fi.Length;
         }
 
         public DateTime GetLastWriteTimeUtc(string path)
         {
-            throw new NotImplementedException();
+            // donne la dernière date d'écriture
+            FileInfo fi = new FileInfo(path);
+            return fi.LastWriteTimeUtc;
         }
 
         public string GetUncPath(string path)
         {
-            throw new NotImplementedException();
+            // donne le chemin universel windows
+            FileInfo fi = new FileInfo(path);
+            return fi.FullName;
         }
         
-        async Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
+        public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
         {
             var stopwatch = Stopwatch.StartNew();
             try
@@ -81,7 +87,7 @@ namespace EasySave.Infrastructure.FileSystem
                 string? dir = Path.GetDirectoryName(destinationPath);
                 if (!string.IsNullOrEmpty(dir))
                 {
-                    Directory.CreateDirectory(dir);
+                    EnsureDirectoryExists(dir);
                 }
 
                 // Copy the source file to the destination (overwrite if it already exists)
