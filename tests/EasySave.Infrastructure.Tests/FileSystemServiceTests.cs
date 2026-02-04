@@ -23,6 +23,75 @@ public sealed class FileSystemServiceTests : IDisposable
     }
 
     [Fact]
+    public void EnsureDirectoryExists_CreatesDirectory_WhenDoesNotExist()
+    {
+        var dirPath = Path.Combine(_tempRoot, "newdir", "nested");
+
+        _service.EnsureDirectoryExists(dirPath);
+
+        Assert.True(Directory.Exists(dirPath));
+    }
+
+    [Fact]
+    public void EnsureDirectoryExists_DoesNothing_WhenDirectoryExists()
+    {
+        var existingDir = Path.Combine(_tempRoot, "existing");
+        Directory.CreateDirectory(existingDir);
+
+        _service.EnsureDirectoryExists(existingDir);
+
+        Assert.True(Directory.Exists(existingDir));  // Toujours vrai, pas d'exception
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(42L)]
+    [InlineData(1024 * 1024L)]  // 1MB
+    public void GetFileSize_ReturnsCorrectSize(long expectedSize)
+    {
+        var filePath = Path.Combine(_tempRoot, "sizefile.txt");
+        File.WriteAllBytes(filePath, new byte[expectedSize]);
+
+        var actualSize = _service.GetFileSize(filePath);
+
+        Assert.Equal(expectedSize, actualSize);
+    }
+
+    [Fact]
+    public void GetFileSize_Throws_OnNonExistentFile()
+    {
+        var nonExistent = Path.Combine(_tempRoot, "missing.txt");
+
+        Assert.Throws<FileNotFoundException>(() => _service.GetFileSize(nonExistent));
+    }
+
+    [Fact]
+    public void GetLastWriteTimeUtc_ReturnsCorrectUtcTime()
+    {
+        var filePath = Path.Combine(_tempRoot, "timefile.txt");
+        File.WriteAllText(filePath, "test");
+        var expectedUtc = new DateTime(2024, 6, 15, 10, 30, 0, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(filePath, expectedUtc);
+
+        var actual = _service.GetLastWriteTimeUtc(filePath);
+
+        Assert.Equal(expectedUtc, actual);
+    }
+
+    [Fact]
+    public void GetUncPath_ReturnsFullCanonicalPath()
+    {
+        var relativePath = Path.Combine(_tempRoot, "rel", "file.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(relativePath)!);
+        File.Create(relativePath).Dispose();
+
+        var uncPath = _service.GetUncPath(relativePath);
+
+        Assert.Equal(Path.GetFullPath(relativePath), uncPath);
+        Assert.True(Path.IsPathFullyQualified(uncPath));
+    }
+
+    [Fact]
     public async Task CopyFileAsync_CreatesDestinationDirectory_And_Copies_Content()
     {
         var sourcePath = Path.Combine(_tempRoot, "src", "file.txt");
