@@ -14,7 +14,7 @@ namespace EasySave.Console.Resources
 
         static LangHelper()
         {
-            _rm = new ResourceManager("ConsoleApp1.Resources.Strings", Assembly.GetExecutingAssembly());
+            _rm = new ResourceManager("EasySave.Console.Resources.Strings", Assembly.GetExecutingAssembly());
         }
 
         public static string? GetString(string name)
