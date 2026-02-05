@@ -552,9 +552,12 @@ public sealed class BackupExecutorTests : IDisposable
     {
         public List<LogEntry> LogEntries { get; } = new();
 
-        public Task WriteAsync(LogEntry logEntry, CancellationToken cancellationToken)
+        public Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
-            LogEntries.Add(logEntry);
+            if (logEntry is LogEntry entry)
+            {
+                LogEntries.Add(entry);
+            }
             return Task.CompletedTask;
         }
     }
