@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
@@ -62,5 +62,71 @@
     </data>
     <data name="BackupStrategyError" xml:space="preserve">
         <value>Il y a une erreur dans le choix de la sauvegarde.</value>
+    </data>
+    <data name="MenuTitle" xml:space="preserve">
+        <value>=== Menu EasySave ===</value>
+    </data>
+    <data name="MenuOption1" xml:space="preserve">
+        <value>Créer un travail de sauvegarde</value>
+    </data>
+    <data name="MenuOption2" xml:space="preserve">
+        <value>Lister les travaux</value>
+    </data>
+    <data name="MenuOption3" xml:space="preserve">
+        <value>Lancer des sauvegardes</value>
+    </data>
+    <data name="MenuOption4" xml:space="preserve">
+        <value>Aide</value>
+    </data>
+    <data name="MenuOption0" xml:space="preserve">
+        <value>Quitter</value>
+    </data>
+    <data name="MenuPrompt" xml:space="preserve">
+        <value>Entrez votre choix :</value>
+    </data>
+    <data name="MenuInvalidChoice" xml:space="preserve">
+        <value>Choix invalide. Veuillez sélectionner 1-4 ou 0 pour quitter.</value>
+    </data>
+    <data name="CreateJobTitle" xml:space="preserve">
+        <value>=== Créer un travail de sauvegarde ===</value>
+    </data>
+    <data name="MaxJobsReached" xml:space="preserve">
+        <value>Nombre maximum de travaux (5) atteint. Impossible de créer plus de travaux.</value>
+    </data>
+    <data name="InvalidInput" xml:space="preserve">
+        <value>Entrée invalide.</value>
+    </data>
+    <data name="JobCreated" xml:space="preserve">
+        <value>Travail {0} créé avec succès.</value>
+    </data>
+    <data name="ListJobsTitle" xml:space="preserve">
+        <value>=== Travaux de sauvegarde ===</value>
+    </data>
+    <data name="NoJobsFound" xml:space="preserve">
+        <value>Aucun travail de sauvegarde trouvé.</value>
+    </data>
+    <data name="RunJobsTitle" xml:space="preserve">
+        <value>=== Lancer des sauvegardes ===</value>
+    </data>
+    <data name="SelectJobsPrompt" xml:space="preserve">
+        <value>Entrez les IDs des travaux à exécuter (ex. : 1-3 ou 1,3,5) :</value>
+    </data>
+    <data name="HelpTitle" xml:space="preserve">
+        <value>=== Aide ===</value>
+    </data>
+    <data name="HelpText" xml:space="preserve">
+        <value>EasySave - Système de gestion de sauvegarde
+
+Options :
+  1. Créer un travail de sauvegarde - Ajouter une nouvelle configuration de sauvegarde
+  2. Lister les travaux - Afficher tous les travaux de sauvegarde configurés
+  3. Lancer des sauvegardes - Exécuter un ou plusieurs travaux de sauvegarde
+  4. Aide - Afficher ce message d'aide
+  0. Quitter - Quitter l'application
+
+Lors de l'exécution de sauvegardes, vous pouvez spécifier les IDs des travaux comme suit :
+  - ID unique : 1
+  - Plage : 1-3
+  - Liste : 1,3,5 ou 1;3;5</value>
     </data>
 </root>

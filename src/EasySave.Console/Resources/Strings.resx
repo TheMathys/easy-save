@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
@@ -62,5 +62,71 @@
     </data>
     <data name="BackupStrategyError" xml:space="preserve">
         <value>There is an error in the backup selection.</value>
+    </data>
+    <data name="MenuTitle" xml:space="preserve">
+        <value>=== EasySave Menu ===</value>
+    </data>
+    <data name="MenuOption1" xml:space="preserve">
+        <value>Create a backup job</value>
+    </data>
+    <data name="MenuOption2" xml:space="preserve">
+        <value>List backup jobs</value>
+    </data>
+    <data name="MenuOption3" xml:space="preserve">
+        <value>Run backups</value>
+    </data>
+    <data name="MenuOption4" xml:space="preserve">
+        <value>Help</value>
+    </data>
+    <data name="MenuOption0" xml:space="preserve">
+        <value>Quit</value>
+    </data>
+    <data name="MenuPrompt" xml:space="preserve">
+        <value>Enter your choice:</value>
+    </data>
+    <data name="MenuInvalidChoice" xml:space="preserve">
+        <value>Invalid choice. Please select 1-4 or 0 to quit.</value>
+    </data>
+    <data name="CreateJobTitle" xml:space="preserve">
+        <value>=== Create Backup Job ===</value>
+    </data>
+    <data name="MaxJobsReached" xml:space="preserve">
+        <value>Maximum number of jobs (5) reached. Cannot create more jobs.</value>
+    </data>
+    <data name="InvalidInput" xml:space="preserve">
+        <value>Invalid input.</value>
+    </data>
+    <data name="JobCreated" xml:space="preserve">
+        <value>Job {0} created successfully.</value>
+    </data>
+    <data name="ListJobsTitle" xml:space="preserve">
+        <value>=== Backup Jobs ===</value>
+    </data>
+    <data name="NoJobsFound" xml:space="preserve">
+        <value>No backup jobs found.</value>
+    </data>
+    <data name="RunJobsTitle" xml:space="preserve">
+        <value>=== Run Backups ===</value>
+    </data>
+    <data name="SelectJobsPrompt" xml:space="preserve">
+        <value>Enter job IDs to run (e.g., 1-3 or 1,3,5):</value>
+    </data>
+    <data name="HelpTitle" xml:space="preserve">
+        <value>=== Help ===</value>
+    </data>
+    <data name="HelpText" xml:space="preserve">
+        <value>EasySave - Backup Management System
+
+Options:
+  1. Create a backup job - Add a new backup configuration
+  2. List backup jobs - Display all configured backup jobs
+  3. Run backups - Execute one or more backup jobs
+  4. Help - Show this help message
+  0. Quit - Exit the application
+
+When running backups, you can specify job IDs as:
+  - Single ID: 1
+  - Range: 1-3
+  - List: 1,3,5 or 1;3;5</value>
     </data>
 </root>
