@@ -345,6 +345,26 @@ namespace EasySave.Console.Tui
                 .ToList();
         }
 
+        /// <summary>
+        /// Reads a path line. Uses Tab completion when console is interactive; otherwise uses ReadLine.
+        /// </summary>
+        private static string? ReadPathLine(string? prompt, string fallbackPrompt)
+        {
+            System.Console.Write($"{prompt ?? fallbackPrompt}: ");
+            if (!System.Console.IsInputRedirected)
+            {
+                try
+                {
+                    return PathCompletionLineReader.ReadPathWithTabCompletion()?.Trim();
+                }
+                catch (InvalidOperationException)
+                {
+                    // ReadKey not available (e.g. no console)
+                }
+            }
+            return System.Console.ReadLine()?.Trim();
+        }
+
         private static async Task CreateJobAsync(IConfigurationRepository configRepository)
         {
             System.Console.WriteLine();
@@ -388,9 +408,7 @@ namespace EasySave.Console.Tui
                 return;
             }
 
-            string? sourcePrompt = LangHelper.GetString("SourceDirectory");
-            System.Console.Write($"{sourcePrompt ?? "Enter source directory"}: ");
-            string? sourcePath = System.Console.ReadLine()?.Trim();
+            string? sourcePath = ReadPathLine(LangHelper.GetString("SourceDirectory"), "Enter source directory");
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
                 string? invalidInputMsg = LangHelper.GetString("InvalidInput");
@@ -398,9 +416,7 @@ namespace EasySave.Console.Tui
                 return;
             }
 
-            string? targetPrompt = LangHelper.GetString("TargetDirectory");
-            System.Console.Write($"{targetPrompt ?? "Enter target directory"}: ");
-            string? targetPath = System.Console.ReadLine()?.Trim();
+            string? targetPath = ReadPathLine(LangHelper.GetString("TargetDirectory"), "Enter target directory");
             if (string.IsNullOrWhiteSpace(targetPath))
             {
                 string? invalidInputMsg = LangHelper.GetString("InvalidInput");
