@@ -28,11 +28,6 @@ public static class CompositionRoot
 
         string normalizedBasePath = Path.GetFullPath(basePath);
 
-        string configDirectory = Path.Combine(normalizedBasePath, "config");
-        string stateDirectory = Path.Combine(normalizedBasePath, "state");
-        string stateFilePath = Path.Combine(stateDirectory, "state.json");
-        string logDirectory = Path.Combine(normalizedBasePath, "logs");
-
         ServiceCollection services = new();
 
         services.AddSingleton<IConfigurationRepository>(_ => new JsonConfigurationRepository(basePath));
