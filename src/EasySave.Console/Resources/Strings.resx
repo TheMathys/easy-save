@@ -165,4 +165,10 @@ When running backups, you can specify job IDs as :
   <data name="TuiNavigationHint" xml:space="preserve">
     <value>Arrows: move | Enter/Space: validate | Esc: quit | 1-4 / 0 / q: numeric selection</value>
   </data>
+  <data name="ExcludeExtensionsPrompt" xml:space="preserve">
+    <value>Exclude file extensions (comma-separated, example .tmp,.log). Leave empty for none:</value>
+  </data>
+  <data name="ExcludeDirectoryNamesPrompt" xml:space="preserve">
+    <value>Exclude directory names (comma-separated, example node_modules,.git). Leave empty for none:</value>
+  </data>
 </root>

@@ -25,7 +25,7 @@ namespace EasySave.Infrastructure.FileSystem
         {
             var fullPath = Path.GetFullPath(path);
             if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
-                return fullPath; // déjà UNC
+                return fullPath;
 
             var drive = Path.GetPathRoot(fullPath);
             if (string.IsNullOrEmpty(drive) || drive.Length < 2)
@@ -39,10 +39,13 @@ namespace EasySave.Infrastructure.FileSystem
             return fullPath;
         }
 
-        public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, BackupEnumerationOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             if (!Directory.Exists(sourcePath))
                 yield break;
+
+            var excludeExtensions = BuildExcludeExtensionsSet(options?.ExcludeExtensions);
+            var excludeDirNames = BuildExcludeDirectoryNamesSet(options?.ExcludeDirectoryNames);
 
             var stack = new Stack<string>();
             stack.Push(sourcePath);
@@ -55,6 +58,12 @@ namespace EasySave.Infrastructure.FileSystem
                 foreach (var file in Directory.EnumerateFiles(current))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    if (excludeExtensions != null)
+                    {
+                        var ext = Path.GetExtension(file);
+                        if (!string.IsNullOrEmpty(ext) && excludeExtensions.Contains(ext))
+                            continue;
+                    }
                     string relativePath = Path.GetRelativePath(sourcePath, file);
                     DateTime lastWriteUtc = File.GetLastWriteTimeUtc(file);
                     yield return new FileItem(relativePath, file, lastWriteUtc);
@@ -63,11 +72,43 @@ namespace EasySave.Infrastructure.FileSystem
                 foreach (var dir in Directory.EnumerateDirectories(current))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    if (excludeDirNames != null)
+                    {
+                        var dirName = Path.GetFileName(dir);
+                        if (!string.IsNullOrEmpty(dirName) && excludeDirNames.Contains(dirName, StringComparer.OrdinalIgnoreCase))
+                            continue;
+                    }
                     stack.Push(dir);
                 }
             }
 
             await Task.CompletedTask.ConfigureAwait(false);
+        }
+
+        private static HashSet<string>? BuildExcludeExtensionsSet(IReadOnlyList<string>? list)
+        {
+            if (list == null || list.Count == 0) return null;
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in list)
+            {
+                var t = (s ?? "").Trim();
+                if (string.IsNullOrEmpty(t)) continue;
+                if (!t.StartsWith(".", StringComparison.Ordinal)) t = "." + t;
+                set.Add(t);
+            }
+            return set.Count == 0 ? null : set;
+        }
+
+        private static HashSet<string>? BuildExcludeDirectoryNamesSet(IReadOnlyList<string>? list)
+        {
+            if (list == null || list.Count == 0) return null;
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in list)
+            {
+                var t = (s ?? "").Trim();
+                if (!string.IsNullOrEmpty(t)) set.Add(t);
+            }
+            return set.Count == 0 ? null : set;
         }
 
         public long GetFileSize(string path)

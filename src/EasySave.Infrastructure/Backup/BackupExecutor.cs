@@ -8,6 +8,7 @@ using EasyLog;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
+using EasySave.Core.Models;
 using FileItem = EasySave.Core.Models.FileItem;
 
 namespace EasySave.Infrastructure.Backup
@@ -71,10 +72,16 @@ namespace EasySave.Infrastructure.Backup
                 IBackupStrategy strategy = _strategyFactory.GetStrategy(job.Type);
                 DateTime? differentialSince = job.Type == BackupType.Differential && config.LastFullBackupUtcByJobId.TryGetValue(job.Id, out DateTime since) ? since : null;
 
+                var enumOptions = new BackupEnumerationOptions
+                {
+                    ExcludeExtensions = job.ExcludeExtensions ?? Array.Empty<string>(),
+                    ExcludeDirectoryNames = job.ExcludeDirectoryNames ?? Array.Empty<string>()
+                };
+
                 // First pass: compute total size and file count without keeping the list in memory.
                 long totalSize = 0L;
                 int fileCount = 0;
-                IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, cancellationToken);
+                IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
                 await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, pass1Stream, differentialSince, cancellationToken))
                 {
                     totalSize += _fileSystem.GetFileSize(f.FullSourcePath);
@@ -99,7 +106,7 @@ namespace EasySave.Infrastructure.Backup
                 // Second pass: stream and copy one file at a time so we never hold the full list.
                 long bytesCompleted = 0L;
                 int processedCount = 0;
-                IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, cancellationToken);
+                IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
                 await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();

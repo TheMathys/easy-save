@@ -15,11 +15,13 @@ namespace EasySave.Core.Interfaces
         /// <summary>
         /// Recursively enumerates all files in a source directory.
         /// Returns an async stream to process files one by one without loading everything into memory.
+        /// When <paramref name="options"/> is provided, files with excluded extensions are omitted and excluded directory names are not traversed.
         /// </summary>
         /// <param name="sourcePath">The root directory path to scan.</param>
+        /// <param name="options">Optional enumeration options of exclude extensions and directory names.</param>
         /// <param name="cancellationToken">Token to cancel the enumeration operation.</param>
         /// <returns>An async stream of <see cref="FileItem"/>.</returns>
-        IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, BackupEnumerationOptions? options = null, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Asynchronously copies a single file from source to destination.

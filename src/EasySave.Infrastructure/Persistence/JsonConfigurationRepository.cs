@@ -1,4 +1,4 @@
-﻿using EasySave.Core.Entities;
+using EasySave.Core.Entities;
 using EasySave.Core.Interfaces;
 
 using System.Text.Json;
@@ -73,7 +73,9 @@ namespace EasySave.Infrastructure.Persistence
                 TargetPath = j.TargetPath ?? "",
                 Type = string.Equals(j.Type, "Differential", StringComparison.OrdinalIgnoreCase)
                     ? Core.Enums.BackupType.Differential
-                    : Core.Enums.BackupType.Full
+                    : Core.Enums.BackupType.Full,
+                ExcludeExtensions = j.ExcludeExtensions ?? new List<string>(),
+                ExcludeDirectoryNames = j.ExcludeDirectoryNames ?? new List<string>()
             }).ToList() ?? new List<BackupJob>();
 
             var lastFull = dto.LastFullBackupUtcByJobId ?? new Dictionary<int, DateTime>();
@@ -108,7 +110,9 @@ namespace EasySave.Infrastructure.Persistence
                     TargetPath = j.TargetPath,
                     Type = j.Type == Core.Enums.BackupType.Differential
                         ? "Differential"
-                        : "Full"
+                        : "Full",
+                    ExcludeExtensions = j.ExcludeExtensions?.Count > 0 ? new List<string>(j.ExcludeExtensions) : null,
+                    ExcludeDirectoryNames = j.ExcludeDirectoryNames?.Count > 0 ? new List<string>(j.ExcludeDirectoryNames) : null
                 }).ToList(),
                 LastFullBackupUtcByJobId = backupConfiguration.LastFullBackupUtcByJobId
                     .ToDictionary(k => k.Key, v => v.Value)
@@ -173,6 +177,8 @@ namespace EasySave.Infrastructure.Persistence
             public string? SourcePath { get; set; }
             public string? TargetPath { get; set; }
             public string? Type { get; set; }
+            public List<string>? ExcludeExtensions { get; set; }
+            public List<string>? ExcludeDirectoryNames { get; set; }
         }
     }
 }

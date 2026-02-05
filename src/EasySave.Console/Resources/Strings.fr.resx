@@ -165,4 +165,10 @@ Lors de l'exécution de sauvegardes, vous pouvez spécifier les IDs des travaux 
   <data name="TuiNavigationHint" xml:space="preserve">
     <value>Flèches : déplacer | Entrée/Espace : valider | Échap : quitter | 1-4 / 0 / q : sélection numérique</value>
   </data>
+  <data name="ExcludeExtensionsPrompt" xml:space="preserve">
+    <value>Exclure des extensions de fichiers (séparées par des virgules, exemple: .tmp,.log). Vide pour aucune :</value>
+  </data>
+  <data name="ExcludeDirectoryNamesPrompt" xml:space="preserve">
+    <value>Exclure des dossiers (séparés par des virgules, exemple node_modules,.git). Vide pour aucun :</value>
+  </data>
 </root>
