@@ -28,12 +28,13 @@ namespace EasySave.Core.Interfaces
 		/// </summary>
 		/// <param name="sourcePath">The absolute path of the source file.</param>
 		/// <param name="destinationPath">The absolute path of the destination file.</param>
+		/// <param name="progress">Optional. Reports bytes copied for the current file (for progress bar during copy).</param>
 		/// <param name="cancellationToken">Token to cancel the copy operation.</param>
 		/// <returns>
-		/// A <see cref="long"/> representing the time taken in milliseconds. 
+		/// A <see cref="long"/> representing the time taken in milliseconds.
 		/// Returns a negative value if an error occurred.
 		/// </returns>
-		Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default);
+		Task<long> CopyFileAsync(string sourcePath, string destinationPath, IProgress<long>? progress = null, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Converts a local path to a UNC path (Universal Naming Convention) if necessary.

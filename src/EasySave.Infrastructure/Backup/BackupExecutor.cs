@@ -39,7 +39,9 @@ namespace EasySave.Infrastructure.Backup
             _logWriter = logWriter;
         }
 
-        public async Task ExecuteAsync(IReadOnlyList<int> jobIds, CancellationToken cancellationToken = default)
+        private const int ProgressReportThrottleMs = 150;
+
+        public async Task ExecuteAsync(IReadOnlyList<int> jobIds, IProgress<BackupProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             BackupConfiguration? config = await _configRepository.LoadAsync(cancellationToken).ConfigureAwait(false);
             if (config == null || config.Jobs.Count == 0)
@@ -65,9 +67,6 @@ namespace EasySave.Infrastructure.Backup
 
                 int idx = progressList.FindIndex(p => p.BackupName == job.Name);
                 if (idx < 0) continue;
-
-                if (!string.IsNullOrWhiteSpace(job.TargetPath))
-                    _fileSystem.EnsureDirectoryExists(job.TargetPath);
 
                 IBackupStrategy strategy = _strategyFactory.GetStrategy(job.Type);
                 DateTime? differentialSince = job.Type == BackupType.Differential && config.LastFullBackupUtcByJobId.TryGetValue(job.Id, out DateTime since) ? since : null;
@@ -99,13 +98,46 @@ namespace EasySave.Infrastructure.Backup
                     RemainingFilesCount = fileCount,
                     RemainingSizeBytes = totalSize,
                     CurrentSourcePath = null,
-                    CurrentDestinationPath = null
+                    CurrentDestinationPath = null,
+                    EstimatedTimeRemainingSeconds = null
                 };
                 await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
+                progress?.Report(progressList[idx]);
 
-                // Second pass: stream and copy one file at a time so we never hold the full list.
+                DateTime jobStartUtc = DateTime.UtcNow;
                 long bytesCompleted = 0L;
                 int processedCount = 0;
+                long lastReportTicks = 0;
+
+                void UpdateProgress(long bytesCopiedInCurrentFile, string? uncSource, string? uncDest)
+                {
+                    long totalCompleted = bytesCompleted + bytesCopiedInCurrentFile;
+                    long remainingSize = totalSize - totalCompleted;
+                    double percentDone = totalSize > 0 ? Math.Round((double)totalCompleted / totalSize * 100.0, 2) : 100.0;
+                    double elapsedSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds;
+                    double? etaSeconds = null;
+                    if (elapsedSeconds > 0.5 && totalCompleted > 0 && remainingSize > 0)
+                    {
+                        double speedBytesPerSec = totalCompleted / elapsedSeconds;
+                        etaSeconds = remainingSize / speedBytesPerSec;
+                    }
+
+                    progressList[idx] = new BackupProgress
+                    {
+                        BackupName = job.Name,
+                        LastActionTimestamp = DateTime.UtcNow,
+                        State = BackupState.Active,
+                        TotalFilesCount = fileCount,
+                        TotalSizeBytes = totalSize,
+                        ProgressPercent = percentDone,
+                        RemainingFilesCount = fileCount - processedCount,
+                        RemainingSizeBytes = remainingSize,
+                        CurrentSourcePath = uncSource,
+                        CurrentDestinationPath = uncDest,
+                        EstimatedTimeRemainingSeconds = etaSeconds
+                    };
+                }
+
                 IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
                 await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
                 {
@@ -116,12 +148,26 @@ namespace EasySave.Infrastructure.Backup
                         _fileSystem.EnsureDirectoryExists(dir);
 
                     long fileSize = _fileSystem.GetFileSize(item.FullSourcePath);
-                    long transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, cancellationToken).ConfigureAwait(false);
-
                     string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDest = _fileSystem.GetUncPath(destPath);
+
+                    var fileProgress = new Progress<long>(bytesCopied =>
+                    {
+                        UpdateProgress(bytesCopied, uncSource, uncDest);
+                        long now = Environment.TickCount64;
+                        if (now - lastReportTicks >= ProgressReportThrottleMs)
+                        {
+                            lastReportTicks = now;
+                            progress?.Report(progressList[idx]);
+                        }
+                    });
+
+                    long transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+
+                    string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
+                    string uncDestLog = _fileSystem.GetUncPath(destPath);
                     TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSource, uncDest, fileSize, transferTime), cancellationToken).ConfigureAwait(false);
+                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime), cancellationToken).ConfigureAwait(false);
 
                     bytesCompleted += fileSize;
                     processedCount++;
@@ -140,9 +186,13 @@ namespace EasySave.Infrastructure.Backup
                         RemainingFilesCount = remainingFiles,
                         RemainingSizeBytes = remainingSize,
                         CurrentSourcePath = uncSource,
-                        CurrentDestinationPath = uncDest
+                        CurrentDestinationPath = uncDest,
+                        EstimatedTimeRemainingSeconds = remainingSize > 0 && (DateTime.UtcNow - jobStartUtc).TotalSeconds > 0.5
+                            ? (double?)(remainingSize / (bytesCompleted / (DateTime.UtcNow - jobStartUtc).TotalSeconds))
+                            : null
                     };
                     await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
+                    progress?.Report(progressList[idx]);
                 }
 
                 progressList[idx] = new BackupProgress
@@ -156,7 +206,8 @@ namespace EasySave.Infrastructure.Backup
                     RemainingFilesCount = 0,
                     RemainingSizeBytes = 0,
                     CurrentSourcePath = null,
-                    CurrentDestinationPath = null
+                    CurrentDestinationPath = null,
+                    EstimatedTimeRemainingSeconds = null
                 };
 
                 if (job.Type == BackupType.Full)

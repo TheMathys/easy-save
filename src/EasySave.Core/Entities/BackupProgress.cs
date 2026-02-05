@@ -1,4 +1,4 @@
-﻿using EasySave.Core.Enums;
+using EasySave.Core.Enums;
 using System;
 
 namespace EasySave.Core.Entities
@@ -37,5 +37,8 @@ namespace EasySave.Core.Entities
 
         /// <summary>Full path of the current destination file (if active).</summary>
         public string? CurrentDestinationPath { get; set; }
+
+        /// <summary>Estimated time remaining in seconds.</summary>
+        public double? EstimatedTimeRemainingSeconds { get; set; }
     }
 }

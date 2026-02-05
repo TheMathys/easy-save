@@ -171,4 +171,18 @@ When running backups, you can specify job IDs as :
   <data name="ExcludeDirectoryNamesPrompt" xml:space="preserve">
     <value>Exclude directory names (comma-separated, example node_modules,.git). Leave empty for none:</value>
   </data>
+
+  <!-- Progress bar and ETA -->
+  <data name="ETAFormat" xml:space="preserve">
+    <value>ETA: {0}</value>
+  </data>
+  <data name="ETANone" xml:space="preserve">
+    <value>--</value>
+  </data>
+  <data name="ETAMinSec" xml:space="preserve">
+    <value>{0} min {1} s</value>
+  </data>
+  <data name="ETASecondsOnly" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
 </root>

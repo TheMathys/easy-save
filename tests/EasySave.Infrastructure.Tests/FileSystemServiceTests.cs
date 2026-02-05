@@ -101,7 +101,7 @@ public sealed class FileSystemServiceTests : IDisposable
 
         var destinationPath = Path.Combine(_tempRoot, "dest", "nested", "file.txt");
 
-        var duration = await ((IFileSystemService)_service).CopyFileAsync(sourcePath, destinationPath, CancellationToken.None);
+        var duration = await ((IFileSystemService)_service).CopyFileAsync(sourcePath, destinationPath, null, CancellationToken.None);
 
         Assert.True(duration >= 0, "Successful copy should return a non-negative duration.");
         Assert.True(File.Exists(destinationPath), "Destination file should exist after copy.");
@@ -115,7 +115,7 @@ public sealed class FileSystemServiceTests : IDisposable
         var missingSource = Path.Combine(_tempRoot, "unknown", "missing.txt");
         var destinationPath = Path.Combine(_tempRoot, "dest", "file.txt");
 
-        var duration = await ((IFileSystemService)_service).CopyFileAsync(missingSource, destinationPath, CancellationToken.None);
+        var duration = await ((IFileSystemService)_service).CopyFileAsync(missingSource, destinationPath, null, CancellationToken.None);
 
         Assert.True(duration <= 0, "Failure should yield a non-positive duration.");
         Assert.False(File.Exists(destinationPath), "Destination file should not exist when copy fails.");

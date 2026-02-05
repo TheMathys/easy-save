@@ -137,11 +137,16 @@ namespace EasySave.Infrastructure.FileSystem
         }
         
         /// <summary>
-        /// Copy buffer size (80 KB). Trade-off between speed and memory usage to avoid overloading the machine.
+        /// Copy buffer size (1 MB). Trade-off between speed and memory usage to avoid overloading the machine.
         /// </summary>
-        private const int CopyBufferSize = 81920;
+        private const int CopyBufferSize = 1024 * 1024;
 
-        public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Report progress at most every this many bytes to limit callback overhead during copy (e.g. 202 MB = ~202 callbacks instead of ~2600).
+        /// </summary>
+        private const long ProgressReportIntervalBytes = CopyBufferSize;
+
+        public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, IProgress<long>? progress = null, CancellationToken cancellationToken = default)
         {
             var stopwatch = Stopwatch.StartNew();
             try
@@ -168,7 +173,22 @@ namespace EasySave.Infrastructure.FileSystem
                 await using (var source = new FileStream(sourcePath, sourceOptions))
                 await using (var dest = new FileStream(destinationPath, destOptions))
                 {
-                    await source.CopyToAsync(dest, CopyBufferSize, cancellationToken).ConfigureAwait(false);
+                    long totalCopied = 0;
+                    long lastReported = -ProgressReportIntervalBytes;
+                    var buffer = new byte[CopyBufferSize];
+                    int read;
+                    while ((read = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
+                    {
+                        await dest.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                        totalCopied += read;
+                        if (progress != null && totalCopied - lastReported >= ProgressReportIntervalBytes)
+                        {
+                            lastReported = totalCopied;
+                            progress.Report(totalCopied);
+                        }
+                    }
+                    if (progress != null && totalCopied > 0 && lastReported != totalCopied)
+                        progress.Report(totalCopied);
                 }
 
                 stopwatch.Stop();
