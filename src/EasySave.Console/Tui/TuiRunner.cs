@@ -40,35 +40,32 @@ namespace EasySave.Console.Tui
             bool running = true;
             while (running)
             {
-                DisplayMenu();
-                string? choice = System.Console.ReadLine()?.Trim().ToLowerInvariant();
+                int selectedIndex = ShowMenuAndReadChoice();
+                bool executedRunJobs = false;
 
-                switch (choice)
+                switch (selectedIndex)
                 {
-                    case "1":
+                    case 0: // Créer un job
                         await CreateJobAsync(configRepository);
                         break;
-                    case "2":
+                    case 1: // Lister
                         await ListJobsAsync(configRepository);
                         break;
-                    case "3":
+                    case 2: // Lancer
                         await RunJobsAsync(configRepository, backupExecutor);
+                        executedRunJobs = true;
                         break;
-                    case "4":
+                    case 3: // Aide
                         ShowHelp();
                         break;
-                    case "0":
-                    case "q":
-                    case "quit":
+                    case 4: // Quitter
                         running = false;
-                        break;
-                    default:
-                        string? errorMsg = LangHelper.GetString("MenuInvalidChoice");
-                        System.Console.WriteLine(errorMsg ?? "Invalid choice. Please select 1-4 or 0 to quit.");
                         break;
                 }
 
-                if (running && enablePause)
+                // Évite l'impression de blocage après une sauvegarde terminée :
+                // le menu revient directement sans afficher "Appuyez sur une touche".
+                if (running && enablePause && !executedRunJobs)
                 {
                     System.Console.WriteLine();
                     System.Console.WriteLine(LangHelper.GetString("PressKeyContinue"));
@@ -76,6 +73,109 @@ namespace EasySave.Console.Tui
                     System.Console.Clear();
                 }
             }
+        }
+
+        /// <summary>
+        /// Affiche le menu et récupère le choix de l'utilisateur.
+        /// - Si l'entrée de la console n'est pas redirigée, utilise un menu interactif
+        ///   avec les flèches haut/bas, Entrée/Espace et Échap.
+        /// - Si l'entrée est redirigée (cas des tests), retombe sur la saisie
+        ///   classique par numéro / 'q'.
+        /// Retourne un index entre 0 et 4 :
+        ///   0 = Créer, 1 = Lister, 2 = Lancer, 3 = Aide, 4 = Quitter.
+        /// </summary>
+        private static int ShowMenuAndReadChoice()
+        {
+            if (!System.Console.IsInputRedirected)
+            {
+                return ShowInteractiveMenu();
+            }
+
+            // Mode "tests" / entrée redirigée : on garde le comportement existant
+            // basé sur la saisie par numéro ou 'q'.
+            while (true)
+            {
+                DisplayMenu();
+                string? raw = System.Console.ReadLine()?.Trim().ToLowerInvariant();
+
+                int mapped = MapTextChoiceToIndex(raw);
+                if (mapped >= 0)
+                    return mapped;
+
+                string? errorMsg = LangHelper.GetString("MenuInvalidChoice");
+                System.Console.WriteLine(errorMsg ?? "Invalid choice. Please select 1-4 or 0 to quit.");
+            }
+        }
+
+        /// <summary>
+        /// Menu interactif : l'utilisateur se déplace avec les flèches haut/bas,
+        /// valide avec Entrée/Espace, et peut quitter avec Échap.
+        /// On conserve aussi la possibilité de taper directement 1-4, 0 ou q.
+        /// </summary>
+        private static int ShowInteractiveMenu()
+        {
+            int selectedIndex = 0; // 0..4
+
+            while (true)
+            {
+                System.Console.Clear();
+                DisplayMenu(selectedIndex);
+
+                string? hint = LangHelper.GetString("TuiNavigationHint");
+                System.Console.WriteLine();
+                System.Console.WriteLine(hint ?? "Use arrows to move, Enter/Space to validate, Esc to quit, or type 1-4 / 0 / q.");
+
+                ConsoleKeyInfo keyInfo = System.Console.ReadKey(intercept: true);
+
+                switch (keyInfo.Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        selectedIndex = (selectedIndex + 5 - 1) % 5;
+                        break;
+                    case ConsoleKey.DownArrow:
+                        selectedIndex = (selectedIndex + 1) % 5;
+                        break;
+                    case ConsoleKey.Enter:
+                    case ConsoleKey.Spacebar:
+                        return selectedIndex;
+                    case ConsoleKey.Escape:
+                        return 4; // Quitter
+                    default:
+                        // On autorise aussi la saisie directe des chiffres / 'q'
+                        char c = keyInfo.KeyChar;
+                        if (c != '\0')
+                        {
+                            string text = c.ToString().ToLowerInvariant();
+                            int mapped = MapTextChoiceToIndex(text);
+                            if (mapped >= 0)
+                                return mapped;
+                        }
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mappe la saisie texte ("1", "2", "3", "4", "0", "q", "quit")
+        /// vers un index de menu 0..4, ou -1 si invalide.
+        /// </summary>
+        private static int MapTextChoiceToIndex(string? choice)
+        {
+            if (string.IsNullOrWhiteSpace(choice))
+                return -1;
+
+            string normalized = choice.Trim().ToLowerInvariant();
+            return normalized switch
+            {
+                "1" => 0,
+                "2" => 1,
+                "3" => 2,
+                "4" => 3,
+                "0" => 4,
+                "q" => 4,
+                "quit" => 4,
+                _ => -1
+            };
         }
 
         private static void DisplayMenu()
@@ -97,6 +197,143 @@ namespace EasySave.Console.Tui
             System.Console.WriteLine($"0. {option0 ?? "Quit"}");
             System.Console.WriteLine();
             System.Console.Write(prompt ?? "Enter your choice: ");
+        }
+
+        /// <summary>
+        /// Version du menu qui affiche un curseur visuel ">" devant
+        /// l'option sélectionnée pour la navigation interactive.
+        /// </summary>
+        private static void DisplayMenu(int selectedIndex)
+        {
+            string? title = LangHelper.GetString("MenuTitle");
+            string? option1 = LangHelper.GetString("MenuOption1");
+            string? option2 = LangHelper.GetString("MenuOption2");
+            string? option3 = LangHelper.GetString("MenuOption3");
+            string? option4 = LangHelper.GetString("MenuOption4");
+            string? option0 = LangHelper.GetString("MenuOption0");
+
+            System.Console.WriteLine(title ?? "=== EasySave Menu ===");
+            System.Console.WriteLine();
+
+            WriteMenuLine(0, selectedIndex, "1", option1 ?? "Create a backup job");
+            WriteMenuLine(1, selectedIndex, "2", option2 ?? "List backup jobs");
+            WriteMenuLine(2, selectedIndex, "3", option3 ?? "Run backups");
+            WriteMenuLine(3, selectedIndex, "4", option4 ?? "Help");
+            WriteMenuLine(4, selectedIndex, "0", option0 ?? "Quit");
+        }
+
+        private static void WriteMenuLine(int index, int selectedIndex, string number, string text)
+        {
+            string prefix = index == selectedIndex ? ">" : " ";
+            System.Console.WriteLine($"{prefix} {number}. {text}");
+        }
+
+        /// <summary>
+        /// Lit le type de sauvegarde (Full/Differential).
+        /// - En mode interactif (entrée non redirigée) : menu avec flèches + Entrée/Espace.
+        /// - En mode tests (entrée redirigée) : saisie classique "1"/"2" comme avant.
+        /// </summary>
+        private static BackupType ReadBackupType()
+        {
+            if (!System.Console.IsInputRedirected)
+            {
+                return ShowBackupTypeInteractiveMenu();
+            }
+
+            while (true)
+            {
+                string? typePrompt = LangHelper.GetString("BackupTypeSelect");
+                System.Console.WriteLine();
+                System.Console.WriteLine(typePrompt ?? "Select backup type (1=Full, 2=Differential):");
+                System.Console.WriteLine("1. " + (LangHelper.GetString("FullBackup") ?? "Full"));
+                System.Console.WriteLine("2. " + (LangHelper.GetString("DifferentialBackup") ?? "Differential"));
+                System.Console.Write("> ");
+
+                string? typeInput = System.Console.ReadLine()?.Trim();
+                if (TryParseBackupType(typeInput, out BackupType backupType))
+                    return backupType;
+
+                string? invalidInputMsg = LangHelper.GetString("InvalidInput");
+                System.Console.WriteLine(invalidInputMsg ?? "Invalid backup type. Please choose 1 or 2.");
+            }
+        }
+
+        private static bool TryParseBackupType(string? input, out BackupType backupType)
+        {
+            backupType = BackupType.Full;
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            string value = input.Trim();
+            if (value == "1" || string.Equals(value, "full", StringComparison.OrdinalIgnoreCase))
+            {
+                backupType = BackupType.Full;
+                return true;
+            }
+
+            if (value == "2" || string.Equals(value, "differential", StringComparison.OrdinalIgnoreCase))
+            {
+                backupType = BackupType.Differential;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Menu interactif pour choisir le type de sauvegarde avec les flèches.
+        /// </summary>
+        private static BackupType ShowBackupTypeInteractiveMenu()
+        {
+            int selectedIndex = 0; // 0 = Full, 1 = Differential
+
+            while (true)
+            {
+                System.Console.Clear();
+
+                string? typePrompt = LangHelper.GetString("BackupTypeSelect");
+                string? full = LangHelper.GetString("FullBackup");
+                string? differential = LangHelper.GetString("DifferentialBackup");
+
+                System.Console.WriteLine(typePrompt ?? "Select backup type:");
+                System.Console.WriteLine();
+
+                WriteBackupTypeLine(0, selectedIndex, "1", full ?? "Full");
+                WriteBackupTypeLine(1, selectedIndex, "2", differential ?? "Differential");
+
+                string? hint = LangHelper.GetString("TuiNavigationHint");
+                System.Console.WriteLine();
+                System.Console.WriteLine(hint ?? "Use arrows to move, Enter/Space to validate, Esc to cancel.");
+
+                ConsoleKeyInfo keyInfo = System.Console.ReadKey(intercept: true);
+                switch (keyInfo.Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        selectedIndex = (selectedIndex + 2 - 1) % 2;
+                        break;
+                    case ConsoleKey.DownArrow:
+                        selectedIndex = (selectedIndex + 1) % 2;
+                        break;
+                    case ConsoleKey.Enter:
+                    case ConsoleKey.Spacebar:
+                        return selectedIndex == 0 ? BackupType.Full : BackupType.Differential;
+                    case ConsoleKey.Escape:
+                        // Par défaut, on revient à une sauvegarde complète si l'utilisateur annule.
+                        return BackupType.Full;
+                    default:
+                        // Support aussi la saisie directe "1"/"2".
+                        char c = keyInfo.KeyChar;
+                        if (c != '\0' && TryParseBackupType(c.ToString(), out BackupType parsed))
+                            return parsed;
+                        break;
+                }
+            }
+        }
+
+        private static void WriteBackupTypeLine(int index, int selectedIndex, string number, string text)
+        {
+            string prefix = index == selectedIndex ? ">" : " ";
+            System.Console.WriteLine($"{prefix} {number}. {text}");
         }
 
         private static async Task CreateJobAsync(IConfigurationRepository configRepository)
@@ -162,24 +399,7 @@ namespace EasySave.Console.Tui
                 return;
             }
 
-            string? typePrompt = LangHelper.GetString("BackupTypeSelect");
-            System.Console.Write($"{typePrompt ?? "Select backup type (1=Full, 2=Differential)"}: ");
-            string? typeInput = System.Console.ReadLine()?.Trim();
-            BackupType backupType;
-            if (typeInput == "1" || string.Equals(typeInput, "full", StringComparison.OrdinalIgnoreCase))
-            {
-                backupType = BackupType.Full;
-            }
-            else if (typeInput == "2" || string.Equals(typeInput, "differential", StringComparison.OrdinalIgnoreCase))
-            {
-                backupType = BackupType.Differential;
-            }
-            else
-            {
-                string? invalidInputMsg = LangHelper.GetString("InvalidInput");
-                System.Console.WriteLine(invalidInputMsg ?? "Invalid backup type. Job creation cancelled.");
-                return;
-            }
+            BackupType backupType = ReadBackupType();
 
             BackupJob newJob = new BackupJob
             {

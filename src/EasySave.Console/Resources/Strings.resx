@@ -162,4 +162,7 @@ When running backups, you can specify job IDs as :
   <data name="PressKeyContinue" xml:space="preserve">
     <value>Press any key to continue...</value>
   </data>
+  <data name="TuiNavigationHint" xml:space="preserve">
+    <value>Arrows: move | Enter/Space: validate | Esc: quit | 1-4 / 0 / q: numeric selection</value>
+  </data>
 </root>

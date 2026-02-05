@@ -59,6 +59,9 @@ namespace EasySave.Infrastructure.Backup
                 if (!jobById.TryGetValue(jobId, out BackupJob? job))
                     continue;
 
+                if (!string.IsNullOrWhiteSpace(job.TargetPath))
+                    _fileSystem.EnsureDirectoryExists(job.TargetPath);
+
                 int idx = progressList.FindIndex(p => p.BackupName == job.Name);
                 if (idx < 0) continue;
 
