@@ -13,6 +13,17 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        string? envBasePath = Environment.GetEnvironmentVariable("EASYSAVE_BASE_PATH");
+        string basePath = !string.IsNullOrWhiteSpace(envBasePath) ? envBasePath : AppContext.BaseDirectory;
+
+        IServiceProvider serviceProvider = CompositionRoot.Build(basePath);
+
+        if (CommandLineParser.ShouldRunTui(args))
+        {
+            await TuiRunner.RunAsync(serviceProvider);
+            return;
+        }
+
         IReadOnlyList<int> jobIds = CommandLineParser.Parse(args);
 
         if (!jobIds.Any())
@@ -22,10 +33,6 @@ class Program
             return;
         }
 
-        string? envBasePath = Environment.GetEnvironmentVariable("EASYSAVE_BASE_PATH");
-        string basePath = !string.IsNullOrWhiteSpace(envBasePath) ? envBasePath : AppContext.BaseDirectory;
-
-        IServiceProvider serviceProvider = CompositionRoot.Build(basePath);
         IBackupExecutor executor = serviceProvider.GetRequiredService<IBackupExecutor>();
 
         using var cts = new CancellationTokenSource();
