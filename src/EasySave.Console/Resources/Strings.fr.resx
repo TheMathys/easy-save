@@ -1,78 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
-    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-        <xsd:element name="root" msdata:IsDataSet="true">
-            
-        </xsd:element>
-    </xsd:schema>
-    <resheader name="resmimetype">
-        <value>text/microsoft-resx</value>
-    </resheader>
-    <resheader name="version">
-        <value>1.3</value>
-    </resheader>
-    <resheader name="reader">
-        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <resheader name="writer">
-        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <data name="BackupCompleted" xml:space="preserve">
-        <value>La sauvegarde est termninée.</value>
-    </data>
-    <data name="BackupError" xml:space="preserve">
-        <value>Erreur de sauvegarde !</value>
-    </data>
-    <data name="UsageHint" xml:space="preserve">
-        <value>Veuillez selectionner un chiffre allant de 1 à 3.</value>
-    </data>
-    <data name="BackupTypeSelect" xml:space="preserve">
-        <value>Sélectionner le type de sauvegarde.</value>
-    </data>
-    <data name="BackupStart" xml:space="preserve">
-        <value>Démarrer la sauvegarde.</value>
-    </data>
-    <data name="BackupCancel" xml:space="preserve">
-        <value>Annuler la sauvegarde (Ctrl+C).</value>
-    </data>
-    <data name="FullBackup" xml:space="preserve">
-        <value>Sauvegarde complète.</value>
-    </data>
-    <data name="DifferentialBackup" xml:space="preserve">
-        <value>Sauvegarde différentielle.</value>
-    </data>
-    <data name="BackupName" xml:space="preserve">
-        <value>Veuillez saisir le nom de la sauvegarde.</value>
-    </data>
-    <data name="SourceDirectory" xml:space="preserve">
-        <value>Répertoire source</value>
-    </data>
-    <data name="TargetDirectory" xml:space="preserve">
-        <value>Répertoire cible</value>
-    </data>
-    <data name="SelectLanguage" xml:space="preserve">
-        <value>Sélectionner la langue.</value>
-    </data>
-    <data name="English" xml:space="preserve">
-        <value>Anglais</value>
-    </data>
-    <data name="French" xml:space="preserve">
-        <value>Français</value>
-    </data>
-    <data name="BackupStrategyError" xml:space="preserve">
-        <value>Il y a une erreur dans le choix de la sauvegarde.</value>
-    </data>
-    <data name="BackupSucess" xml:space="preserve">
-        <value>Sauvegardee réussite.</value>
-    </data>
-    <data name="ExecutingJobs" xml:space="preserve">
-        <value>Travail en cours.</value>
-    </data>
-    <data name="ConsoleInitialized" xml:space="preserve">
-        <value>Console EasySave initialisée avec le chemin de base</value>
-    </data>
-    <data name="UsageJob" xml:space="preserve">
-        <value>Utilisation : EasySave.exe &lt;jobIds&gt; (ex : 1-3 ou 1;3;5)</value>
-    </data>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Messages cœur de sauvegarde -->
+  <data name="BackupCompleted" xml:space="preserve">
+    <value>La sauvegarde est terminée.</value>
+  </data>
+  <data name="BackupError" xml:space="preserve">
+    <value>Erreur de sauvegarde !</value>
+  </data>
+  <data name="BackupTypeSelect" xml:space="preserve">
+    <value>Sélectionner le type de sauvegarde.</value>
+  </data>
+  <data name="BackupStart" xml:space="preserve">
+    <value>Démarrer la sauvegarde.</value>
+  </data>
+  <data name="BackupCancel" xml:space="preserve">
+    <value>Annuler la sauvegarde (Ctrl+C).</value>
+  </data>
+  <data name="FullBackup" xml:space="preserve">
+    <value>Sauvegarde complète.</value>
+  </data>
+  <data name="DifferentialBackup" xml:space="preserve">
+    <value>Sauvegarde différentielle.</value>
+  </data>
+  <data name="BackupName" xml:space="preserve">
+    <value>Veuillez saisir le nom de la sauvegarde.</value>
+  </data>
+  <data name="SourceDirectory" xml:space="preserve">
+    <value>Répertoire source</value>
+  </data>
+  <data name="TargetDirectory" xml:space="preserve">
+    <value>Répertoire cible</value>
+  </data>
+
+  <!-- UI générique / langue -->
+  <data name="UsageHint" xml:space="preserve">
+    <value>Veuillez sélectionner un chiffre allant de 1 à 3.</value>
+  </data>
+  <data name="SelectLanguage" xml:space="preserve">
+    <value>Sélectionner la langue.</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>Anglais</value>
+  </data>
+  <data name="French" xml:space="preserve">
+    <value>Français</value>
+  </data>
+
+  <!-- Erreur de stratégie -->
+  <data name="BackupStrategyError" xml:space="preserve">
+    <value>Il y a une erreur dans le choix de la sauvegarde.</value>
+  </data>
+
+  <!-- Messages spécifiques à la console (CLI) -->
+  <data name="ExecutingJobs" xml:space="preserve">
+    <value>Travaux en cours</value>
+  </data>
+  <data name="ConsoleInitialized" xml:space="preserve">
+    <value>Console EasySave initialisée avec le chemin de base</value>
+  </data>
+  <data name="UsageJob" xml:space="preserve">
+    <value>Utilisation : EasySave.exe &lt;jobIds&gt; (ex : 1-3 ou 1;3;5)</value>
+  </data>
+  <!-- Ancienne clé conservée si déjà utilisée quelque part -->
+  <data name="BackupSucess" xml:space="preserve">
+    <value>Sauvegarde réussie.</value>
+  </data>
+  <!-- Nouvelles clés explicites utilisées par Program.cs -->
+  <data name="BackupSuccess" xml:space="preserve">
+    <value>Sauvegarde réussie.</value>
+  </data>
+  <data name="BackupCancelled" xml:space="preserve">
+    <value>Sauvegarde annulée par l'utilisateur.</value>
+  </data>
+
+  <!-- TUI : menu -->
+  <data name="MenuTitle" xml:space="preserve">
+    <value>=== Menu EasySave ===</value>
+  </data>
+  <data name="MenuOption1" xml:space="preserve">
+    <value>Créer un travail de sauvegarde</value>
+  </data>
+  <data name="MenuOption2" xml:space="preserve">
+    <value>Lister les travaux</value>
+  </data>
+  <data name="MenuOption3" xml:space="preserve">
+    <value>Lancer des sauvegardes</value>
+  </data>
+  <data name="MenuOption4" xml:space="preserve">
+    <value>Aide</value>
+  </data>
+  <data name="MenuOption0" xml:space="preserve">
+    <value>Quitter</value>
+  </data>
+  <data name="MenuPrompt" xml:space="preserve">
+    <value>Entrez votre choix :</value>
+  </data>
+  <data name="MenuInvalidChoice" xml:space="preserve">
+    <value>Choix invalide. Veuillez sélectionner 1-4 ou 0 pour quitter.</value>
+  </data>
+
+  <!-- TUI : gestion des travaux -->
+  <data name="CreateJobTitle" xml:space="preserve">
+    <value>=== Créer un travail de sauvegarde ===</value>
+  </data>
+  <data name="MaxJobsReached" xml:space="preserve">
+    <value>Nombre maximum de travaux (5) atteint. Impossible de créer plus de travaux.</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Entrée invalide.</value>
+  </data>
+  <data name="JobCreated" xml:space="preserve">
+    <value>Travail {0} créé avec succès.</value>
+  </data>
+  <data name="ListJobsTitle" xml:space="preserve">
+    <value>=== Travaux de sauvegarde ===</value>
+  </data>
+  <data name="NoJobsFound" xml:space="preserve">
+    <value>Aucun travail de sauvegarde trouvé.</value>
+  </data>
+  <data name="RunJobsTitle" xml:space="preserve">
+    <value>=== Lancer des sauvegardes ===</value>
+  </data>
+  <data name="SelectJobsPrompt" xml:space="preserve">
+    <value>Entrez les IDs des travaux à exécuter (ex. : 1-3 ou 1,3,5) :</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>=== Aide ===</value>
+  </data>
+  <data name="HelpText" xml:space="preserve">
+    <value>EasySave - Système de gestion de sauvegarde
+
+Options :
+  1. Créer un travail de sauvegarde - Ajouter une nouvelle configuration de sauvegarde
+  2. Lister les travaux - Afficher tous les travaux de sauvegarde configurés
+  3. Lancer des sauvegardes - Exécuter un ou plusieurs travaux de sauvegarde
+  4. Aide - Afficher ce message d'aide
+  0. Quitter - Quitter l'application
+
+Lors de l'exécution de sauvegardes, vous pouvez spécifier les IDs des travaux comme suit :
+  - ID unique : 1
+  - Plage : 1-3
+  - Liste : 1,3,5 ou 1;3;5</value>
+  </data>
+  <data name="PressKeyContinue" xml:space="preserve">
+    <value>Appuyez sur une touche pour continuer...</value>
+  </data>
 </root>

@@ -1,81 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
-    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-        <xsd:element name="root" msdata:IsDataSet="true">
-            
-        </xsd:element>
-    </xsd:schema>
-    <resheader name="resmimetype">
-        <value>text/microsoft-resx</value>
-    </resheader>
-    <resheader name="version">
-        <value>1.3</value>
-    </resheader>
-    <resheader name="reader">
-        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <resheader name="writer">
-        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <data name="BackupCompleted" xml:space="preserve">
-        <value>Save completed successfully.</value>
-    </data>
-    <data name="BackupError" xml:space="preserve">
-        <value>Saving failed !</value>
-    </data>
-    <data name="UsageHint" xml:space="preserve">
-        <value>Please select a number between 1 and 3.</value>
-    </data>
-    <data name="BackupTypeSelect" xml:space="preserve">
-        <value>Select the backup type.</value>
-    </data>
-    <data name="BackupStart" xml:space="preserve">
-        <value>Start the backup.</value>
-    </data>
-    <data name="BackupCancel" xml:space="preserve">
-        <value>Cancel the backup (Ctrl+C).</value>
-    </data>
-    <data name="FullBackup" xml:space="preserve">
-        <value>Full backup.</value>
-    </data>
-    <data name="DifferentialBackup" xml:space="preserve">
-        <value>Differential backup.</value>
-    </data>
-    <data name="BackupName" xml:space="preserve">
-        <value>Enter the backup name.</value>
-    </data>
-    <data name="SourceDirectory" xml:space="preserve">
-        <value>Source directory</value>
-    </data>
-    <data name="TargetDirectory" xml:space="preserve">
-        <value>Target directory</value>
-    </data>
-    <data name="SelectLanguage" xml:space="preserve">
-        <value>Select language.</value>
-    </data>
-    <data name="English" xml:space="preserve">
-        <value>English</value>
-    </data>
-    <data name="French" xml:space="preserve">
-        <value>French</value>
-    </data>
-    <data name="BackupStrategyError" xml:space="preserve">
-        <value>There is an error in the backup selection.</value>
-    </data>
-    <data name="BackupSucess" xml:space="preserve">
-        <value>Backup success.</value>
-    </data>
-    <data name="ExecutingJobs" xml:space="preserve">
-        <value>Executing jobs</value>
-    </data>
-    <data name="ConsoleInitialized" xml:space="preserve">
-        <value>EasySave console initialized with base path</value>
-    </data>
-    <data name="Usage" xml:space="preserve">
-        <value />
-    </data>
-    <data name="UsageJob" xml:space="preserve">
-        <value>Usage: EasySave.exe &lt;jobIds&gt; (e.g., 1-3 or 1;3;5)</value>
-    </data>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Core backup messages -->
+  <data name="BackupCompleted" xml:space="preserve">
+    <value>Save completed successfully.</value>
+  </data>
+  <data name="BackupError" xml:space="preserve">
+    <value>Saving failed !</value>
+  </data>
+  <data name="BackupTypeSelect" xml:space="preserve">
+    <value>Select the backup type.</value>
+  </data>
+  <data name="BackupStart" xml:space="preserve">
+    <value>Start the backup.</value>
+  </data>
+  <data name="BackupCancel" xml:space="preserve">
+    <value>Cancel the backup (Ctrl+C).</value>
+  </data>
+  <data name="FullBackup" xml:space="preserve">
+    <value>Full backup.</value>
+  </data>
+  <data name="DifferentialBackup" xml:space="preserve">
+    <value>Differential backup.</value>
+  </data>
+  <data name="BackupName" xml:space="preserve">
+    <value>Enter the backup name.</value>
+  </data>
+  <data name="SourceDirectory" xml:space="preserve">
+    <value>Source directory</value>
+  </data>
+  <data name="TargetDirectory" xml:space="preserve">
+    <value>Target directory</value>
+  </data>
+
+  <!-- Generic UI / language -->
+  <data name="UsageHint" xml:space="preserve">
+    <value>Please select a number between 1 and 3.</value>
+  </data>
+  <data name="SelectLanguage" xml:space="preserve">
+    <value>Select language.</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="French" xml:space="preserve">
+    <value>French</value>
+  </data>
+
+  <!-- Error on strategy selection -->
+  <data name="BackupStrategyError" xml:space="preserve">
+    <value>There is an error in the backup selection.</value>
+  </data>
+
+  <!-- Console (CLI) specific messages -->
+  <data name="ExecutingJobs" xml:space="preserve">
+    <value>Executing jobs</value>
+  </data>
+  <data name="ConsoleInitialized" xml:space="preserve">
+    <value>EasySave console initialized with base path</value>
+  </data>
+  <data name="UsageJob" xml:space="preserve">
+    <value>Usage: EasySave.exe &lt;jobIds&gt; (e.g., 1-3 or 1;3;5)</value>
+  </data>
+  <!-- Old key kept for backward-compat if referenced somewhere -->
+  <data name="BackupSucess" xml:space="preserve">
+    <value>Backup success.</value>
+  </data>
+  <!-- New explicit keys used by Program.cs -->
+  <data name="BackupSuccess" xml:space="preserve">
+    <value>Backup completed successfully.</value>
+  </data>
+  <data name="BackupCancelled" xml:space="preserve">
+    <value>Backup cancelled by user (Ctrl+C).</value>
+  </data>
+
+  <!-- TUI menu -->
+  <data name="MenuTitle" xml:space="preserve">
+    <value>=== EasySave Menu ===</value>
+  </data>
+  <data name="MenuOption1" xml:space="preserve">
+    <value>Create a backup job</value>
+  </data>
+  <data name="MenuOption2" xml:space="preserve">
+    <value>List backup jobs</value>
+  </data>
+  <data name="MenuOption3" xml:space="preserve">
+    <value>Run backups</value>
+  </data>
+  <data name="MenuOption4" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="MenuOption0" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="MenuPrompt" xml:space="preserve">
+    <value>Enter your choice :</value>
+  </data>
+  <data name="MenuInvalidChoice" xml:space="preserve">
+    <value>Invalid choice. Please select 1-4 or 0 to quit.</value>
+  </data>
+
+  <!-- TUI job management -->
+  <data name="CreateJobTitle" xml:space="preserve">
+    <value>=== Create Backup Job ===</value>
+  </data>
+  <data name="MaxJobsReached" xml:space="preserve">
+    <value>Maximum number of jobs (5) reached. Cannot create more jobs.</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Invalid input.</value>
+  </data>
+  <data name="JobCreated" xml:space="preserve">
+    <value>Job {0} created successfully.</value>
+  </data>
+  <data name="ListJobsTitle" xml:space="preserve">
+    <value>=== Backup Jobs ===</value>
+  </data>
+  <data name="NoJobsFound" xml:space="preserve">
+    <value>No backup jobs found.</value>
+  </data>
+  <data name="RunJobsTitle" xml:space="preserve">
+    <value>=== Run Backups ===</value>
+  </data>
+  <data name="SelectJobsPrompt" xml:space="preserve">
+    <value>Enter job IDs to run (e.g., 1-3 or 1,3,5) :</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>=== Help ===</value>
+  </data>
+  <data name="HelpText" xml:space="preserve">
+    <value>EasySave - Backup Management System
+
+Options :
+  1. Create a backup job - Add a new backup configuration
+  2. List backup jobs - Display all configured backup jobs
+  3. Run backups - Execute one or more backup jobs
+  4. Help - Show this help message
+  0. Quit - Exit the application
+
+When running backups, you can specify job IDs as :
+  - Single ID : 1
+  - Range : 1-3
+  - List : 1,3,5 or 1;3;5</value>
+  </data>
+  <data name="PressKeyContinue" xml:space="preserve">
+    <value>Press any key to continue...</value>
+  </data>
 </root>

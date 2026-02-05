@@ -24,7 +24,10 @@ namespace EasySave.Console.Cli
         {
             if (args == null || args.Length == 0)
                 return true;
-            return args.Length >= 1 && string.Equals(args[0], "--tui", StringComparison.OrdinalIgnoreCase);
+
+            // Le TUI n'est lancé explicitement que si le premier
+            // argument est --tui.
+            return string.Equals(args[0], "--tui", StringComparison.OrdinalIgnoreCase);
         }
 
         public static IReadOnlyList<int> Parse(string[] args)

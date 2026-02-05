@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Console.Tui;
+using EasySave.Console.Resources;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
@@ -47,8 +48,8 @@ public sealed class TuiRunnerTests : IDisposable
     public async Task RunAsync_DisplaysMenu_AndQuits_OnZeroChoice()
     {
         string input = "0" + Environment.NewLine;
-        using var output = new StringWriter();
-        using var inputReader = new StringReader(input);
+        using StringWriter output = new();
+        using StringReader inputReader = new(input);
         System.Console.SetIn(inputReader);
         System.Console.SetOut(output);
 
@@ -61,7 +62,7 @@ public sealed class TuiRunnerTests : IDisposable
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         string text = output.ToString();
         Assert.Contains("EasySave", text);              // titre du menu (EN ou FR)
@@ -73,7 +74,7 @@ public sealed class TuiRunnerTests : IDisposable
     public async Task RunAsync_ShowsError_OnInvalidChoice()
     {
         string input = "x" + Environment.NewLine + "0" + Environment.NewLine;
-        StringWriter output = new();
+        using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
 
@@ -86,10 +87,12 @@ public sealed class TuiRunnerTests : IDisposable
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         string text = output.ToString();
-        Assert.Contains("invalid", text, StringComparison.OrdinalIgnoreCase);
+        string? expected = LangHelper.GetString("MenuInvalidChoice");
+        Assert.False(string.IsNullOrWhiteSpace(expected));
+        Assert.Contains(expected!, text);
     }
 
     [Fact]
@@ -103,13 +106,13 @@ public sealed class TuiRunnerTests : IDisposable
             "1" + Environment.NewLine +     // type Full
             "0" + Environment.NewLine;      // retour menu puis quitter
 
-        StringWriter output = new();
+        using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
 
         (IServiceProvider provider, FakeConfigRepository repo, _) = CreateProvider(null);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         BackupConfiguration? config = await repo.LoadAsync(CancellationToken.None);
         Assert.NotNull(config);
@@ -123,7 +126,10 @@ public sealed class TuiRunnerTests : IDisposable
         Assert.Equal(BackupType.Full, job.Type);
 
         string text = output.ToString();
-        Assert.Contains("Job 1", text);
+        string? jobCreated = LangHelper.GetString("JobCreated");
+        Assert.False(string.IsNullOrWhiteSpace(jobCreated));
+        string expectedMessage = string.Format(jobCreated!, 1);
+        Assert.Contains(expectedMessage, text);
     }
 
     [Fact]
@@ -141,13 +147,13 @@ public sealed class TuiRunnerTests : IDisposable
         };
 
         string input = "2" + Environment.NewLine + "0" + Environment.NewLine;
-        StringWriter output = new();
+        using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         string text = output.ToString();
         Assert.Contains("Job 1", text);
@@ -175,27 +181,29 @@ public sealed class TuiRunnerTests : IDisposable
             "1,2" + Environment.NewLine +
             "0" + Environment.NewLine;
 
-        StringWriter output = new();
+        using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
 
         (IServiceProvider provider, _, FakeBackupExecutor executor) = CreateProvider(initialConfig);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         Assert.Single(executor.Executions);
         IReadOnlyList<int> executed = executor.Executions[0];
         Assert.Equal(new List<int> { 1, 2 }, executed);
 
         string text = output.ToString();
-        Assert.Contains("Starting backup", text);
+        string? backupStart = LangHelper.GetString("BackupStart");
+        Assert.False(string.IsNullOrWhiteSpace(backupStart));
+        Assert.Contains(backupStart!, text);
     }
 
     [Fact]
     public async Task RunAsync_ShowsHelp_WhenOption4Selected()
     {
         string input = "4" + Environment.NewLine + "0" + Environment.NewLine;
-        StringWriter output = new();
+        using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
 
@@ -208,10 +216,22 @@ public sealed class TuiRunnerTests : IDisposable
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
 
-        await TuiRunner.RunAsync(provider);
+        await TuiRunner.RunAsync(provider, enablePause: false);
 
         string text = output.ToString();
-        Assert.Contains("Help", text, StringComparison.OrdinalIgnoreCase);
+        string? helpTitle = LangHelper.GetString("HelpTitle");
+        string? helpText = LangHelper.GetString("HelpText");
+
+        Assert.True(!string.IsNullOrWhiteSpace(helpTitle) || !string.IsNullOrWhiteSpace(helpText));
+
+        if (!string.IsNullOrWhiteSpace(helpTitle))
+        {
+            Assert.Contains(helpTitle!, text);
+        }
+        else if (!string.IsNullOrWhiteSpace(helpText))
+        {
+            Assert.Contains(helpText!, text);
+        }
     }
 
     private sealed class FakeConfigRepository : IConfigurationRepository
