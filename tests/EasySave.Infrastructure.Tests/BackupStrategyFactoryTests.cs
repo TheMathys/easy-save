@@ -1,23 +1,3 @@
-<<<<<<< HEAD
-﻿using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using EasySave.Core.Interfaces;
-using EasySave.Core.Models;
-using EasySave.Infrastructure.Backup;
-using EasySave.Infrastructure.Tests;
-using Xunit;
-
-namespace EasySave.Infrastructure.Tests
-
-{
-    private readonly FullBackupStrategyTests _fullTests;
-    private readonly DifferentialBackupStrategyTests _differentialTests;
-    public sealed class BackupStrategyFactoryTests
-    {
-
-=======
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
 using EasySave.Infrastructure.Backup;
@@ -104,6 +84,5 @@ public sealed class BackupStrategyFactoryTests
 
         Assert.Same(result1, result2);
         Assert.Same(full, result1);
->>>>>>> 20b3911d27cfe82b07a5b875d06990bdee622349
     }
 }
