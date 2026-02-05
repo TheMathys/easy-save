@@ -6,6 +6,50 @@ namespace EasySave.Console.Tests {
 
 public sealed class CommandLineParserTests
 {
+    // --- ShouldRunTui tests ---
+
+    [Fact]
+    public void ShouldRunTui_ReturnsTrue_WhenArgsAreNull()
+    {
+        bool result = CommandLineParser.ShouldRunTui(null);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldRunTui_ReturnsTrue_WhenNoArgs()
+    {
+        string[] args = { };
+
+        bool result = CommandLineParser.ShouldRunTui(args);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldRunTui_ReturnsTrue_WhenFirstArgIsTui_CaseInsensitive()
+    {
+        string[] argsLower = { "--tui" };
+        string[] argsUpper = { "--TUI" };
+        string[] argsMixed = { "--TuI" };
+
+        Assert.True(CommandLineParser.ShouldRunTui(argsLower));
+        Assert.True(CommandLineParser.ShouldRunTui(argsUpper));
+        Assert.True(CommandLineParser.ShouldRunTui(argsMixed));
+    }
+
+    [Fact]
+    public void ShouldRunTui_ReturnsFalse_WhenFirstArgIsNotTui()
+    {
+        string[] args = { "1-3" };
+
+        bool result = CommandLineParser.ShouldRunTui(args);
+
+        Assert.False(result);
+    }
+
+    // --- Parse tests ---
+
     [Fact]
     public void Parse_ReturnsEmptyList_WhenNoArgs()
     {
