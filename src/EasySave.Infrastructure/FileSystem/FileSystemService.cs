@@ -55,9 +55,9 @@ namespace EasySave.Infrastructure.FileSystem
                 foreach (var file in Directory.EnumerateFiles(current))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var fi = new FileInfo(file);
-                    var relativePath = Path.GetRelativePath(sourcePath, file);
-                    yield return new FileItem(relativePath, file, fi.LastWriteTimeUtc);
+                    string relativePath = Path.GetRelativePath(sourcePath, file);
+                    DateTime lastWriteUtc = File.GetLastWriteTimeUtc(file);
+                    yield return new FileItem(relativePath, file, lastWriteUtc);
                 }
 
                 foreach (var dir in Directory.EnumerateDirectories(current))
@@ -95,6 +95,11 @@ namespace EasySave.Infrastructure.FileSystem
             }
         }
         
+        /// <summary>
+        /// Copy buffer size (80 KB). Trade-off between speed and memory usage to avoid overloading the machine.
+        /// </summary>
+        private const int CopyBufferSize = 81920;
+
         public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -102,13 +107,30 @@ namespace EasySave.Infrastructure.FileSystem
             {
                 string? dir = Path.GetDirectoryName(destinationPath);
                 if (!string.IsNullOrEmpty(dir))
-                {
                     EnsureDirectoryExists(dir);
+
+                var sourceOptions = new FileStreamOptions
+                {
+                    Mode = FileMode.Open,
+                    Access = FileAccess.Read,
+                    Share = FileShare.Read,
+                    Options = FileOptions.Asynchronous
+                };
+                var destOptions = new FileStreamOptions
+                {
+                    Mode = FileMode.Create,
+                    Access = FileAccess.Write,
+                    Share = FileShare.None,
+                    Options = FileOptions.Asynchronous
+                };
+
+                await using (var source = new FileStream(sourcePath, sourceOptions))
+                await using (var dest = new FileStream(destinationPath, destOptions))
+                {
+                    await source.CopyToAsync(dest, CopyBufferSize, cancellationToken).ConfigureAwait(false);
                 }
 
-                await Task.Run(() => File.Copy(sourcePath, destinationPath, true), cancellationToken);
                 stopwatch.Stop();
-    
                 return stopwatch.ElapsedMilliseconds;
             }
             catch

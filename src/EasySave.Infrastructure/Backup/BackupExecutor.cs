@@ -65,39 +65,44 @@ namespace EasySave.Infrastructure.Backup
                 int idx = progressList.FindIndex(p => p.BackupName == job.Name);
                 if (idx < 0) continue;
 
+                if (!string.IsNullOrWhiteSpace(job.TargetPath))
+                    _fileSystem.EnsureDirectoryExists(job.TargetPath);
+
                 IBackupStrategy strategy = _strategyFactory.GetStrategy(job.Type);
                 DateTime? differentialSince = job.Type == BackupType.Differential && config.LastFullBackupUtcByJobId.TryGetValue(job.Id, out DateTime since) ? since : null;
 
-                IAsyncEnumerable<FileItem> filesStream = _fileSystem.EnumerateFilesAsync(job.SourcePath, cancellationToken);
-                List<FileItem> eligibleFiles = new List<FileItem>();
-                await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, filesStream, differentialSince, cancellationToken))
-                    eligibleFiles.Add(f);
-
+                // First pass: compute total size and file count without keeping the list in memory.
                 long totalSize = 0L;
-                foreach (FileItem f in eligibleFiles)
+                int fileCount = 0;
+                IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, cancellationToken);
+                await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, pass1Stream, differentialSince, cancellationToken))
+                {
                     totalSize += _fileSystem.GetFileSize(f.FullSourcePath);
+                    fileCount++;
+                }
 
                 progressList[idx] = new BackupProgress
                 {
                     BackupName = job.Name,
                     LastActionTimestamp = DateTime.UtcNow,
                     State = BackupState.Active,
-                    TotalFilesCount = eligibleFiles.Count,
+                    TotalFilesCount = fileCount,
                     TotalSizeBytes = totalSize,
                     ProgressPercent = 0,
-                    RemainingFilesCount = eligibleFiles.Count,
+                    RemainingFilesCount = fileCount,
                     RemainingSizeBytes = totalSize,
                     CurrentSourcePath = null,
                     CurrentDestinationPath = null
                 };
                 await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
 
-                long bytesCompletedBeforeCurrentFile = 0L;
-
-                for (int i = 0; i < eligibleFiles.Count; i++)
+                // Second pass: stream and copy one file at a time so we never hold the full list.
+                long bytesCompleted = 0L;
+                int processedCount = 0;
+                IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, cancellationToken);
+                await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    FileItem item = eligibleFiles[i];
                     string destPath = Path.Combine(job.TargetPath, item.RelativePath);
                     string? dir = Path.GetDirectoryName(destPath);
                     if (!string.IsNullOrEmpty(dir))
@@ -111,17 +116,18 @@ namespace EasySave.Infrastructure.Backup
                     TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
                     await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSource, uncDest, fileSize, transferTime), cancellationToken).ConfigureAwait(false);
 
-                    bytesCompletedBeforeCurrentFile += fileSize;
-                    int remainingFiles = eligibleFiles.Count - (i + 1);
-                    long remainingSize = totalSize - bytesCompletedBeforeCurrentFile;
-                    double percentDone = totalSize > 0 ? Math.Round((double)bytesCompletedBeforeCurrentFile / totalSize * 100.0, 2) : 100.0;
+                    bytesCompleted += fileSize;
+                    processedCount++;
+                    int remainingFiles = fileCount - processedCount;
+                    long remainingSize = totalSize - bytesCompleted;
+                    double percentDone = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0;
 
                     progressList[idx] = new BackupProgress
                     {
                         BackupName = job.Name,
                         LastActionTimestamp = DateTime.UtcNow,
                         State = BackupState.Active,
-                        TotalFilesCount = eligibleFiles.Count,
+                        TotalFilesCount = fileCount,
                         TotalSizeBytes = totalSize,
                         ProgressPercent = percentDone,
                         RemainingFilesCount = remainingFiles,
@@ -137,7 +143,7 @@ namespace EasySave.Infrastructure.Backup
                     BackupName = job.Name,
                     LastActionTimestamp = DateTime.UtcNow,
                     State = BackupState.Completed,
-                    TotalFilesCount = eligibleFiles.Count,
+                    TotalFilesCount = fileCount,
                     TotalSizeBytes = totalSize,
                     ProgressPercent = 100,
                     RemainingFilesCount = 0,
