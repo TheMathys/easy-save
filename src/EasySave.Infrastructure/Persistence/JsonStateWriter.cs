@@ -60,7 +60,8 @@ namespace EasySave.Infrastructure.Persistence
                     RemainingFilesCount = p.RemainingFilesCount,
                     RemainingSizeBytes = p.RemainingSizeBytes,
                     CurrentSourcePath = p.CurrentSourcePath,
-                    CurrentDestinationPath = p.CurrentDestinationPath
+                    CurrentDestinationPath = p.CurrentDestinationPath,
+                    EstimatedTimeRemainingSeconds = p.EstimatedTimeRemainingSeconds
                 }).ToList()
             };
             string json = JsonSerializer.Serialize(dto, _jsonOptions) + Environment.NewLine;
@@ -85,6 +86,7 @@ namespace EasySave.Infrastructure.Persistence
             public long RemainingSizeBytes { get; set; }
             public string? CurrentSourcePath { get; set; }
             public string? CurrentDestinationPath { get; set; }
+            public double? EstimatedTimeRemainingSeconds { get; set; }
         }
     }
 }

@@ -186,7 +186,7 @@ public sealed class BackupExecutorTests : IDisposable
         CancellationTokenSource cts = new();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => executor.ExecuteAsync(new[] { 1 }, cts.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => executor.ExecuteAsync(new[] { 1 }, null, cts.Token));
     }
 
     [Fact]

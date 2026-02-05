@@ -288,7 +288,7 @@ public sealed class TuiRunnerTests : IDisposable
     {
         public List<IReadOnlyList<int>> Executions { get; } = new();
 
-        public Task ExecuteAsync(IReadOnlyList<int> jobIds, CancellationToken cancellationToken = default)
+        public Task ExecuteAsync(IReadOnlyList<int> jobIds, IProgress<BackupProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             Executions.Add(new List<int>(jobIds));
             return Task.CompletedTask;

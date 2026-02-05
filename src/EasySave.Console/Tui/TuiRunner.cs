@@ -8,6 +8,7 @@ using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using ProgressDisplay = EasySave.Console.ProgressDisplay;
 
 namespace EasySave.Console.Tui
 {
@@ -569,19 +570,35 @@ namespace EasySave.Console.Tui
             string? backupStartMsg = LangHelper.GetString("BackupStart");
             System.Console.WriteLine(backupStartMsg ?? "Starting backup...");
 
+            long lastProgressTicks = 0;
+            const int ProgressThrottleMs = 120;
+            var progress = new Progress<BackupProgress>(p =>
+            {
+                if (p?.State != BackupState.Active) return;
+                long now = Environment.TickCount64;
+                if (now - lastProgressTicks >= ProgressThrottleMs)
+                {
+                    lastProgressTicks = now;
+                    ProgressDisplay.WriteProgressLine(p);
+                }
+            });
+
             try
             {
-                await backupExecutor.ExecuteAsync(jobIds, cts.Token);
+                await backupExecutor.ExecuteAsync(jobIds, progress, cts.Token);
+                ProgressDisplay.ClearProgressLine();
                 string? backupCompletedMsg = LangHelper.GetString("BackupCompleted");
                 System.Console.WriteLine(backupCompletedMsg ?? "Backup completed successfully.");
             }
             catch (OperationCanceledException)
             {
+                ProgressDisplay.ClearProgressLine();
                 string? backupCancelMsg = LangHelper.GetString("BackupCancel");
                 System.Console.WriteLine(backupCancelMsg ?? "Backup cancelled by user.");
             }
             catch (Exception ex)
             {
+                ProgressDisplay.ClearProgressLine();
                 string? backupErrorMsg = LangHelper.GetString("BackupError");
                 System.Console.WriteLine($"{backupErrorMsg ?? "Backup failed"}: {ex.Message}");
             }

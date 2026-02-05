@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using EasySave.Console.Cli;
 using EasySave.Console.Tui;
 using EasySave.Console.Resources;
+using EasySave.Console;
+using EasySave.Core.Entities;
+using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
 using EasySave.ConsoleApp;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,18 +49,34 @@ class Program
         Console.WriteLine($"{LangHelper.GetString("ConsoleInitialized")}: {basePath}");
         Console.WriteLine($"{LangHelper.GetString("ExecutingJobs")}: {string.Join(", ", jobIds)}");
 
+        long lastProgressTicks = 0;
+        const int ProgressThrottleMs = 120;
+        var progress = new Progress<BackupProgress>(p =>
+        {
+            if (p?.State != BackupState.Active) return;
+            long now = Environment.TickCount64;
+            if (now - lastProgressTicks >= ProgressThrottleMs)
+            {
+                lastProgressTicks = now;
+                ProgressDisplay.WriteProgressLine(p);
+            }
+        });
+
         try
         {
-            await executor.ExecuteAsync(jobIds, cts.Token);
-            Console.WriteLine(LangHelper.GetString("BackupSuccess")); 
+            await executor.ExecuteAsync(jobIds, progress, cts.Token);
+            ProgressDisplay.ClearProgressLine();
+            Console.WriteLine(LangHelper.GetString("BackupSuccess"));
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine(LangHelper.GetString("BackupCancelled")); 
+            ProgressDisplay.ClearProgressLine();
+            Console.WriteLine(LangHelper.GetString("BackupCancelled"));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"{LangHelper.GetString("BackupError")}: {ex.Message}"); 
+            ProgressDisplay.ClearProgressLine();
+            Console.WriteLine($"{LangHelper.GetString("BackupError")}: {ex.Message}");
         }
     }
 }
