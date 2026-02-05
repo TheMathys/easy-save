@@ -60,6 +60,15 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annuler la sauvegarde..
+        /// </summary>
+        internal static string BackupCancel {
+            get {
+                return ResourceManager.GetString("BackupCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to La sauvegarde est termninée..
         /// </summary>
         internal static string BackupCompleted {
@@ -69,11 +78,110 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Erreur sur la sauvegarde !.
+        ///   Looks up a localized string similar to Erreur de sauvegarde !.
         /// </summary>
         internal static string BackupError {
             get {
                 return ResourceManager.GetString("BackupError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Veuillez saisir le nom de la sauvegarde..
+        /// </summary>
+        internal static string BackupName {
+            get {
+                return ResourceManager.GetString("BackupName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Démarrer la sauvegarde..
+        /// </summary>
+        internal static string BackupStart {
+            get {
+                return ResourceManager.GetString("BackupStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Il y a une erreur dans le choix de la sauvegarde..
+        /// </summary>
+        internal static string BackupStrategyError {
+            get {
+                return ResourceManager.GetString("BackupStrategyError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sélectionner le type de sauvegarde..
+        /// </summary>
+        internal static string BackupTypeSelect {
+            get {
+                return ResourceManager.GetString("BackupTypeSelect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sauvegarde différentielle..
+        /// </summary>
+        internal static string DifferentialBackup {
+            get {
+                return ResourceManager.GetString("DifferentialBackup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Anglais.
+        /// </summary>
+        internal static string English {
+            get {
+                return ResourceManager.GetString("English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Français.
+        /// </summary>
+        internal static string French {
+            get {
+                return ResourceManager.GetString("French", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sauvegarde complète..
+        /// </summary>
+        internal static string FullBackup {
+            get {
+                return ResourceManager.GetString("FullBackup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sélectionner la langue..
+        /// </summary>
+        internal static string SelectLanguage {
+            get {
+                return ResourceManager.GetString("SelectLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Répertoire source.
+        /// </summary>
+        internal static string SourceDirectory {
+            get {
+                return ResourceManager.GetString("SourceDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Répertoire cible.
+        /// </summary>
+        internal static string TargetDirectory {
+            get {
+                return ResourceManager.GetString("TargetDirectory", resourceCulture);
             }
         }
         

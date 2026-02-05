@@ -60,6 +60,15 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel the backup..
+        /// </summary>
+        internal static string BackupCancel {
+            get {
+                return ResourceManager.GetString("BackupCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save completed successfully..
         /// </summary>
         internal static string BackupCompleted {
@@ -78,7 +87,106 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please select a number from 1 to 3..
+        ///   Looks up a localized string similar to Enter the backup name..
+        /// </summary>
+        internal static string BackupName {
+            get {
+                return ResourceManager.GetString("BackupName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start the backup..
+        /// </summary>
+        internal static string BackupStart {
+            get {
+                return ResourceManager.GetString("BackupStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is an error in the backup selection..
+        /// </summary>
+        internal static string BackupStrategyError {
+            get {
+                return ResourceManager.GetString("BackupStrategyError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the backup type..
+        /// </summary>
+        internal static string BackupTypeSelect {
+            get {
+                return ResourceManager.GetString("BackupTypeSelect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Differential backup..
+        /// </summary>
+        internal static string DifferentialBackup {
+            get {
+                return ResourceManager.GetString("DifferentialBackup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to English.
+        /// </summary>
+        internal static string English {
+            get {
+                return ResourceManager.GetString("English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to French.
+        /// </summary>
+        internal static string French {
+            get {
+                return ResourceManager.GetString("French", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full backup..
+        /// </summary>
+        internal static string FullBackup {
+            get {
+                return ResourceManager.GetString("FullBackup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select language..
+        /// </summary>
+        internal static string SelectLanguage {
+            get {
+                return ResourceManager.GetString("SelectLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source directory.
+        /// </summary>
+        internal static string SourceDirectory {
+            get {
+                return ResourceManager.GetString("SourceDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target directory.
+        /// </summary>
+        internal static string TargetDirectory {
+            get {
+                return ResourceManager.GetString("TargetDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a number between 1 and 3..
         /// </summary>
         internal static string UsageHint {
             get {

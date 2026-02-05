@@ -22,9 +22,45 @@
         <value>La sauvegarde est termninée.</value>
     </data>
     <data name="BackupError" xml:space="preserve">
-        <value>Erreur sur la sauvegarde !</value>
+        <value>Erreur de sauvegarde !</value>
     </data>
     <data name="UsageHint" xml:space="preserve">
         <value>Veuillez selectionner un chiffre allant de 1 à 3.</value>
+    </data>
+    <data name="BackupTypeSelect" xml:space="preserve">
+        <value>Sélectionner le type de sauvegarde.</value>
+    </data>
+    <data name="BackupStart" xml:space="preserve">
+        <value>Démarrer la sauvegarde.</value>
+    </data>
+    <data name="BackupCancel" xml:space="preserve">
+        <value>Annuler la sauvegarde.</value>
+    </data>
+    <data name="FullBackup" xml:space="preserve">
+        <value>Sauvegarde complète.</value>
+    </data>
+    <data name="DifferentialBackup" xml:space="preserve">
+        <value>Sauvegarde différentielle.</value>
+    </data>
+    <data name="BackupName" xml:space="preserve">
+        <value>Veuillez saisir le nom de la sauvegarde.</value>
+    </data>
+    <data name="SourceDirectory" xml:space="preserve">
+        <value>Répertoire source</value>
+    </data>
+    <data name="TargetDirectory" xml:space="preserve">
+        <value>Répertoire cible</value>
+    </data>
+    <data name="SelectLanguage" xml:space="preserve">
+        <value>Sélectionner la langue.</value>
+    </data>
+    <data name="English" xml:space="preserve">
+        <value>Anglais</value>
+    </data>
+    <data name="French" xml:space="preserve">
+        <value>Français</value>
+    </data>
+    <data name="BackupStrategyError" xml:space="preserve">
+        <value>Il y a une erreur dans le choix de la sauvegarde.</value>
     </data>
 </root>

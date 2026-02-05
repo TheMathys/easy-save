@@ -25,6 +25,42 @@
         <value>Saving failed !</value>
     </data>
     <data name="UsageHint" xml:space="preserve">
-        <value>Please select a number from 1 to 3.</value>
+        <value>Please select a number between 1 and 3.</value>
+    </data>
+    <data name="BackupTypeSelect" xml:space="preserve">
+        <value>Select the backup type.</value>
+    </data>
+    <data name="BackupStart" xml:space="preserve">
+        <value>Start the backup.</value>
+    </data>
+    <data name="BackupCancel" xml:space="preserve">
+        <value>Cancel the backup.</value>
+    </data>
+    <data name="FullBackup" xml:space="preserve">
+        <value>Full backup.</value>
+    </data>
+    <data name="DifferentialBackup" xml:space="preserve">
+        <value>Differential backup.</value>
+    </data>
+    <data name="BackupName" xml:space="preserve">
+        <value>Enter the backup name.</value>
+    </data>
+    <data name="SourceDirectory" xml:space="preserve">
+        <value>Source directory</value>
+    </data>
+    <data name="TargetDirectory" xml:space="preserve">
+        <value>Target directory</value>
+    </data>
+    <data name="SelectLanguage" xml:space="preserve">
+        <value>Select language.</value>
+    </data>
+    <data name="English" xml:space="preserve">
+        <value>English</value>
+    </data>
+    <data name="French" xml:space="preserve">
+        <value>French</value>
+    </data>
+    <data name="BackupStrategyError" xml:space="preserve">
+        <value>There is an error in the backup selection.</value>
     </data>
 </root>
