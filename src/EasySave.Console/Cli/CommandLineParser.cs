@@ -13,6 +13,20 @@ namespace EasySave.Console.Cli
     /// </summary>
     public static class CommandLineParser
     {
+        /// <summary>
+        /// Indicates whether the application should start the TUI (no arguments or first argument is --tui).
+        /// </summary>
+        /// <param name="args">Command-line arguments.</param>
+        /// <returns>
+        /// True to start the TUI, false to run in CLI mode (e.g. EasySave 1-3).
+        /// </returns>
+        public static bool ShouldRunTui(string[]? args)
+        {
+            if (args == null || args.Length == 0)
+                return true;
+            return args.Length >= 1 && string.Equals(args[0], "--tui", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static IReadOnlyList<int> Parse(string[] args)
         {
             if (args == null || args.Length == 0)
