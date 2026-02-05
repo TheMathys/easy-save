@@ -109,11 +109,41 @@
   <data name="MenuOption0" xml:space="preserve">
     <value>Quit</value>
   </data>
+  <data name="TuiOptionDelete" xml:space="preserve">
+    <value>Delete a backup job</value>
+  </data>
+  <data name="TuiOptionEdit" xml:space="preserve">
+    <value>Edit a backup job</value>
+  </data>
+  <data name="TuiOptionViewPaths" xml:space="preserve">
+    <value>View paths (config and logs)</value>
+  </data>
   <data name="MenuPrompt" xml:space="preserve">
     <value>Enter your choice :</value>
   </data>
   <data name="MenuInvalidChoice" xml:space="preserve">
-    <value>Invalid choice. Please select 1-4 or 0 to quit.</value>
+    <value>Invalid choice. Please select 1-7 or 0 to quit.</value>
+  </data>
+  <data name="TuiPromptDeleteJobId" xml:space="preserve">
+    <value>Enter the job ID to delete (1-5) :</value>
+  </data>
+  <data name="TuiConfirmDelete" xml:space="preserve">
+    <value>Delete job "{0}"? (y/n)</value>
+  </data>
+  <data name="TuiJobDeleted" xml:space="preserve">
+    <value>Job {0} has been deleted.</value>
+  </data>
+  <data name="TuiPromptEditJobId" xml:space="preserve">
+    <value>Enter the job ID to edit (1-5) :</value>
+  </data>
+  <data name="TuiJobUpdated" xml:space="preserve">
+    <value>Job {0} has been updated.</value>
+  </data>
+  <data name="TuiViewPathsConfig" xml:space="preserve">
+    <value>Config, state and log directory :</value>
+  </data>
+  <data name="TuiViewPathsHint" xml:space="preserve">
+    <value>backup-config.json, state.json and daily log files (yyyy-MM-dd.json) are stored in this directory.</value>
   </data>
 
   <!-- TUI job management -->
@@ -147,23 +177,26 @@
   <data name="HelpText" xml:space="preserve">
     <value>EasySave - Backup Management System
 
-Options :
+Options:
   1. Create a backup job - Add a new backup configuration
   2. List backup jobs - Display all configured backup jobs
   3. Run backups - Execute one or more backup jobs
-  4. Help - Show this help message
+  4. Delete a backup job - Remove a job (with confirmation)
+  5. Edit a backup job - Modify name, paths, type, exclusions
+  6. View paths (config and logs) - Show directory for config, state and logs
+  7. Help - Show this help message
   0. Quit - Exit the application
 
-When running backups, you can specify job IDs as :
-  - Single ID : 1
-  - Range : 1-3
-  - List : 1,3,5 or 1;3;5</value>
+When running backups, you can specify job IDs as:
+  - Single ID: 1
+  - Range: 1-3
+  - List: 1,3,5 or 1;3;5</value>
   </data>
   <data name="PressKeyContinue" xml:space="preserve">
     <value>Press any key to continue...</value>
   </data>
   <data name="TuiNavigationHint" xml:space="preserve">
-    <value>Arrows: move | Enter/Space: validate | Esc: quit | 1-4 / 0 / q: numeric selection</value>
+    <value>Arrows: move | Enter/Space: validate | Esc: quit | 1-7 / 0 / q: numeric selection</value>
   </data>
   <data name="ExcludeExtensionsPrompt" xml:space="preserve">
     <value>Exclude file extensions (comma-separated, example .tmp,.log). Leave empty for none:</value>

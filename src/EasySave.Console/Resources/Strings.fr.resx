@@ -109,11 +109,41 @@
   <data name="MenuOption0" xml:space="preserve">
     <value>Quitter</value>
   </data>
+  <data name="TuiOptionDelete" xml:space="preserve">
+    <value>Supprimer un travail</value>
+  </data>
+  <data name="TuiOptionEdit" xml:space="preserve">
+    <value>Modifier un travail</value>
+  </data>
+  <data name="TuiOptionViewPaths" xml:space="preserve">
+    <value>Voir les chemins (config et logs)</value>
+  </data>
   <data name="MenuPrompt" xml:space="preserve">
     <value>Entrez votre choix :</value>
   </data>
   <data name="MenuInvalidChoice" xml:space="preserve">
-    <value>Choix invalide. Veuillez sélectionner 1-4 ou 0 pour quitter.</value>
+    <value>Choix invalide. Veuillez sélectionner 1-7 ou 0 pour quitter.</value>
+  </data>
+  <data name="TuiPromptDeleteJobId" xml:space="preserve">
+    <value>Entrez l'ID du travail à supprimer (1-5) :</value>
+  </data>
+  <data name="TuiConfirmDelete" xml:space="preserve">
+    <value>Supprimer le travail « {0} » ? (o/n)</value>
+  </data>
+  <data name="TuiJobDeleted" xml:space="preserve">
+    <value>Le travail {0} a été supprimé.</value>
+  </data>
+  <data name="TuiPromptEditJobId" xml:space="preserve">
+    <value>Entrez l'ID du travail à modifier (1-5) :</value>
+  </data>
+  <data name="TuiJobUpdated" xml:space="preserve">
+    <value>Le travail {0} a été mis à jour.</value>
+  </data>
+  <data name="TuiViewPathsConfig" xml:space="preserve">
+    <value>Répertoire config, état et logs :</value>
+  </data>
+  <data name="TuiViewPathsHint" xml:space="preserve">
+    <value>backup-config.json, state.json et les fichiers de log journaliers (yyyy-MM-dd.json) sont stockés dans ce répertoire.</value>
   </data>
 
   <!-- TUI : gestion des travaux -->
@@ -148,10 +178,13 @@
     <value>EasySave - Système de gestion de sauvegarde
 
 Options :
-  1. Créer un travail de sauvegarde - Ajouter une nouvelle configuration de sauvegarde
-  2. Lister les travaux - Afficher tous les travaux de sauvegarde configurés
-  3. Lancer des sauvegardes - Exécuter un ou plusieurs travaux de sauvegarde
-  4. Aide - Afficher ce message d'aide
+  1. Créer un travail - Ajouter une nouvelle configuration de sauvegarde
+  2. Lister les travaux - Afficher tous les travaux configurés
+  3. Lancer des sauvegardes - Exécuter un ou plusieurs travaux
+  4. Supprimer un travail - Retirer un travail (avec confirmation)
+  5. Modifier un travail - Modifier nom, chemins, type, exclusions
+  6. Voir les chemins (config et logs) - Afficher le répertoire config, état et logs
+  7. Aide - Afficher ce message d'aide
   0. Quitter - Quitter l'application
 
 Lors de l'exécution de sauvegardes, vous pouvez spécifier les IDs des travaux comme suit :
@@ -163,7 +196,7 @@ Lors de l'exécution de sauvegardes, vous pouvez spécifier les IDs des travaux 
     <value>Appuyez sur une touche pour continuer...</value>
   </data>
   <data name="TuiNavigationHint" xml:space="preserve">
-    <value>Flèches : déplacer | Entrée/Espace : valider | Échap : quitter | 1-4 / 0 / q : sélection numérique</value>
+    <value>Flèches : déplacer | Entrée/Espace : valider | Échap : quitter | 1-7 / 0 / q : sélection numérique</value>
   </data>
   <data name="ExcludeExtensionsPrompt" xml:space="preserve">
     <value>Exclure des extensions de fichiers (séparées par des virgules, exemple: .tmp,.log). Vide pour aucune :</value>
