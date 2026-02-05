@@ -20,29 +20,23 @@ namespace EasySave.Tests
         [Fact]
         public void GetString_ExistingKey_ReturnsCorrectString()
         {
-            // Arrange : Assure-toi d'avoir Strings.resx avec une clé "Welcome"
-            // Act
-            var result = LangHelper.GetString("Welcome");
+            var result = LangHelper.GetString("BackupCancel");
 
-            // Assert : Adapte selon ta vraie valeur dans Strings.resx
             Assert.NotNull(result);
-            Assert.Contains("Welcome", result); // Ou la vraie valeur
+            Assert.Contains("Cancel the backup.", result); 
         }
 
         [Fact]
         public void GetString_NonExistingKey_ReturnsNull()
         {
-            // Act
             var result = LangHelper.GetString("NonExistentKey");
 
-            // Assert
             Assert.Null(result);
         }
 
         [Fact]
         public void GetString_NullKey_ReturnsNull()
         {
-            // Act & Assert
             Assert.Null(LangHelper.GetString(null));
         }
     }
