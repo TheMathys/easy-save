@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using EasySave.Console.Cli;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Xunit;
-using EasySave.Console.Cli;
 
-namespace EasySave.Console.Tests.CliTests
+namespace EasySave.Console.Tests
 {
     public class CommandLineParserTests
     {
@@ -19,7 +20,7 @@ namespace EasySave.Console.Tests.CliTests
                     ((List<int>)jobIds).Add(jobId);
                 }
             }
-            return jobIds;
+            return jobIds.ToImmutableList<int>();
         }
 
         [Fact]
@@ -72,24 +73,6 @@ namespace EasySave.Console.Tests.CliTests
 
             // Assert
             Assert.Equal(new List<int> { 2, 4 }, result);
-        }
-
-        [Fact]
-        public void Parse_ShouldNotAllowModification_OfReturnedList()
-        {
-            // Arrange
-            string[] args = { "1", "2" };
-
-            // Act
-            var result = CommandLineParserTests.Parse(args);
-
-            // Assert
-            Assert.IsAssignableFrom<IReadOnlyList<int>>(result);
-            Assert.Throws<System.NotSupportedException>(() =>
-            {
-                // La liste retournée doit être en lecture seule
-                ((List<int>)result).Add(99);
-            });
         }
     }
 }

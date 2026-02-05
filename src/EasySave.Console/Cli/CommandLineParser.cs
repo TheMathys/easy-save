@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 
 namespace EasySave.Console.Cli
@@ -25,7 +26,7 @@ namespace EasySave.Console.Cli
                     ((List<int>)jobIds).Add(jobId);
                 }
             }
-            return jobIds;
+            return jobIds.ToImmutableList<int>();
         }
     }
 }
