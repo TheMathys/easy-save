@@ -60,7 +60,7 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annuler la sauvegarde..
+        ///   Looks up a localized string similar to Annuler la sauvegarde (Ctrl+C)..
         /// </summary>
         internal static string BackupCancel {
             get {
@@ -114,11 +114,29 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sauvegardee réussite..
+        /// </summary>
+        internal static string BackupSucess {
+            get {
+                return ResourceManager.GetString("BackupSucess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sélectionner le type de sauvegarde..
         /// </summary>
         internal static string BackupTypeSelect {
             get {
                 return ResourceManager.GetString("BackupTypeSelect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Console EasySave initialisée avec le chemin de base.
+        /// </summary>
+        internal static string ConsoleInitialized {
+            get {
+                return ResourceManager.GetString("ConsoleInitialized", resourceCulture);
             }
         }
         
@@ -137,6 +155,15 @@ namespace EasySave.Console.Resources {
         internal static string English {
             get {
                 return ResourceManager.GetString("English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Travail en cours..
+        /// </summary>
+        internal static string ExecutingJobs {
+            get {
+                return ResourceManager.GetString("ExecutingJobs", resourceCulture);
             }
         }
         
@@ -191,6 +218,15 @@ namespace EasySave.Console.Resources {
         internal static string UsageHint {
             get {
                 return ResourceManager.GetString("UsageHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Utilisation : EasySave.exe &lt;jobIds&gt; (ex : 1-3 ou 1;3;5).
+        /// </summary>
+        internal static string UsageJob {
+            get {
+                return ResourceManager.GetString("UsageJob", resourceCulture);
             }
         }
     }
