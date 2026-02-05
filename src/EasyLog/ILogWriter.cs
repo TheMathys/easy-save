@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 namespace EasyLog
 {
     /// <summary>
-    /// Internal contract for a log writer.
+    /// Public contract for a log writer.
     /// Implementations write a log entry asynchronously.
     /// </summary>
-    internal interface ILogWriter
+    public interface ILogWriter
     {
         /// <summary>
         /// Writes a log entry asynchronously.

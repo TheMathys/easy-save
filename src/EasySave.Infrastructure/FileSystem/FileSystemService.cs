@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 
 namespace EasySave.Infrastructure.FileSystem
 {
@@ -16,11 +18,25 @@ namespace EasySave.Infrastructure.FileSystem
     {
         public void EnsureDirectoryExists(string directoryPath)
         {
-            FileInfo fi = new FileInfo(directoryPath);
-            if (!fi.Directory.Exists)
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        private static string GetUncPathWindows(string path)
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
+                return fullPath; // déjà UNC
+
+            var drive = Path.GetPathRoot(fullPath);
+            if (string.IsNullOrEmpty(drive) || drive.Length < 2)
+                return fullPath;
+
+            int length = 260;
+            StringBuilder sb = new StringBuilder(length);
+            if (NativeMethods.WNetGetConnectionW(drive.TrimEnd('\\'), sb, ref length) == 0)
+                return fullPath.Replace(drive, sb.ToString().TrimEnd('\\') + Path.DirectorySeparatorChar);
+
+            return fullPath;
         }
 
         public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -56,20 +72,27 @@ namespace EasySave.Infrastructure.FileSystem
 
         public long GetFileSize(string path)
         {
-            FileInfo fi = new FileInfo(path);
-            return fi.Length;
+            return new FileInfo(path).Length;
         }
 
         public DateTime GetLastWriteTimeUtc(string path)
         {
-            FileInfo fi = new FileInfo(path);
-            return fi.LastWriteTimeUtc;
+            return new FileInfo(path).LastWriteTimeUtc;
         }
 
         public string GetUncPath(string path)
         {
-            FileInfo fi = new FileInfo(path);
-            return fi.FullName;
+            if (string.IsNullOrWhiteSpace(path)) return path;
+            try
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    return GetUncPathWindows(path);
+                return Path.GetFullPath(path);
+            }
+            catch
+            {
+                return Path.GetFullPath(path);
+            }
         }
         
         public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
@@ -93,6 +116,11 @@ namespace EasySave.Infrastructure.FileSystem
                 stopwatch.Stop();
                 return -stopwatch.ElapsedMilliseconds;
             }
+        }
+        private static class NativeMethods
+        {
+            [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern int WNetGetConnectionW(string localName, StringBuilder remoteName, ref int length);
         }
     }
 }
