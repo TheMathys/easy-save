@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Console.Cli;
+using EasySave.Console.Resources;
 using EasySave.Core.Interfaces;
 using EasySave.ConsoleApp;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,7 @@ class Program
 
         if (!jobIds.Any())
         {
-            string usage = "Usage: EasySave.exe <jobIds> (ex: 1-3 ou 1;3;5)";
+            string usage = $"{LangHelper.GetString("UsageJob")}";
             Console.WriteLine(usage);
             return;
         }
@@ -34,21 +35,21 @@ class Program
             cts.Cancel();
         };
 
-        Console.WriteLine($"EasySave console initialized with base path: {basePath}");
-        Console.WriteLine($"Executing jobs: {string.Join(", ", jobIds)}");
+        Console.WriteLine($"{LangHelper.GetString("ConsoleInitialized")}: {basePath}");
+        Console.WriteLine($"{LangHelper.GetString("ExecutingJobs")}: {string.Join(", ", jobIds)}");
 
         try
         {
             await executor.ExecuteAsync(jobIds, cts.Token);
-            Console.WriteLine("Backup jobs completed successfully."); 
+            Console.WriteLine(LangHelper.GetString("BackupSuccess")); 
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("Backup cancelled by user (Ctrl+C)."); 
+            Console.WriteLine(LangHelper.GetString("BackupCancelled")); 
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Backup failed: {ex.Message}"); 
+            Console.WriteLine($"{LangHelper.GetString("BackupError")}: {ex.Message}"); 
         }
     }
 }
