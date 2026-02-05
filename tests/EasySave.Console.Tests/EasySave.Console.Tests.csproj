@@ -22,8 +22,4 @@
     <ProjectReference Include="..\..\src\EasySave.Console\EasySave.Console.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="CliTests\" />
-  </ItemGroup>
-
 </Project>
