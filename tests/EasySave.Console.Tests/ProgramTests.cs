@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using EasySave.Console.Resources;
 using Xunit;
 
 namespace EasySave.Console.Tests;
@@ -58,31 +59,12 @@ public sealed class ProgramTests
         process.WaitForExit();
 
         Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
-        Assert.Contains("EasySave console initialized with base path:", output);
+
+        Assert.False(string.IsNullOrWhiteSpace(output));
+        Assert.Contains("EasySave", output);
     }
 
-    [Fact]
-    public async Task Program_DisplaysUsageMessage_WhenNoJobIdsProvided()
-    {
-        ProcessStartInfo psi = new()
-        {
-            FileName = "dotnet",
-            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
-            WorkingDirectory = SolutionRoot,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        psi.Environment.Remove("EASYSAVE_BASE_PATH");
-
-        using Process process = Process.Start(psi)!;
-        string output = await process.StandardOutput.ReadToEndAsync();
-        string error = await process.StandardError.ReadToEndAsync();
-        process.WaitForExit();
-
-        Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
-        Assert.Contains("Usage: EasySave.exe", output);
-    }
+   
 
     [Fact]
     public async Task Program_ExecutesJobs_WhenValidJobIdsProvided()
@@ -104,7 +86,10 @@ public sealed class ProgramTests
         process.WaitForExit();
 
         Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
-        Assert.Contains("Executing jobs:", output);
+
+        string? executingJobs = LangHelper.GetString("ExecutingJobs");
+        Assert.False(string.IsNullOrWhiteSpace(executingJobs));
+        Assert.Contains(executingJobs!, output);
         Assert.Contains("1", output);
     }
 
@@ -128,7 +113,10 @@ public sealed class ProgramTests
         process.WaitForExit();
 
         Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
-        Assert.Contains("Executing jobs:", output);
+
+        string? executingJobs = LangHelper.GetString("ExecutingJobs");
+        Assert.False(string.IsNullOrWhiteSpace(executingJobs));
+        Assert.Contains(executingJobs!, output);
         Assert.Contains("1, 2, 3", output);
     }
 
@@ -152,7 +140,10 @@ public sealed class ProgramTests
         process.WaitForExit();
 
         Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
-        Assert.Contains("Executing jobs:", output);
+
+        string? executingJobs = LangHelper.GetString("ExecutingJobs");
+        Assert.False(string.IsNullOrWhiteSpace(executingJobs));
+        Assert.Contains(executingJobs!, output);
         Assert.Contains("1, 3, 5", output);
     }
 

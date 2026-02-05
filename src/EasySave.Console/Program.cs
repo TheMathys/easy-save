@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Console.Cli;
+using EasySave.Console.Tui;
 using EasySave.Console.Resources;
 using EasySave.Core.Interfaces;
 using EasySave.ConsoleApp;

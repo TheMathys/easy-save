@@ -18,10 +18,21 @@ namespace EasySave.Console.Tui
     {
         /// <summary>
         /// Runs the TUI menu loop, resolving required services from the provided service provider.
+        /// Shows the \"press any key\" pause between iterations.
         /// </summary>
         /// <param name="provider">Service provider to resolve IConfigurationRepository and IBackupExecutor.</param>
+        public static Task RunAsync(IServiceProvider provider)
+        {
+            return RunAsync(provider, enablePause: true);
+        }
+
+        /// <summary>
+        /// Runs the TUI menu loop with an option to disable the \"press any key\" pause (useful for tests).
+        /// </summary>
+        /// <param name="provider">Service provider to resolve IConfigurationRepository and IBackupExecutor.</param>
+        /// <param name="enablePause">If true, shows the \"press any key to continue\" prompt between iterations.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public static async Task RunAsync(IServiceProvider provider)
+        public static async Task RunAsync(IServiceProvider provider, bool enablePause)
         {
             IConfigurationRepository configRepository = provider.GetRequiredService<IConfigurationRepository>();
             IBackupExecutor backupExecutor = provider.GetRequiredService<IBackupExecutor>();
@@ -57,7 +68,7 @@ namespace EasySave.Console.Tui
                         break;
                 }
 
-                if (running && !System.Console.IsInputRedirected && !System.Console.IsOutputRedirected)
+                if (running && enablePause)
                 {
                     System.Console.WriteLine();
                     System.Console.WriteLine(LangHelper.GetString("PressKeyContinue"));
