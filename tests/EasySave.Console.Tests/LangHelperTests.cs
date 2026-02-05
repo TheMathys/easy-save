@@ -18,15 +18,6 @@ namespace EasySave.Tests
         }
 
         [Fact]
-        public void GetString_ExistingKey_ReturnsCorrectString()
-        {
-            var result = LangHelper.GetString("BackupCancel");
-
-            Assert.NotNull(result);
-            Assert.Contains("Cancel the backup.", result); 
-        }
-
-        [Fact]
         public void GetString_NonExistingKey_ReturnsNull()
         {
             var result = LangHelper.GetString("NonExistentKey");

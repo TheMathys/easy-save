@@ -21,7 +21,7 @@ public sealed class ProgramTests
         ProcessStartInfo psi = new()
         {
             FileName = "dotnet",
-            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\" -- 1",
             WorkingDirectory = SolutionRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -44,7 +44,7 @@ public sealed class ProgramTests
         ProcessStartInfo psi = new()
         {
             FileName = "dotnet",
-            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\" -- 1",
             WorkingDirectory = SolutionRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -59,6 +59,101 @@ public sealed class ProgramTests
 
         Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
         Assert.Contains("EasySave console initialized with base path:", output);
+    }
+
+    [Fact]
+    public async Task Program_DisplaysUsageMessage_WhenNoJobIdsProvided()
+    {
+        ProcessStartInfo psi = new()
+        {
+            FileName = "dotnet",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
+            WorkingDirectory = SolutionRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.Environment.Remove("EASYSAVE_BASE_PATH");
+
+        using Process process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        string error = await process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+
+        Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
+        Assert.Contains("Usage: EasySave.exe", output);
+    }
+
+    [Fact]
+    public async Task Program_ExecutesJobs_WhenValidJobIdsProvided()
+    {
+        ProcessStartInfo psi = new()
+        {
+            FileName = "dotnet",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\" -- 1",
+            WorkingDirectory = SolutionRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.Environment.Remove("EASYSAVE_BASE_PATH");
+
+        using Process process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        string error = await process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+
+        Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
+        Assert.Contains("Executing jobs:", output);
+        Assert.Contains("1", output);
+    }
+
+    [Fact]
+    public async Task Program_ExecutesMultipleJobs_WhenRangeProvided()
+    {
+        ProcessStartInfo psi = new()
+        {
+            FileName = "dotnet",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\" -- 1-3",
+            WorkingDirectory = SolutionRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.Environment.Remove("EASYSAVE_BASE_PATH");
+
+        using Process process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        string error = await process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+
+        Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
+        Assert.Contains("Executing jobs:", output);
+        Assert.Contains("1, 2, 3", output);
+    }
+
+    [Fact]
+    public async Task Program_ExecutesJobs_WhenCommaSeparatedListProvided()
+    {
+        ProcessStartInfo psi = new()
+        {
+            FileName = "dotnet",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\" -- 1,3,5",
+            WorkingDirectory = SolutionRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.Environment.Remove("EASYSAVE_BASE_PATH");
+
+        using Process process = Process.Start(psi)!;
+        string output = await process.StandardOutput.ReadToEndAsync();
+        string error = await process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+
+        Assert.True(process.ExitCode == 0, $"Process exited with {process.ExitCode}, stderr: {error}");
+        Assert.Contains("Executing jobs:", output);
+        Assert.Contains("1, 3, 5", output);
     }
 
     private static string FindSolutionRoot()
