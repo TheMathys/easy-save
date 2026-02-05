@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
@@ -7,26 +7,46 @@ namespace EasySave.Console.Cli
 {
 
     /// <summary>
-    /// CommandLineParse guess what job is to be done depending on the list of args from the prompt.
-    /// The Parse method must accept an arg type string and must return a list of int between one and five (jobs ids).
-    /// Wrong id's are excluded.
+    /// Parses the command-line arguments to determine which backup jobs must be executed.
+    /// The <see cref="Parse"/> method accepts raw arguments and returns a list of job identifiers between 1 and 5.
+    /// Invalid or out-of-range identifiers are excluded from the result.
     /// </summary>
-    static class CommandLineParser
+    public static class CommandLineParser
     {
         public static IReadOnlyList<int> Parse(string[] args)
         {
-            IReadOnlyList<int> jobIds = new List<int>();
-            foreach (var arg in args)
-            {
-                int min = 1;
-                int max = 5;
+            if (args == null || args.Length == 0)
+                return Array.Empty<int>();
 
-                if (int.TryParse(arg, out int jobId) && jobId >= min && jobId <= max)
+            string raw = string.Join(" ", args).Trim();
+            if (string.IsNullOrWhiteSpace(raw))
+                return Array.Empty<int>();
+
+            List<int> result = new List<int>();
+
+            // Support "1-3" (range) and "1;3" or "1,3" (list)
+            if (raw.Contains('-') && !raw.Contains(';') && !raw.Contains(','))
+            {
+                string[] parts = raw.Split('-');
+                if (parts.Length == 2 &&
+                    int.TryParse(parts[0].Trim(), out int start) &&
+                    int.TryParse(parts[1].Trim(), out int end))
                 {
-                    ((List<int>)jobIds).Add(jobId);
+                    for (int i = Math.Min(start, end); i <= Math.Max(start, end); i++)
+                        if (i >= 1 && i <= 5)
+                            result.Add(i);
+                    return result;
                 }
             }
-            return jobIds.ToImmutableList<int>();
+
+            char[] separators = new[] { ';', ',' };
+            foreach (string token in raw.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(token.Trim(), out int id) && id >= 1 && id <= 5 && !result.Contains(id))
+                    result.Add(id);
+            }
+
+            return result;
         }
     }
 }
