@@ -13,76 +13,47 @@ public sealed class BackupStrategyFactoryTests
     [Fact]
     public void GetStrategy_ReturnsFullBackupStrategy_WhenTypeIsFull()
     {
-        FullBackupStrategy full = new();
-        DifferentialBackupStrategy differential = new();
-        BackupStrategyFactory factory = new(full, differential);
+        BackupStrategyFactory factory = new();
 
         IBackupStrategy result = factory.GetStrategy(BackupType.Full);
 
-        Assert.Same(full, result);
+        Assert.IsType<FullBackupStrategy>(result);
     }
 
     [Fact]
     public void GetStrategy_ReturnsDifferentialBackupStrategy_WhenTypeIsDifferential()
     {
-        FullBackupStrategy full = new();
-        DifferentialBackupStrategy differential = new();
-        BackupStrategyFactory factory = new(full, differential);
+        BackupStrategyFactory factory = new();
 
         IBackupStrategy result = factory.GetStrategy(BackupType.Differential);
 
-        Assert.Same(differential, result);
+        Assert.IsType<DifferentialBackupStrategy>(result);
     }
 
     [Fact]
-    public void GetStrategy_ThrowsArgumentOutOfRangeException_WhenTypeIsInvalid()
+    public void GetStrategy_ReturnsSameSingletonInstances_ForEachType()
     {
-        FullBackupStrategy full = new();
-        DifferentialBackupStrategy differential = new();
-        BackupStrategyFactory factory = new(full, differential);
-        BackupType invalidType = (BackupType)99;
+        BackupStrategyFactory factory = new();
 
-        ArgumentOutOfRangeException ex = Assert.Throws<ArgumentOutOfRangeException>(
-            () => factory.GetStrategy(invalidType));
+        IBackupStrategy full1 = factory.GetStrategy(BackupType.Full);
+        IBackupStrategy full2 = factory.GetStrategy(BackupType.Full);
+        IBackupStrategy diff1 = factory.GetStrategy(BackupType.Differential);
+        IBackupStrategy diff2 = factory.GetStrategy(BackupType.Differential);
 
-        Assert.Equal("type", ex.ParamName);
-        Assert.Equal(invalidType, ex.ActualValue);
-        Assert.Contains("Unknown backup type", ex.Message);
+        Assert.Same(full1, full2);
+        Assert.Same(diff1, diff2);
+        Assert.NotSame(full1, diff1);
     }
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenFullBackupStrategyIsNull()
+    public void GetStrategy_FallbacksToFullStrategy_ForUnknownType()
     {
-        DifferentialBackupStrategy differential = new();
+        BackupStrategyFactory factory = new();
+        BackupType invalid = (BackupType)99;
 
-        ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
-            () => new BackupStrategyFactory(null!, differential));
+        IBackupStrategy full = factory.GetStrategy(BackupType.Full);
+        IBackupStrategy result = factory.GetStrategy(invalid);
 
-        Assert.Equal("fullBackupStrategy", ex.ParamName);
-    }
-
-    [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenDifferentialBackupStrategyIsNull()
-    {
-        FullBackupStrategy full = new();
-
-        ArgumentNullException ex = Assert.Throws<ArgumentNullException>(
-            () => new BackupStrategyFactory(full, null!));
-
-        Assert.Equal("differentialBackupStrategy", ex.ParamName);
-    }
-
-    [Fact]
-    public void GetStrategy_ReturnsSameInstance_ForMultipleCallsWithSameType()
-    {
-        FullBackupStrategy full = new();
-        DifferentialBackupStrategy differential = new();
-        BackupStrategyFactory factory = new(full, differential);
-
-        IBackupStrategy result1 = factory.GetStrategy(BackupType.Full);
-        IBackupStrategy result2 = factory.GetStrategy(BackupType.Full);
-
-        Assert.Same(result1, result2);
-        Assert.Same(full, result1);
+        Assert.Same(full, result);
     }
 }

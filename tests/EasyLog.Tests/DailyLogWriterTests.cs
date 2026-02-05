@@ -28,11 +28,11 @@ public sealed class DailyLogWriterTests : IDisposable
     }
 
     [Fact]
-    public async Task WriteLogAsync_CreatesFileWithArray_WhenMissing()
+    public async Task WriteAsync_CreatesFileWithArray_WhenMissing()
     {
         var writer = new DailyLogWriter(_tempDir);
         var entry = new LogEntry(DateTime.UtcNow, "job1", "src", "dest", 123L, TimeSpan.FromMilliseconds(10));
-        await writer.WriteLogAsync(entry);
+        await writer.WriteAsync(entry);
 
         var file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
         Assert.True(File.Exists(file));
@@ -48,7 +48,7 @@ public sealed class DailyLogWriterTests : IDisposable
     }
 
     [Fact]
-    public async Task WriteLogAsync_AppendsToExistingArray_WhenFileHasArray()
+    public async Task WriteAsync_AppendsToExistingArray_WhenFileHasArray()
     {
         var file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
         var initial = new { TimeStamp = DateTime.UtcNow, BackupName = "initial", SourcePath = "s", DestinationPath = "d", FileSizeBytes = 1, TrasnferTimeMs = TimeSpan.FromMilliseconds(1) };
@@ -57,7 +57,7 @@ public sealed class DailyLogWriterTests : IDisposable
 
         var writer = new DailyLogWriter(_tempDir);
         var entry = new LogEntry(DateTime.UtcNow, "appended", "src2", "dest2", 456L, TimeSpan.FromMilliseconds(20));
-        await writer.WriteLogAsync(entry);
+        await writer.WriteAsync(entry);
 
         var content = File.ReadAllText(file);
         using (var doc = JsonDocument.Parse(content))
@@ -68,7 +68,7 @@ public sealed class DailyLogWriterTests : IDisposable
     }
 
     [Fact]
-    public async Task WriteLogAsync_PreservesTrailingWhitespace_WhenFileContainsOnlyOpeningBracket()
+    public async Task WriteAsync_PreservesTrailingWhitespace_WhenFileContainsOnlyOpeningBracket()
     {
         var file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
         var trailing = "\r\n\r\n";
@@ -76,7 +76,7 @@ public sealed class DailyLogWriterTests : IDisposable
 
         var writer = new DailyLogWriter(_tempDir);
         var entry = new LogEntry(DateTime.UtcNow, "onlyBracket", "s", "d", 2, TimeSpan.Zero);
-        await writer.WriteLogAsync(entry);
+        await writer.WriteAsync(entry);
 
         var content = File.ReadAllText(file);
         using (var doc = JsonDocument.Parse(content))
@@ -88,14 +88,14 @@ public sealed class DailyLogWriterTests : IDisposable
     }
 
     [Fact]
-    public async Task WriteLogAsync_ConcurrentWrites_ProducesAllEntries()
+    public async Task WriteAsync_ConcurrentWrites_ProducesAllEntries()
     {
         var writer = new DailyLogWriter(_tempDir);
         var n = 10;
         var tasks = Enumerable.Range(0, n).Select(i =>
         {
             var entry = new LogEntry(DateTime.UtcNow, "job" + i, "s", "d", i, TimeSpan.FromMilliseconds(i));
-            return writer.WriteLogAsync(entry);
+            return writer.WriteAsync(entry);
         }).ToArray();
 
         await Task.WhenAll(tasks);

@@ -11,7 +11,7 @@ namespace EasyLog
     /// DailyLogWriter is responsible for writing log entries to daily log files in JSON format.
     /// Each daily file contains a single JSON array with one object per log entry.
     /// </summary>
-    public sealed class DailyLogWriter
+    public sealed class DailyLogWriter : ILogWriter
     {
         private string _baseDirectory;
         private JsonSerializerOptions _jsonOptions;
@@ -31,7 +31,7 @@ namespace EasyLog
         /// Writes the specified log entry asynchronously to a daily log file in JSON array format.
         /// The file name is determined from UTC date (format: yyyy-MM-dd.json).
         /// </summary>
-        public async Task WriteLogAsync<T>(T logEntry, CancellationToken cancellationToken = default)
+        public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken = default)
         {
             var logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
             Directory.CreateDirectory(_baseDirectory);
