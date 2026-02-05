@@ -47,8 +47,9 @@ public sealed class TuiRunnerTests : IDisposable
     public async Task RunAsync_DisplaysMenu_AndQuits_OnZeroChoice()
     {
         string input = "0" + Environment.NewLine;
-        StringWriter output = new();
-        System.Console.SetIn(new StringReader(input));
+        using var output = new StringWriter();
+        using var inputReader = new StringReader(input);
+        System.Console.SetIn(inputReader);
         System.Console.SetOut(output);
 
         BackupConfiguration initialConfig = new()
