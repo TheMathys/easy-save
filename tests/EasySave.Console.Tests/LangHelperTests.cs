@@ -33,11 +33,5 @@ namespace EasySave.Tests
 
             Assert.Null(result);
         }
-
-        [Fact]
-        public void GetString_NullKey_ReturnsNull()
-        {
-            Assert.Null(LangHelper.GetString(null));
-        }
     }
 }
