@@ -123,6 +123,15 @@ namespace EasySave.Console.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to === Create Backup Job ===.
+        /// </summary>
+        internal static string CreateJobTitle {
+            get {
+                return ResourceManager.GetString("CreateJobTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Differential backup..
         /// </summary>
         internal static string DifferentialBackup {
@@ -155,6 +164,180 @@ namespace EasySave.Console.Resources {
         internal static string FullBackup {
             get {
                 return ResourceManager.GetString("FullBackup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EasySave - Backup Management System
+        ///
+        ///Options:
+        ///  1. Create a backup job - Add a new backup configuration
+        ///  2. List backup jobs - Display all configured backup jobs
+        ///  3. Run backups - Execute one or more backup jobs
+        ///  4. Help - Show this help message
+        ///  0. Quit - Exit the application
+        ///
+        ///When running backups, you can specify job IDs as:
+        ///  - Single ID: 1
+        ///  - Range: 1-3
+        ///  - List: 1,3,5 or 1;3;5.
+        /// </summary>
+        internal static string HelpText {
+            get {
+                return ResourceManager.GetString("HelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to === Help ===.
+        /// </summary>
+        internal static string HelpTitle {
+            get {
+                return ResourceManager.GetString("HelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid input..
+        /// </summary>
+        internal static string InvalidInput {
+            get {
+                return ResourceManager.GetString("InvalidInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job {0} created successfully..
+        /// </summary>
+        internal static string JobCreated {
+            get {
+                return ResourceManager.GetString("JobCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to === Backup Jobs ===.
+        /// </summary>
+        internal static string ListJobsTitle {
+            get {
+                return ResourceManager.GetString("ListJobsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum number of jobs (5) reached. Cannot create more jobs..
+        /// </summary>
+        internal static string MaxJobsReached {
+            get {
+                return ResourceManager.GetString("MaxJobsReached", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid choice. Please select 1-4 or 0 to quit..
+        /// </summary>
+        internal static string MenuInvalidChoice {
+            get {
+                return ResourceManager.GetString("MenuInvalidChoice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quit.
+        /// </summary>
+        internal static string MenuOption0 {
+            get {
+                return ResourceManager.GetString("MenuOption0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a backup job.
+        /// </summary>
+        internal static string MenuOption1 {
+            get {
+                return ResourceManager.GetString("MenuOption1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List backup jobs.
+        /// </summary>
+        internal static string MenuOption2 {
+            get {
+                return ResourceManager.GetString("MenuOption2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run backups.
+        /// </summary>
+        internal static string MenuOption3 {
+            get {
+                return ResourceManager.GetString("MenuOption3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        internal static string MenuOption4 {
+            get {
+                return ResourceManager.GetString("MenuOption4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter your choice:.
+        /// </summary>
+        internal static string MenuPrompt {
+            get {
+                return ResourceManager.GetString("MenuPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to === EasySave Menu ===.
+        /// </summary>
+        internal static string MenuTitle {
+            get {
+                return ResourceManager.GetString("MenuTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No backup jobs found..
+        /// </summary>
+        internal static string NoJobsFound {
+            get {
+                return ResourceManager.GetString("NoJobsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press any key to continue....
+        /// </summary>
+        internal static string PressKeyContinue {
+            get {
+                return ResourceManager.GetString("PressKeyContinue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to === Run Backups ===.
+        /// </summary>
+        internal static string RunJobsTitle {
+            get {
+                return ResourceManager.GetString("RunJobsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter job IDs to run (e.g., 1-3 or 1,3,5):.
+        /// </summary>
+        internal static string SelectJobsPrompt {
+            get {
+                return ResourceManager.GetString("SelectJobsPrompt", resourceCulture);
             }
         }
         

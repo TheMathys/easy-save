@@ -60,7 +60,7 @@ namespace EasySave.Console.Tui
                 if (running && !System.Console.IsInputRedirected && !System.Console.IsOutputRedirected)
                 {
                     System.Console.WriteLine();
-                    System.Console.WriteLine("Press any key to continue...");
+                    System.Console.WriteLine(LangHelper.GetString("PressKeyContinue"));
                     System.Console.ReadKey();
                     System.Console.Clear();
                 }

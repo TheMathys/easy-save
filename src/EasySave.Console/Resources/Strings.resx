@@ -129,4 +129,7 @@ When running backups, you can specify job IDs as:
   - Range: 1-3
   - List: 1,3,5 or 1;3;5</value>
     </data>
+    <data name="PressKeyContinue" xml:space="preserve">
+        <value>Press any key to continue...</value>
+    </data>
 </root>
