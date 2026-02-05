@@ -21,7 +21,7 @@ public sealed class ProgramTests
         ProcessStartInfo psi = new()
         {
             FileName = "dotnet",
-            Arguments = $"run --no-build --project \"{ConsoleCsprojPath}\"",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
             WorkingDirectory = SolutionRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -44,7 +44,7 @@ public sealed class ProgramTests
         ProcessStartInfo psi = new()
         {
             FileName = "dotnet",
-            Arguments = $"run --no-build --project \"{ConsoleCsprojPath}\"",
+            Arguments = $"run --configuration Release --project \"{ConsoleCsprojPath}\"",
             WorkingDirectory = SolutionRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
