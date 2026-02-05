@@ -7,7 +7,6 @@ using EasySave.Console.Cli;
 using EasySave.Core.Interfaces;
 using EasySave.ConsoleApp;
 using Microsoft.Extensions.DependencyInjection;
-using System.Resources;
 
 class Program
 {
