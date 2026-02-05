@@ -336,6 +336,15 @@ namespace EasySave.Console.Tui
             System.Console.WriteLine($"{prefix} {number}. {text}");
         }
 
+        private static List<string> ParseCommaSeparatedList(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return new List<string>();
+            return input!.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToList();
+        }
+
         private static async Task CreateJobAsync(IConfigurationRepository configRepository)
         {
             System.Console.WriteLine();
@@ -401,13 +410,26 @@ namespace EasySave.Console.Tui
 
             BackupType backupType = ReadBackupType();
 
+            string? extPrompt = LangHelper.GetString("ExcludeExtensionsPrompt");
+            System.Console.WriteLine();
+            System.Console.Write(extPrompt ?? "Exclude file extensions (comma-separated, example .tmp,.log). Leave empty for none: ");
+            string? extInput = System.Console.ReadLine()?.Trim();
+            List<string> excludeExtensions = ParseCommaSeparatedList(extInput);
+
+            string? dirPrompt = LangHelper.GetString("ExcludeDirectoryNamesPrompt");
+            System.Console.Write(dirPrompt ?? "Exclude file extensions (comma-separated, example .tmp,.log). Leave empty for none: ");
+            string? dirInput = System.Console.ReadLine()?.Trim();
+            List<string> excludeDirectoryNames = ParseCommaSeparatedList(dirInput);
+
             BackupJob newJob = new BackupJob
             {
                 Id = newJobId,
                 Name = name,
                 SourcePath = sourcePath,
                 TargetPath = targetPath,
-                Type = backupType
+                Type = backupType,
+                ExcludeExtensions = excludeExtensions,
+                ExcludeDirectoryNames = excludeDirectoryNames
             };
 
             jobs.Add(newJob);

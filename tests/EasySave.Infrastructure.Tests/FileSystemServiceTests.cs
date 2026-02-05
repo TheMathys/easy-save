@@ -126,7 +126,7 @@ public sealed class FileSystemServiceTests : IDisposable
     {
         var nonExistentPath = Path.Combine(_tempRoot, "nonexistent");
 
-        var result = await CollectAsync(_service.EnumerateFilesAsync(nonExistentPath, CancellationToken.None));
+        var result = await CollectAsync(_service.EnumerateFilesAsync(nonExistentPath, null, CancellationToken.None));
 
         Assert.Empty(result);
     }
@@ -143,7 +143,7 @@ public sealed class FileSystemServiceTests : IDisposable
         await File.WriteAllTextAsync(file1, "content1");
         await File.WriteAllTextAsync(file2, "content2");
 
-        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, CancellationToken.None));
+        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, null, CancellationToken.None));
 
         Assert.Equal(2, result.Count);
         var paths = result.Select(f => f.RelativePath.Replace('\\', '/')).OrderBy(p => p).ToList();
@@ -161,7 +161,7 @@ public sealed class FileSystemServiceTests : IDisposable
         await File.WriteAllTextAsync(filePath, "test");
         File.SetLastWriteTimeUtc(filePath, writeTime);
 
-        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, CancellationToken.None));
+        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, null, CancellationToken.None));
 
         var item = Assert.Single(result);
         Assert.Equal("test.txt", item.RelativePath);
@@ -181,7 +181,7 @@ public sealed class FileSystemServiceTests : IDisposable
         var count = 0;
         try
         {
-            await foreach (var _ in _service.EnumerateFilesAsync(sourceDir, cts.Token))
+            await foreach (var _ in _service.EnumerateFilesAsync(sourceDir, null, cts.Token))
             {
                 count++;
                 if (count == 3)
@@ -191,6 +191,52 @@ public sealed class FileSystemServiceTests : IDisposable
         catch (OperationCanceledException) { }
 
         Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public async Task EnumerateFilesAsync_ExcludesFilesByExtension_WhenOptionsProvided()
+    {
+        var sourceDir = Path.Combine(_tempRoot, "source");
+        Directory.CreateDirectory(sourceDir);
+        await File.WriteAllTextAsync(Path.Combine(sourceDir, "a.txt"), "x");
+        await File.WriteAllTextAsync(Path.Combine(sourceDir, "b.tmp"), "x");
+        await File.WriteAllTextAsync(Path.Combine(sourceDir, "c.log"), "x");
+        await File.WriteAllTextAsync(Path.Combine(sourceDir, "d.txt"), "x");
+
+        var options = new BackupEnumerationOptions
+        {
+            ExcludeExtensions = new[] { ".tmp", ".log" }
+        };
+        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, options, CancellationToken.None));
+
+        Assert.Equal(2, result.Count);
+        var names = result.Select(f => f.RelativePath.Replace("\\", "/")).OrderBy(p => p).ToList();
+        Assert.Contains("a.txt", names);
+        Assert.Contains("d.txt", names);
+    }
+
+    [Fact]
+    public async Task EnumerateFilesAsync_DoesNotTraverseExcludedDirectoryNames_WhenOptionsProvided()
+    {
+        var sourceDir = Path.Combine(_tempRoot, "source");
+        var includedDir = Path.Combine(sourceDir, "included");
+        var nodeModules = Path.Combine(sourceDir, "node_modules");
+        Directory.CreateDirectory(includedDir);
+        Directory.CreateDirectory(nodeModules);
+        await File.WriteAllTextAsync(Path.Combine(sourceDir, "root.txt"), "x");
+        await File.WriteAllTextAsync(Path.Combine(includedDir, "sub.txt"), "x");
+        await File.WriteAllTextAsync(Path.Combine(nodeModules, "pkg.js"), "x");
+
+        var options = new BackupEnumerationOptions
+        {
+            ExcludeDirectoryNames = new[] { "node_modules" }
+        };
+        var result = await CollectAsync(_service.EnumerateFilesAsync(sourceDir, options, CancellationToken.None));
+
+        Assert.Equal(2, result.Count);
+        var paths = result.Select(f => f.RelativePath.Replace("\\", "/")).OrderBy(p => p).ToList();
+        Assert.Contains("root.txt", paths);
+        Assert.Contains("included/sub.txt", paths);
     }
 
     private static async Task<List<FileItem>> CollectAsync(IAsyncEnumerable<FileItem> source)

@@ -104,7 +104,9 @@ public sealed class TuiRunnerTests : IDisposable
             "C:\\Source" + Environment.NewLine +
             "D:\\Target" + Environment.NewLine +
             "1" + Environment.NewLine +     // type Full
-            "0" + Environment.NewLine;      // retour menu puis quitter
+            "" + Environment.NewLine +     // exclude extensions (empty)
+            "" + Environment.NewLine +     // exclude dir names (empty)
+            "0" + Environment.NewLine;     // retour menu puis quitter
 
         using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
