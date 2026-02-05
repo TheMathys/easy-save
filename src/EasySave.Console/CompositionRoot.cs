@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using EasyLog;
+using EasySave.Console;
 using EasySave.Core.Interfaces;
 using EasySave.Infrastructure.Backup;
 using EasySave.Infrastructure.FileSystem;
@@ -30,14 +31,15 @@ public static class CompositionRoot
 
         ServiceCollection services = new();
 
-        services.AddSingleton<IConfigurationRepository>(_ => new JsonConfigurationRepository(basePath));
+        services.AddSingleton(new EasySavePaths(normalizedBasePath));
+        services.AddSingleton<IConfigurationRepository>(sp => new JsonConfigurationRepository(sp.GetRequiredService<EasySavePaths>().BaseDirectory));
         services.AddSingleton<IFileSystemService>(_ => new FileSystemService());
         services.AddSingleton<IStateWriter>(sp =>
         {
-            var path = Path.Combine(basePath, "state.json");
-            return new JsonStateWriter(path);
+            var paths = sp.GetRequiredService<EasySavePaths>();
+            return new JsonStateWriter(paths.StateFilePath);
         });
-        services.AddSingleton<ILogWriter>(_ => new DailyLogWriter(basePath));
+        services.AddSingleton<ILogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),

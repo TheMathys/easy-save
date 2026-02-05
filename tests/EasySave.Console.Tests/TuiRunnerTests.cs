@@ -37,6 +37,7 @@ public sealed class TuiRunnerTests : IDisposable
         FakeBackupExecutor backupExecutor = new();
 
         ServiceCollection services = new();
+        services.AddSingleton(new EasySave.Console.EasySavePaths(Path.Combine(Path.GetTempPath(), "EasySave.Tests")));
         services.AddSingleton<IConfigurationRepository>(configRepository);
         services.AddSingleton<IBackupExecutor>(backupExecutor);
 
@@ -202,9 +203,9 @@ public sealed class TuiRunnerTests : IDisposable
     }
 
     [Fact]
-    public async Task RunAsync_ShowsHelp_WhenOption4Selected()
+    public async Task RunAsync_ShowsHelp_WhenOption7Selected()
     {
-        string input = "4" + Environment.NewLine + "0" + Environment.NewLine;
+        string input = "7" + Environment.NewLine + "0" + Environment.NewLine;
         using StringWriter output = new();
         System.Console.SetIn(new StringReader(input));
         System.Console.SetOut(output);
