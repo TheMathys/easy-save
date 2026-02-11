@@ -12,6 +12,18 @@ namespace EasySave.Console.Tui
     /// <summary>TUI option "View paths (config and logs)" and change log format.</summary>
     public static partial class TuiRunner
     {
+        /// <summary>
+        /// Displays the configuration/state/log paths and allows the user
+        /// to view and change the current log file format if the user wants to (JSON/XML).
+        /// </summary>
+        /// <param name="configRepository">
+        /// Repository used to load and persist the global backup configuration,
+        /// including the selected log file format.
+        /// </param>
+        /// <param name="paths">
+        /// Paths helper providing the base directory used for configuration,
+        /// state file and daily log files.
+        /// </param>
         private static async Task ViewPathsAsync(IConfigurationRepository configRepository, EasySavePaths paths)
         {
             System.Console.WriteLine();
