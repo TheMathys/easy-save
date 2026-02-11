@@ -46,6 +46,34 @@ public sealed class TuiRunnerTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_ChangesLogFormat_WhenOptionViewPathsAndXmlSelected()
+    {
+        string input =
+            "6" + Environment.NewLine +   // menu: View paths
+            "xml" + Environment.NewLine + // change format in XML
+            "0" + Environment.NewLine;    // quit
+
+        using StringWriter output = new();
+        System.Console.SetIn(new StringReader(input));
+        System.Console.SetOut(output);
+
+        BackupConfiguration initialConfig = new()
+        {
+            LogAndStateDirectory = string.Empty,
+            Jobs = Array.Empty<BackupJob>(),
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+        };
+
+        (IServiceProvider provider, FakeConfigRepository repo, _) = CreateProvider(initialConfig);
+
+        await TuiRunner.RunAsync(provider, enablePause: false);
+
+        BackupConfiguration? config = await repo.LoadAsync(CancellationToken.None);
+        Assert.NotNull(config);
+        Assert.Equal(LogFileFormat.Xml, config!.LogFileFormat);
+    }
+
+    [Fact]
     public async Task RunAsync_DisplaysMenu_AndQuits_OnZeroChoice()
     {
         string input = "0" + Environment.NewLine;

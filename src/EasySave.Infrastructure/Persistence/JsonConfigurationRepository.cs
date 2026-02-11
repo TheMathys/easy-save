@@ -1,6 +1,6 @@
 using EasySave.Core.Entities;
+using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
-
 using System.Text.Json;
 
 namespace EasySave.Infrastructure.Persistence
@@ -80,9 +80,17 @@ namespace EasySave.Infrastructure.Persistence
 
             var lastFull = dto.LastFullBackupUtcByJobId ?? new Dictionary<int, DateTime>();
 
+            LogFileFormat format = LogFileFormat.Json;
+            if (!string.IsNullOrWhiteSpace(dto.LogFileFormat))
+            {
+                if (Enum.TryParse<LogFileFormat>(dto.LogFileFormat, ignoreCase: true, out var parsed))
+                    format = parsed;
+            }
+
             return new BackupConfiguration
             {
                 LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
+                LogFileFormat = format,
                 Jobs = jobs,
                 LastFullBackupUtcByJobId = lastFull
             };
@@ -102,6 +110,7 @@ namespace EasySave.Infrastructure.Persistence
             var dto = new ConfigDto
             {
                 LogAndStateDirectory = backupConfiguration.LogAndStateDirectory,
+                LogFileFormat = backupConfiguration.LogFileFormat.ToString(),
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -163,6 +172,7 @@ namespace EasySave.Infrastructure.Persistence
         private sealed class ConfigDto
         {
             public string? LogAndStateDirectory { get; set; }
+            public string? LogFileFormat { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }

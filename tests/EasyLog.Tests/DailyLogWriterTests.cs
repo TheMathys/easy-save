@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using EasyLog;
 
 namespace EasyLog.Tests;
 
@@ -30,8 +29,8 @@ public sealed class DailyLogWriterTests : IDisposable
     [Fact]
     public async Task WriteAsync_CreatesFileWithArray_WhenMissing()
     {
-        var writer = new DailyLogWriter(_tempDir);
-        var entry = new LogEntry(DateTime.UtcNow, "job1", "src", "dest", 123L, TimeSpan.FromMilliseconds(10));
+        var writer = new EasyLog.DailyLogWriter(_tempDir);
+        var entry = new TestLogEntry(DateTime.UtcNow, "job1", "src", "dest", 123L, TimeSpan.FromMilliseconds(10));
         await writer.WriteAsync(entry);
 
         var file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
@@ -55,8 +54,8 @@ public sealed class DailyLogWriterTests : IDisposable
         var initialJson = JsonSerializer.Serialize(initial, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(file, "[" + initialJson + "]");
 
-        var writer = new DailyLogWriter(_tempDir);
-        var entry = new LogEntry(DateTime.UtcNow, "appended", "src2", "dest2", 456L, TimeSpan.FromMilliseconds(20));
+        var writer = new EasyLog.DailyLogWriter(_tempDir);
+        var entry = new TestLogEntry(DateTime.UtcNow, "appended", "src2", "dest2", 456L, TimeSpan.FromMilliseconds(20));
         await writer.WriteAsync(entry);
 
         var content = File.ReadAllText(file);
@@ -74,8 +73,8 @@ public sealed class DailyLogWriterTests : IDisposable
         var trailing = "\r\n\r\n";
         File.WriteAllText(file, "[" + trailing);
 
-        var writer = new DailyLogWriter(_tempDir);
-        var entry = new LogEntry(DateTime.UtcNow, "onlyBracket", "s", "d", 2, TimeSpan.Zero);
+        var writer = new EasyLog.DailyLogWriter(_tempDir);
+        var entry = new TestLogEntry(DateTime.UtcNow, "onlyBracket", "s", "d", 2, TimeSpan.Zero);
         await writer.WriteAsync(entry);
 
         var content = File.ReadAllText(file);
@@ -90,11 +89,11 @@ public sealed class DailyLogWriterTests : IDisposable
     [Fact]
     public async Task WriteAsync_ConcurrentWrites_ProducesAllEntries()
     {
-        var writer = new DailyLogWriter(_tempDir);
+        var writer = new EasyLog.DailyLogWriter(_tempDir);
         var n = 10;
         var tasks = Enumerable.Range(0, n).Select(i =>
         {
-            var entry = new LogEntry(DateTime.UtcNow, "job" + i, "s", "d", i, TimeSpan.FromMilliseconds(i));
+            var entry = new TestLogEntry(DateTime.UtcNow, "job" + i, "s", "d", i, TimeSpan.FromMilliseconds(i));
             return writer.WriteAsync(entry);
         }).ToArray();
 
@@ -108,6 +107,25 @@ public sealed class DailyLogWriterTests : IDisposable
             var names = doc.RootElement.EnumerateArray().Select(e => e.GetProperty("BackupName").GetString()).ToArray();
             for (var i = 0; i < n; i++)
                 Assert.Contains("job" + i, names);
+        }
+    }
+    private sealed class TestLogEntry
+    {
+        public DateTime TimeStamp { get; }
+        public string BackupName { get; }
+        public string SourcePath { get; }
+        public string DestinationPath { get; }
+        public long FileSizeBytes { get; }
+        public TimeSpan TrasnferTimeMs { get; }
+
+        public TestLogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs)
+        {
+            TimeStamp = timeStamp;
+            BackupName = backupName;
+            SourcePath = sourcePath;
+            DestinationPath = destinationPath;
+            FileSizeBytes = fileSizeBytes;
+            TrasnferTimeMs = transferTimeMs;
         }
     }
 }

@@ -60,7 +60,7 @@ public sealed class CompositionRootTests : IDisposable
         Assert.IsType<JsonConfigurationRepository>(config1);
         Assert.IsType<FileSystemService>(fs1);
         Assert.IsType<JsonStateWriter>(state1);
-        Assert.IsType<DailyLogWriter>(log1);
+        Assert.IsType<ConfigurableLogWriter>(log1);
         Assert.IsType<BackupStrategyFactory>(factory1);
         Assert.IsType<BackupExecutor>(exec1);
 

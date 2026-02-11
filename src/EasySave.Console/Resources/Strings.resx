@@ -143,7 +143,10 @@
     <value>Config, state and log directory :</value>
   </data>
   <data name="TuiViewPathsHint" xml:space="preserve">
-    <value>backup-config.json, state.json and daily log files (yyyy-MM-dd.json) are stored in this directory.</value>
+    <value>backup-config.json, state.json and daily log files (yyyy-MM-dd.json / yyyy-MM-dd.xml) are stored in this directory.</value>
+  </data>
+  <data name="TuiChangeLogFormatPrompt" xml:space="preserve">
+    <value>Change log format? (json/xml, Enter to keep): </value>
   </data>
 
   <!-- TUI job management -->

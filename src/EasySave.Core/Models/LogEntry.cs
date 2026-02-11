@@ -1,46 +1,41 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text.Json;
-using System.Threading;
+using System;
 
-namespace EasyLog
+namespace EasySave.Core.Models
 {
     /// <summary>
-    /// LogEntry defines a single log entry for EasyLog.
+    /// Represents a single backup log entry for EasySave.
     /// </summary>
     public class LogEntry
     {
         /// <summary>
         /// Date and time of the log entry.
         /// </summary>
-        public DateTime TimeStamp { get; } 
+        public DateTime TimeStamp { get; }
 
         /// <summary>
         /// Name of the backup job.
         /// </summary>
-        public string BackupName { get; } 
+        public string BackupName { get; }
 
         /// <summary>
         /// Source path of the backup.
         /// </summary>
-        public string SourcePath { get; } 
+        public string SourcePath { get; }
 
         /// <summary>
         /// Destination path of the backup.
         /// </summary>
-        public string DestinationPath { get; } 
+        public string DestinationPath { get; }
 
         /// <summary>
         /// Size of the file transferred in bytes.
         /// </summary>
-        public long FileSizeBytes { get; } 
+        public long FileSizeBytes { get; }
 
         /// <summary>
         /// Time taken to transfer the file.
         /// </summary>
-        public TimeSpan TrasnferTimeMs { get; } 
+        public TimeSpan TransferTimeMs { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LogEntry"/> class.
@@ -58,7 +53,8 @@ namespace EasyLog
             SourcePath = sourcePath;
             DestinationPath = destinationPath;
             FileSizeBytes = fileSizeBytes;
-            TrasnferTimeMs = transferTimeMs;
+            TransferTimeMs = transferTimeMs;
         }
     }
 }
+
