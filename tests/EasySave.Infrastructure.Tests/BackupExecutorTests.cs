@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using EasyLog;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
 using EasySave.Core.Models;
+using EasyLog;
 using EasySave.Infrastructure.Backup;
 using EasySave.Infrastructure.FileSystem;
 
@@ -403,7 +403,7 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Equal(content.Length, entry.FileSizeBytes);
         Assert.Contains("test.txt", entry.SourcePath);
         Assert.Contains("test.txt", entry.DestinationPath);
-        Assert.True(entry.TrasnferTimeMs >= TimeSpan.Zero);
+        Assert.True(entry.TransferTimeMs >= TimeSpan.Zero);
     }
 
     [Fact]

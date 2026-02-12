@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using EasySave.Core.Enums;
 
 namespace EasySave.Core.Entities
 {
@@ -12,6 +13,11 @@ namespace EasySave.Core.Entities
         /// Directory where the daily log and the state file are stored (not c:\temp\).
         /// </summary>
         public string LogAndStateDirectory { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Log file format (JSON or XML). Default: JSON for backward compatibility.
+        /// </summary>
+        public LogFileFormat LogFileFormat { get; init; } = LogFileFormat.Json;
 
         /// <summary>
         /// List of backup jobs (max 5).

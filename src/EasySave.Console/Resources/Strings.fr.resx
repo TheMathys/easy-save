@@ -143,7 +143,10 @@
     <value>Répertoire config, état et logs :</value>
   </data>
   <data name="TuiViewPathsHint" xml:space="preserve">
-    <value>backup-config.json, state.json et les fichiers de log journaliers (yyyy-MM-dd.json) sont stockés dans ce répertoire.</value>
+    <value>backup-config.json, state.json et les fichiers de log journaliers (yyyy-MM-dd.json / yyyy-MM-dd.xml) sont stockés dans ce répertoire.</value>
+  </data>
+  <data name="TuiChangeLogFormatPrompt" xml:space="preserve">
+    <value>Changer le format de log ? (json/xml, Entrée pour conserver) : </value>
   </data>
 
   <!-- TUI : gestion des travaux -->
