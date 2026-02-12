@@ -1,9 +1,5 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EasyLog
 {
@@ -15,7 +11,7 @@ namespace EasyLog
     {
         private string _baseDirectory;
         private JsonSerializerOptions _jsonOptions;
-        private readonly SemaphoreSlim _lock = new(1,1);
+        private readonly SemaphoreSlim _lock = new(1, 1);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DailyLogWriter"/> class.

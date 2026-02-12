@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using EasySave.Console.Resources;
 using EasySave.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +49,7 @@ namespace EasySave.Console.Tui
                         await EditJobAsync(configRepository);
                         break;
                     case 5:
-                        ViewPaths(paths);
+                        await ViewPathsAsync(configRepository, paths);
                         break;
                     case 6:
                         ShowHelp();

@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using EasyLog;
 using EasySave.Console;
 using EasySave.Core.Interfaces;
@@ -36,10 +34,19 @@ public static class CompositionRoot
         services.AddSingleton<IFileSystemService>(_ => new FileSystemService());
         services.AddSingleton<IStateWriter>(sp =>
         {
-            var paths = sp.GetRequiredService<EasySavePaths>();
+            EasySavePaths paths = sp.GetRequiredService<EasySavePaths>();
             return new JsonStateWriter(paths.StateFilePath);
         });
-        services.AddSingleton<ILogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
+
+        services.AddSingleton<DailyLogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
+        services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
+        services.AddSingleton<ILogWriter>(sp =>
+        {
+            IConfigurationRepository configRepo = sp.GetRequiredService<IConfigurationRepository>();
+            DailyLogWriter jsonWriter = sp.GetRequiredService<DailyLogWriter>();
+            XmlDailyLogWriter xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
+            return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
+        });
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),

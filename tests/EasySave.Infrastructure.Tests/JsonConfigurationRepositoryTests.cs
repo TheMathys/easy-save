@@ -45,6 +45,7 @@ namespace EasySave.Infrastructure.Tests
                 var originalConfig = new BackupConfiguration
                 {
                     LogAndStateDirectory = Path.Combine(tempDir, "logs"),
+                    LogFileFormat = LogFileFormat.Xml,
                     Jobs = System.Array.AsReadOnly(new[]
                     {
                         new BackupJob
@@ -76,6 +77,7 @@ namespace EasySave.Infrastructure.Tests
 
                 Assert.NotNull(loadedConfig);
                 Assert.Equal(originalConfig.LogAndStateDirectory, loadedConfig!.LogAndStateDirectory);
+                Assert.Equal(originalConfig.LogFileFormat, loadedConfig.LogFileFormat);
 
                 Assert.Equal(originalConfig.Jobs.Count, loadedConfig.Jobs.Count);
                 for (var i = 0; i < originalConfig.Jobs.Count; i++)
