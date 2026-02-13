@@ -10,7 +10,7 @@ namespace EasySave.Gui;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public ObservableCollection<BackupJob> SelectedJobs { get; } = new();  // Auto-syncho avec CheckBox
+    public ObservableCollection<BackupJob> SelectedJobs { get; } = new();  // Auto-sync with CheckBox
     public string TabHeader => "Jobs";  // Ou resource localisé [web:67]
 
     
