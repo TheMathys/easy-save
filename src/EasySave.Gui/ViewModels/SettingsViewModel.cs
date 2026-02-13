@@ -44,7 +44,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
-        RefreshRunningProcessesList();
+        RefreshRunningProcessesListAsync();
     }
 
     private void RaiseLocalizedProperties()
@@ -136,7 +136,7 @@ public sealed class SettingsViewModel : ViewModelBase
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
-        RefreshRunningProcessesList();
+        RefreshRunningProcessesListAsync();
         ApplySelectedProcessFromConfig();
     }
 
@@ -157,22 +157,34 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(SelectedProcessChoice));
     }
 
-    private void RefreshRunningProcessesList()
+    /// <summary>
+    /// Loads the process list on a background thread to avoid blocking the UI (GetProcesses is heavy).
+    /// </summary>
+    private void RefreshRunningProcessesListAsync()
     {
+        string currentProcessName = _businessSoftwareProcessName;
         string noneLabel = _localization.GetString("Gui_NoBusinessSoftware");
-        var names = _businessSoftwareDetector.GetRunningProcessNames();
-        var list = new List<string> { noneLabel };
-        foreach (string name in names)
-            list.Add(name);
-        if (!string.IsNullOrWhiteSpace(_businessSoftwareProcessName) && !names.Contains(_businessSoftwareProcessName, StringComparer.OrdinalIgnoreCase))
-            list.Insert(1, _businessSoftwareProcessName);
-        RunningProcessChoices.Clear();
-        foreach (string item in list)
-            RunningProcessChoices.Add(item);
-        ApplySelectedProcessFromConfig();
+        _ = Task.Run(() => _businessSoftwareDetector.GetRunningProcessNames())
+            .ContinueWith(t =>
+            {
+                if (!t.IsCompletedSuccessfully || t.Result == null) return;
+                var names = t.Result;
+                var list = new List<string> { noneLabel };
+                foreach (string name in names)
+                    list.Add(name);
+                if (!string.IsNullOrWhiteSpace(currentProcessName) && !names.Contains(currentProcessName, StringComparer.OrdinalIgnoreCase))
+                    list.Insert(1, currentProcessName);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    RunningProcessChoices.Clear();
+                    foreach (string item in list)
+                        RunningProcessChoices.Add(item);
+                    ApplySelectedProcessFromConfig();
+                });
+            }, TaskScheduler.Default);
     }
 
-    public void RefreshRunningProcesses(object _) => RefreshRunningProcessesList();
+    public void RefreshRunningProcesses(object _) => RefreshRunningProcessesListAsync();
 
     public bool CanRefreshRunningProcesses(object _) => true;
 
