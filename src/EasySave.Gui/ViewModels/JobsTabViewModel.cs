@@ -27,6 +27,12 @@ public sealed class JobsTabViewModel : ViewModelBase
     private string _statusText = string.Empty;
     private bool _isRunning;
     private CancellationTokenSource? _cts;
+    private double _progressPercent;
+    private string _progressJobName = string.Empty;
+    private string _progressCurrentFile = string.Empty;
+    private string _progressFilesText = string.Empty;
+    private string _progressEtaText = string.Empty;
+    private string _progressSizeText = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JobsTabViewModel"/> class.
@@ -58,7 +64,14 @@ public sealed class JobsTabViewModel : ViewModelBase
         RaisePropertyChanged(nameof(RefreshButtonText));
         RaisePropertyChanged(nameof(RunSelectedButtonText));
         RaisePropertyChanged(nameof(JobsHintText));
+        RaisePropertyChanged(nameof(ProgressTitle));
+        RaisePropertyChanged(nameof(ProgressCurrentFileLabel));
+        RaisePropertyChanged(nameof(ProgressSizeLabel));
     }
+
+    public string ProgressTitle => _localization.GetString("Gui_ProgressTitle");
+    public string ProgressCurrentFileLabel => _localization.GetString("Gui_ProgressCurrentFile");
+    public string ProgressSizeLabel => _localization.GetString("Gui_ProgressSizeLabel");
 
     public ObservableCollection<JobItemViewModel> Jobs { get; }
 
@@ -124,11 +137,59 @@ public sealed class JobsTabViewModel : ViewModelBase
                 RaisePropertyChanged(nameof(CanStop));
                 RaisePropertyChanged(nameof(CanRunSelected));
                 RaisePropertyChanged(nameof(CanRefresh));
+                RaisePropertyChanged(nameof(IsProgressVisible));
+                if (!value)
+                    ClearProgress();
             }
         }
     }
 
     public bool CanStop => IsRunning;
+
+    /// <summary>Progress 0–100 when a job is running.</summary>
+    public double ProgressPercent
+    {
+        get => _progressPercent;
+        private set => SetProperty(ref _progressPercent, value);
+    }
+
+    /// <summary>Name of the job currently reporting progress.</summary>
+    public string ProgressJobName
+    {
+        get => _progressJobName;
+        private set => SetProperty(ref _progressJobName, value ?? string.Empty);
+    }
+
+    /// <summary>Current file being transferred (path or name).</summary>
+    public string ProgressCurrentFile
+    {
+        get => _progressCurrentFile;
+        private set => SetProperty(ref _progressCurrentFile, value ?? string.Empty);
+    }
+
+    /// <summary>e.g. "12 / 50 fichiers".</summary>
+    public string ProgressFilesText
+    {
+        get => _progressFilesText;
+        private set => SetProperty(ref _progressFilesText, value ?? string.Empty);
+    }
+
+    /// <summary>Estimated time remaining (e.g. "~2 min").</summary>
+    public string ProgressEtaText
+    {
+        get => _progressEtaText;
+        private set => SetProperty(ref _progressEtaText, value ?? string.Empty);
+    }
+
+    /// <summary>Transferred size / total size (e.g. "2.5 Go / 100 Go").</summary>
+    public string ProgressSizeText
+    {
+        get => _progressSizeText;
+        private set => SetProperty(ref _progressSizeText, value ?? string.Empty);
+    }
+
+    /// <summary>True when progress data should be shown (job running and progress received).</summary>
+    public bool IsProgressVisible => IsRunning && !string.IsNullOrEmpty(_progressJobName);
 
     public string JobsListTitle => _localization.GetString("Gui_JobsListTitle");
     public string DetailsTitle => _localization.GetString("Gui_DetailsTitle");
@@ -242,36 +303,88 @@ public sealed class JobsTabViewModel : ViewModelBase
         _cts = new CancellationTokenSource();
 
         IsRunning = true;
+        ClearProgress();
         StatusText = _localization.GetString("Gui_JobRunning", string.Join(", ", ids));
+        IProgress<BackupProgress> progress = new Progress<BackupProgress>(p =>
+        {
+            Dispatcher.UIThread.Post(() => UpdateProgress(p));
+        });
+        string? successMessage = _localization.GetString("Gui_JobSuccess", string.Join(", ", ids));
+        string cancelMessage = _localization.GetString("Gui_JobCancelledByUser");
         try
         {
-            // Run the executor on the thread pool to keep UI responsive
-            await Task.Run(async () => await _backupExecutor.ExecuteAsync(ids, progress: null, _cts.Token)).ConfigureAwait(true);
-
-            if (_cts.IsCancellationRequested)
-            {
-                StatusText = _localization.GetString("Gui_JobCancelledByUser");
-            }
-            else
-            {
-                StatusText = _localization.GetString("Gui_JobSuccess", string.Join(", ", ids));
-            }
+            await Task.Run(async () => await _backupExecutor.ExecuteAsync(ids, progress, _cts.Token)).ConfigureAwait(false);
+            string message = _cts?.IsCancellationRequested == true ? cancelMessage : successMessage;
+            Dispatcher.UIThread.Post(() => { StatusText = message; });
         }
         catch (OperationCanceledException)
         {
-            StatusText = _localization.GetString("Gui_JobCancelledByUser");
+            Dispatcher.UIThread.Post(() => { StatusText = cancelMessage; });
         }
         catch (Exception ex)
         {
-            StatusText = _localization.GetString("Gui_JobError", ex.Message);
+            string errorMessage = _localization.GetString("Gui_JobError", ex.Message);
+            Dispatcher.UIThread.Post(() => { StatusText = errorMessage; });
         }
         finally
         {
-            IsRunning = false;
-            _cts?.Dispose();
-            _cts = null;
-            RaisePropertyChanged(nameof(CanRefresh));
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsRunning = false;
+                _cts?.Dispose();
+                _cts = null;
+                RaisePropertyChanged(nameof(CanRefresh));
+            });
         }
+    }
+
+    private void ClearProgress()
+    {
+        ProgressPercent = 0;
+        ProgressJobName = string.Empty;
+        ProgressCurrentFile = string.Empty;
+        ProgressFilesText = string.Empty;
+        ProgressEtaText = string.Empty;
+        ProgressSizeText = string.Empty;
+        RaisePropertyChanged(nameof(IsProgressVisible));
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        const long Ko = 1024L;
+        const long Mo = Ko * 1024;
+        const long Go = Mo * 1024;
+        if (bytes >= Go)
+            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Go", (double)bytes / Go);
+        if (bytes >= Mo)
+            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Mo", (double)bytes / Mo);
+        if (bytes >= Ko)
+            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Ko", (double)bytes / Ko);
+        return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0} o", bytes);
+    }
+
+    private void UpdateProgress(BackupProgress p)
+    {
+        ProgressPercent = p.ProgressPercent;
+        ProgressJobName = p.BackupName;
+        ProgressCurrentFile = string.IsNullOrEmpty(p.CurrentSourcePath)
+            ? string.Empty
+            : System.IO.Path.GetFileName(p.CurrentSourcePath) ?? p.CurrentSourcePath;
+        int done = p.TotalFilesCount - p.RemainingFilesCount;
+        ProgressFilesText = string.Format(_localization.GetString("Gui_ProgressFilesFormat") ?? "{0} / {1} files", done, p.TotalFilesCount);
+        long transferredBytes = p.TotalSizeBytes - p.RemainingSizeBytes;
+        ProgressSizeText = string.Format(_localization.GetString("Gui_ProgressSizeFormat") ?? "{0} / {1}", FormatBytes(transferredBytes), FormatBytes(p.TotalSizeBytes));
+        if (p.EstimatedTimeRemainingSeconds.HasValue && p.EstimatedTimeRemainingSeconds.Value >= 1)
+        {
+            int sec = (int)Math.Round(p.EstimatedTimeRemainingSeconds.Value);
+            if (sec >= 60)
+                ProgressEtaText = string.Format(_localization.GetString("Gui_ProgressEtaMinutes") ?? "~{0} min", (sec + 30) / 60);
+            else
+                ProgressEtaText = string.Format(_localization.GetString("Gui_ProgressEtaSeconds") ?? "~{0} s", sec);
+        }
+        else
+            ProgressEtaText = string.Empty;
+        RaisePropertyChanged(nameof(IsProgressVisible));
     }
 
     public void Stop(object _)
