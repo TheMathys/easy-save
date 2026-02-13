@@ -1,37 +1,43 @@
+using System;
+using System.IO;
 using EasyLog;
-using EasySave.Console;
 using EasySave.Core.Interfaces;
+using EasySave.Gui.Services;
+using EasySave.Gui.ViewModels;
 using EasySave.Infrastructure.Backup;
 using EasySave.Infrastructure.Encryption;
 using EasySave.Infrastructure.FileSystem;
 using EasySave.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasySave.ConsoleApp;
+namespace EasySave.Gui;
 
 /// <summary>
-/// Central place where all EasySave services are wired together.
-/// Builds an <see cref="IServiceProvider"/> from a given base path.
+/// Central composition root for the GUI application.
+/// Registers infrastructure services and ViewModels in the dependency injection container.
 /// </summary>
 public static class CompositionRoot
 {
     /// <summary>
-    /// Builds the service provider and registers all EasySave services as singletons.
+    /// Builds and configures the <see cref="IServiceProvider"/> for the GUI layer.
     /// </summary>
     /// <param name="basePath">
-    /// Base directory used for configuration, state and log files.
+    /// Base directory that will be used by infrastructure services to locate configuration,
+    /// state and log files.
     /// </param>
+    /// <returns>The fully configured service provider.</returns>
     public static IServiceProvider Build(string basePath)
     {
         if (string.IsNullOrWhiteSpace(basePath))
             throw new ArgumentNullException(nameof(basePath));
 
         string normalizedBasePath = Path.GetFullPath(basePath);
+        ServiceCollection services = new ServiceCollection();
 
-        ServiceCollection services = new();
-
+        // Paths and persistence
         services.AddSingleton(new EasySavePaths(normalizedBasePath));
-        services.AddSingleton<IConfigurationRepository>(sp => new JsonConfigurationRepository(sp.GetRequiredService<EasySavePaths>().BaseDirectory));
+        services.AddSingleton<IConfigurationRepository>(sp =>
+            new JsonConfigurationRepository(sp.GetRequiredService<EasySavePaths>().BaseDirectory));
         services.AddSingleton<IFileSystemService>(_ => new FileSystemService());
         services.AddSingleton<IStateWriter>(sp =>
         {
@@ -39,6 +45,7 @@ public static class CompositionRoot
             return new JsonStateWriter(paths.StateFilePath);
         });
 
+        // Logging
         services.AddSingleton<DailyLogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
         services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
         services.AddSingleton<ILogWriter>(sp =>
@@ -48,9 +55,11 @@ public static class CompositionRoot
             XmlDailyLogWriter xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
             return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
         });
+
+        // Backup execution
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
         services.AddSingleton<IFileEncryptor, CryptoSoftFileEncryptor>();
-        services.AddSingleton<IBusinessSoftwareDetector, BusinessSoftwareDetector>();
+        services.AddSingleton<EasySave.Core.Interfaces.IBusinessSoftwareDetector, BusinessSoftwareDetector>();
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),
             sp.GetRequiredService<IBackupStrategyFactory>(),
@@ -58,7 +67,20 @@ public static class CompositionRoot
             sp.GetRequiredService<IStateWriter>(),
             sp.GetRequiredService<ILogWriter>(),
             sp.GetRequiredService<IFileEncryptor>(),
-            sp.GetRequiredService<IBusinessSoftwareDetector>()));
+            sp.GetRequiredService<EasySave.Core.Interfaces.IBusinessSoftwareDetector>()));
+
+        // GUI services (abstractions for SOLID)
+        services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
+        services.AddSingleton<IConfigurationHolder, ConfigurationHolder>();
+        services.AddSingleton<IFolderPickerService, FolderPickerService>();
+        services.AddSingleton<IConfirmationService, MessageBoxConfirmationService>();
+        services.AddSingleton<IFilePickerService, FilePickerService>();
+
+        // ViewModels (one per screen / tab)
+        services.AddTransient<JobsTabViewModel>();
+        services.AddTransient<CreateEditJobViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<MainWindowViewModel>();
 
         return services.BuildServiceProvider();
     }

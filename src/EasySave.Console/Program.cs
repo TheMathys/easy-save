@@ -9,6 +9,7 @@ using EasySave.Console.Resources;
 using EasySave.Console;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
+using EasySave.Core.Exceptions;
 using EasySave.Core.Interfaces;
 using EasySave.ConsoleApp;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +73,11 @@ class Program
         {
             ProgressDisplay.ClearProgressLine();
             Console.WriteLine(LangHelper.GetString("BackupCancelled"));
+        }
+        catch (BusinessSoftwareDetectedException)
+        {
+            ProgressDisplay.ClearProgressLine();
+            Console.WriteLine(LangHelper.GetString("BusinessSoftwareDetected"));
         }
         catch (Exception ex)
         {

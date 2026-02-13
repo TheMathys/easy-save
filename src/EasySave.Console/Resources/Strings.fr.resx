@@ -89,6 +89,9 @@
   <data name="BackupCancelled" xml:space="preserve">
     <value>Sauvegarde annulée par l'utilisateur.</value>
   </data>
+  <data name="BusinessSoftwareDetected" xml:space="preserve">
+    <value>Lancement impossible : le logiciel métier est en cours d'exécution. Fermez-le pour lancer la sauvegarde.</value>
+  </data>
 
   <!-- TUI : menu -->
   <data name="MenuTitle" xml:space="preserve">

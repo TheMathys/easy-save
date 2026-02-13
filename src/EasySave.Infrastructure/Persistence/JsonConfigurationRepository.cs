@@ -87,12 +87,16 @@ namespace EasySave.Infrastructure.Persistence
                     format = parsed;
             }
 
+            List<string> encryptExtensions = dto.EncryptExtensions ?? [];
             return new BackupConfiguration
             {
                 LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
                 LogFileFormat = format,
                 Jobs = jobs,
-                LastFullBackupUtcByJobId = lastFull
+                LastFullBackupUtcByJobId = lastFull,
+                EncryptExtensions = encryptExtensions,
+                EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim(),
+                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim()
             };
         }
 
@@ -111,6 +115,9 @@ namespace EasySave.Infrastructure.Persistence
             {
                 LogAndStateDirectory = backupConfiguration.LogAndStateDirectory,
                 LogFileFormat = backupConfiguration.LogFileFormat.ToString(),
+                EncryptExtensions = backupConfiguration.EncryptExtensions?.ToList() ?? new List<string>(),
+                EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
+                BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -155,8 +162,12 @@ namespace EasySave.Infrastructure.Persistence
                 var updated = new BackupConfiguration
                 {
                     LogAndStateDirectory = config.LogAndStateDirectory,
+                    LogFileFormat = config.LogFileFormat,
                     Jobs = config.Jobs,
-                    LastFullBackupUtcByJobId = dict
+                    LastFullBackupUtcByJobId = dict,
+                    EncryptExtensions = config.EncryptExtensions,
+                    EncryptionKeyPath = config.EncryptionKeyPath,
+                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
                 };
                 await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
             }
@@ -173,6 +184,9 @@ namespace EasySave.Infrastructure.Persistence
         {
             public string? LogAndStateDirectory { get; set; }
             public string? LogFileFormat { get; set; }
+            public List<string>? EncryptExtensions { get; set; }
+            public string? EncryptionKeyPath { get; set; }
+            public string? BusinessSoftwareProcessName { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }

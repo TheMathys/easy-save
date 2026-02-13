@@ -38,6 +38,17 @@ namespace EasySave.Core.Models
         public TimeSpan TransferTimeMs { get; }
 
         /// <summary>
+        /// Time required to encrypt the file in milliseconds (log journalier).
+        /// 0 = pas de cryptage, &gt;0 = temps de cryptage (ms), &lt;0 = code erreur.
+        /// </summary>
+        public long EncryptionTimeMs { get; }
+
+        /// <summary>
+        /// Optional stop reason (e.g. "BusinessSoftwareDetected"). When set, this entry is a stop record; paths/sizes may be empty.
+        /// </summary>
+        public string? Reason { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LogEntry"/> class.
         /// </summary>
         /// <param name="timeStamp">Date and time of the log entry.</param>
@@ -46,14 +57,18 @@ namespace EasySave.Core.Models
         /// <param name="destinationPath">Destination path of the backup.</param>
         /// <param name="fileSizeBytes">Size of the file transferred in bytes.</param>
         /// <param name="transferTimeMs">Time taken to transfer the file.</param>
-        public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs)
+        /// <param name="encryptionTimeMs">Temps nécessaire au cryptage (ms): 0 = pas de cryptage, &gt;0 = temps en ms, &lt;0 = code erreur.</param>
+        /// <param name="reason">Optional stop reason (e.g. BusinessSoftwareDetected) for stop-only entries.</param>
+        public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs, long encryptionTimeMs = 0, string? reason = null)
         {
             TimeStamp = timeStamp;
             BackupName = backupName;
-            SourcePath = sourcePath;
-            DestinationPath = destinationPath;
+            SourcePath = sourcePath ?? string.Empty;
+            DestinationPath = destinationPath ?? string.Empty;
             FileSizeBytes = fileSizeBytes;
             TransferTimeMs = transferTimeMs;
+            EncryptionTimeMs = encryptionTimeMs;
+            Reason = reason;
         }
     }
 }

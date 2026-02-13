@@ -127,20 +127,7 @@ namespace EasySave.Console.Tui
 
             List<BackupJob> jobs = config.Jobs.ToList();
 
-            if (jobs.Count >= 5)
-            {
-                string? maxJobsMsg = LangHelper.GetString("MaxJobsReached");
-                System.Console.WriteLine(maxJobsMsg ?? "Maximum number of jobs (5) reached. Cannot create more jobs.");
-                return;
-            }
-
             int newJobId = jobs.Count > 0 ? jobs.Max(j => j.Id) + 1 : 1;
-            if (newJobId > 5)
-            {
-                string? maxJobsMsg = LangHelper.GetString("MaxJobsReached");
-                System.Console.WriteLine(maxJobsMsg ?? "Maximum number of jobs (5) reached. Cannot create more jobs.");
-                return;
-            }
 
             string? namePrompt = LangHelper.GetString("BackupName");
             System.Console.Write($"{namePrompt ?? "Enter backup name"}: ");

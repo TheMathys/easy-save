@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
+using EasySave.Core.Exceptions;
 using EasySave.Core.Interfaces;
 using EasyLog;
 using EasySave.Core.Models;
@@ -16,6 +17,7 @@ namespace EasySave.Infrastructure.Backup
     /// <summary>
     /// Executes backup jobs sequentially: logging, real-time state, full/differential strategy.
     /// Progress by size (bytes) with ETA and report during file copy.
+    /// Blocks start and stops during backup when business software is detected.
     /// </summary>
     public sealed class BackupExecutor : IBackupExecutor
     {
@@ -24,19 +26,27 @@ namespace EasySave.Infrastructure.Backup
         private readonly IFileSystemService _fileSystem;
         private readonly IStateWriter _stateWriter;
         private readonly ILogWriter _logWriter;
+        private readonly IFileEncryptor? _fileEncryptor;
+        private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
+
+        public const string StopReasonBusinessSoftware = "BusinessSoftwareDetected";
 
         public BackupExecutor(
             IConfigurationRepository configRepository,
             IBackupStrategyFactory strategyFactory,
             IFileSystemService fileSystem,
             IStateWriter stateWriter,
-            ILogWriter logWriter)
+            ILogWriter logWriter,
+            IFileEncryptor? fileEncryptor,
+            IBusinessSoftwareDetector businessSoftwareDetector)
         {
             _configRepository = configRepository;
             _strategyFactory = strategyFactory;
             _fileSystem = fileSystem;
             _stateWriter = stateWriter;
             _logWriter = logWriter;
+            _fileEncryptor = fileEncryptor;
+            _businessSoftwareDetector = businessSoftwareDetector ?? throw new ArgumentNullException(nameof(businessSoftwareDetector));
         }
 
         private const int ProgressReportThrottleMs = 150;
@@ -46,6 +56,9 @@ namespace EasySave.Infrastructure.Backup
             BackupConfiguration? config = await _configRepository.LoadAsync(cancellationToken).ConfigureAwait(false);
             if (config == null || config.Jobs.Count == 0)
                 return;
+
+            if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
+                throw new BusinessSoftwareDetectedException();
 
             Dictionary<int, BackupJob> jobById = config.Jobs.ToDictionary(j => j.Id);
             List<BackupProgress> progressList = config.Jobs.Select(j => new BackupProgress
@@ -57,8 +70,12 @@ namespace EasySave.Infrastructure.Backup
 
             await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
 
+            bool stoppedDueToBusinessSoftware = false;
             foreach (int jobId in jobIds)
             {
+                if (stoppedDueToBusinessSoftware)
+                    break;
+
                 if (!jobById.TryGetValue(jobId, out BackupJob? job))
                     continue;
 
@@ -138,6 +155,24 @@ namespace EasySave.Infrastructure.Backup
                     };
                 }
 
+                var encryptExtensionsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (config.EncryptExtensions?.Count > 0 == true)
+                {
+                    foreach (string ext in config.EncryptExtensions)
+                    {
+                        string normalized = ext.Trim();
+                        if (normalized.Length > 0 && normalized[0] != '.')
+                            normalized = "." + normalized;
+                        if (normalized.Length > 0)
+                            encryptExtensionsSet.Add(normalized);
+                    }
+                }
+
+                string cryptoSoftExePath = Path.Combine(AppContext.BaseDirectory, "CryptoSoft", "CryptoSoft.exe");
+                bool useEncryption = encryptExtensionsSet.Count > 0
+                    && !string.IsNullOrWhiteSpace(config.EncryptionKeyPath)
+                    && _fileEncryptor != null;
+
                 IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
                 await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
                 {
@@ -151,23 +186,38 @@ namespace EasySave.Infrastructure.Backup
                     string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDest = _fileSystem.GetUncPath(destPath);
 
-                    var fileProgress = new Progress<long>(bytesCopied =>
+                    long transferMs;
+                    long encryptionTimeMs;
+                    if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                     {
-                        UpdateProgress(bytesCopied, uncSource, uncDest);
-                        long now = Environment.TickCount64;
-                        if (now - lastReportTicks >= ProgressReportThrottleMs)
+                        transferMs = await _fileEncryptor!.EncryptFileAsync(
+                            item.FullSourcePath,
+                            destPath,
+                            config.EncryptionKeyPath!.Trim(),
+                            cryptoSoftExePath,
+                            cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = transferMs;
+                    }
+                    else
+                    {
+                        Progress<long> fileProgress = new Progress<long>(bytesCopied =>
                         {
-                            lastReportTicks = now;
-                            progress?.Report(progressList[idx]);
-                        }
-                    });
-
-                    long transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                            UpdateProgress(bytesCopied, uncSource, uncDest);
+                            long now = Environment.TickCount64;
+                            if (now - lastReportTicks >= ProgressReportThrottleMs)
+                            {
+                                lastReportTicks = now;
+                                progress?.Report(progressList[idx]);
+                            }
+                        });
+                        transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = 0;
+                    }
 
                     string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDestLog = _fileSystem.GetUncPath(destPath);
                     TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime), cancellationToken).ConfigureAwait(false);
+                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
 
                     bytesCompleted += fileSize;
                     processedCount++;
@@ -193,6 +243,15 @@ namespace EasySave.Infrastructure.Backup
                     };
                     await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
                     progress?.Report(progressList[idx]);
+
+                    // After finishing the current file: if business software is detected, stop and log.
+                    if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
+                    {
+                        var stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
+                        await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                        stoppedDueToBusinessSoftware = true;
+                        break;
+                    }
                 }
 
                 progressList[idx] = new BackupProgress

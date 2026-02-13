@@ -16,9 +16,9 @@ namespace EasySave.Console.Tui
         {
             System.Console.WriteLine();
             string? prompt = LangHelper.GetString("TuiPromptDeleteJobId");
-            System.Console.Write(prompt ?? "Enter the ID of the job to delete (1-5): ");
+            System.Console.Write(prompt ?? "Enter the ID of the job to delete: ");
             string? raw = System.Console.ReadLine()?.Trim();
-            if (!int.TryParse(raw, out int jobId) || jobId < 1 || jobId > 5)
+            if (!int.TryParse(raw, out int jobId) || jobId < 1)
             {
                 string? invalid = LangHelper.GetString("InvalidInput");
                 System.Console.WriteLine(invalid ?? "Invalid input. Cancelled.");

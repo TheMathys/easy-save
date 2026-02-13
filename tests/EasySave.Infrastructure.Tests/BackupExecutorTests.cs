@@ -117,7 +117,8 @@ public sealed class BackupExecutorTests : IDisposable
         IBackupStrategyFactory strategyFactory = new BackupStrategyFactory();
         FakeLogWriter logWriter = new();
 
-        BackupExecutor executor = new(configRepo, strategyFactory, fileSystem, stateWriter, logWriter);
+        var businessDetector = new BusinessSoftwareDetector();
+        BackupExecutor executor = new(configRepo, strategyFactory, fileSystem, stateWriter, logWriter, null, businessDetector);
 
         await executor.ExecuteAsync(new[] { 1 });
 
@@ -404,6 +405,7 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Contains("test.txt", entry.SourcePath);
         Assert.Contains("test.txt", entry.DestinationPath);
         Assert.True(entry.TransferTimeMs >= TimeSpan.Zero);
+        Assert.Equal(0L, entry.EncryptionTimeMs); // pas de cryptage = 0
     }
 
     [Fact]
@@ -516,7 +518,8 @@ public sealed class BackupExecutorTests : IDisposable
         stateWriter ??= new FakeStateWriter();
         logWriter ??= new FakeLogWriter();
 
-        return new BackupExecutor(configRepository, strategyFactory, fileSystem, stateWriter, logWriter);
+        var businessDetector = new BusinessSoftwareDetector();
+        return new BackupExecutor(configRepository, strategyFactory, fileSystem, stateWriter, logWriter, null, businessDetector);
     }
 
     private sealed class FakeConfigRepository : IConfigurationRepository

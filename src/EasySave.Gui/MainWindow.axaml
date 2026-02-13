@@ -1,0 +1,208 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="EasySave.Gui.MainWindow"
+    Title="{Binding WindowTitle}"
+    Width="1024"
+    Height="700"
+    MinWidth="860"
+    MinHeight="580"
+    Background="#FAFAFA">
+  <Window.Styles>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style Selector="TabControl">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="16,10" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Foreground" Value="#0067C0" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#E5E7EB" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="20" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#0067C0" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="16,10" />
+    </Style>
+    <Style Selector="Button.primary:pointerover">
+      <Setter Property="Background" Value="#005A9E" />
+    </Style>
+    <Style Selector="Button.primary:pressed">
+      <Setter Property="Background" Value="#004578" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*" Margin="0">
+    <!-- En-tête blanc moderne -->
+    <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="24,20">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+        <Border Width="48" Height="48" CornerRadius="10" Background="#0067C0" VerticalAlignment="Center">
+          <TextBlock Text="ES" FontSize="18" FontWeight="Bold" Foreground="White"
+                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Text="{Binding HeaderTitle}" FontSize="22" FontWeight="Bold" Foreground="#111827" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <TabControl Grid.Row="1" Margin="24,20">
+      <TabItem Header="{Binding TabJobs}">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="16" Margin="0,8,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <Button Content="{Binding JobsTab.RefreshButtonText}" Command="{Binding JobsTab.Refresh}"
+                    IsEnabled="{Binding JobsTab.CanRefresh}" Classes="primary" />
+            <Button Content="{Binding JobsTab.RunSelectedButtonText}" Command="{Binding JobsTab.RunSelected}"
+                    CommandParameter="{Binding JobsTab.SelectedJob}"
+                    IsEnabled="{Binding JobsTab.CanRunSelected}" />
+            <Button Content="{Binding JobsTab.StopButtonText}" Command="{Binding JobsTab.Stop}"
+                IsEnabled="{Binding JobsTab.CanStop}" />
+            <Button Content="Supprimer" Command="{Binding JobsTab.DeleteSelected}"
+                    IsEnabled="{Binding JobsTab.CanDelete}" />
+          </StackPanel>
+
+          <Grid Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
+            <Border Grid.Column="0" Classes="card">
+              <StackPanel Spacing="12">
+                <TextBlock Text="{Binding JobsTab.JobsListTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
+                <ListBox ItemsSource="{Binding JobsTab.Jobs}"
+                         SelectedItems="{Binding JobsTab.SelectedJobs}"
+                         SelectionMode="Multiple,Toggle"
+                         MinHeight="240" Background="Transparent" BorderThickness="0">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="Auto,*" Margin="4"> 
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding Name}"
+                                   VerticalAlignment="Center"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Classes="card">
+              <StackPanel Spacing="12">
+                <TextBlock Text="{Binding JobsTab.DetailsTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
+                <TextBlock Text="{Binding JobsTab.JobDetailsText}" TextWrapping="Wrap" Foreground="#4B5563" LineHeight="22" />
+              </StackPanel>
+            </Border>
+          </Grid>
+          <Border Grid.Row="2" Classes="card" Padding="16" IsVisible="{Binding JobsTab.IsProgressVisible}">
+            <StackPanel Spacing="10">
+              <TextBlock Text="{Binding JobsTab.ProgressTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
+              <TextBlock Text="{Binding JobsTab.ProgressJobName}" FontSize="13" Foreground="#0067C0" />
+              <ProgressBar Minimum="0" Maximum="100" Value="{Binding JobsTab.ProgressPercent}" Height="8" />
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="{Binding JobsTab.ProgressFilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressEtaText}" Foreground="#6B7280" FontSize="12" VerticalAlignment="Center" />
+              </Grid>
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="{Binding JobsTab.ProgressSizeLabel}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressSizeText}" Foreground="#4B5563" FontSize="13" VerticalAlignment="Center" />
+              </Grid>
+              <StackPanel>
+                <TextBlock Text="{Binding JobsTab.ProgressCurrentFileLabel}" FontSize="12" Foreground="#9CA3AF" />
+                <TextBlock Text="{Binding JobsTab.ProgressCurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="12" MaxLines="1" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <TextBlock Grid.Row="3" Text="{Binding JobsTab.JobsHintText}" FontSize="12" Foreground="#9CA3AF" />
+          <TextBlock Grid.Row="4" Text="{Binding JobsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="{Binding TabCreateEdit}">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16" Margin="0,8,0,0">
+          <Border Classes="card" Padding="16">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="{Binding CreateEditTab.ExistingJobLabel}" VerticalAlignment="Center" Foreground="#374151" />
+              <ComboBox ItemsSource="{Binding CreateEditTab.ExistingJobs}"
+                        SelectedItem="{Binding CreateEditTab.SelectedExistingJob}"
+                        Width="260" />
+              <Button Content="{Binding CreateEditTab.NewJobButtonText}" Command="{Binding CreateEditTab.NewJob}" />
+            </StackPanel>
+          </Border>
+          <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.EditHintText}" FontSize="12" Foreground="#9CA3AF" />
+          <Border Grid.Row="2" Classes="card">
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="14">
+              <TextBlock Text="{Binding CreateEditTab.LabelName}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBox Grid.Column="1" Text="{Binding CreateEditTab.Name}" Watermark="My backup" />
+              <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.LabelSource}" VerticalAlignment="Center" Foreground="#374151" />
+              <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Text="{Binding CreateEditTab.SourcePath}" Watermark="C:\Source" />
+                <Button Grid.Column="1" Content="{Binding CreateEditTab.BrowseButtonText}" Command="{Binding CreateEditTab.PickSourceFolder}" MinWidth="90" />
+              </Grid>
+              <TextBlock Grid.Row="2" Text="{Binding CreateEditTab.LabelTarget}" VerticalAlignment="Center" Foreground="#374151" />
+              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Text="{Binding CreateEditTab.TargetPath}" Watermark="D:\Backup" />
+                <Button Grid.Column="1" Content="{Binding CreateEditTab.BrowseButtonText}" Command="{Binding CreateEditTab.PickTargetFolder}" MinWidth="90" />
+              </Grid>
+              <TextBlock Grid.Row="3" Text="{Binding CreateEditTab.LabelType}" VerticalAlignment="Center" Foreground="#374151" />
+              <ComboBox Grid.Row="3" Grid.Column="1" SelectedIndex="{Binding CreateEditTab.SelectedTypeIndex}" HorizontalAlignment="Left" MinWidth="180">
+                <ComboBoxItem Content="{Binding CreateEditTab.FullBackupLabel}" />
+                <ComboBoxItem Content="{Binding CreateEditTab.DifferentialBackupLabel}" />
+              </ComboBox>
+              <TextBlock Grid.Row="4" Text="{Binding CreateEditTab.LabelExcludeExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CreateEditTab.ExcludeExtensions}" Watermark=".tmp,.log" />
+              <TextBlock Grid.Row="5" Text="{Binding CreateEditTab.LabelExcludeDirs}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CreateEditTab.ExcludeDirectories}" Watermark="node_modules,.git" />
+            </Grid>
+          </Border>
+          <StackPanel Grid.Row="3" Spacing="10">
+            <Button Content="{Binding CreateEditTab.SaveButtonText}" Command="{Binding CreateEditTab.SaveJob}" Classes="primary" HorizontalAlignment="Left" />
+            <TextBlock Text="{Binding CreateEditTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+          </StackPanel>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="{Binding TabSettings}">
+        <Border Classes="card" Margin="0,8,0,0" MaxWidth="720" HorizontalAlignment="Left">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+            <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
+            <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="#4B5563" />
+            <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatePath}" TextWrapping="Wrap" Foreground="#4B5563" />
+            <TextBlock Grid.Row="3" Text="{Binding SettingsTab.LabelLogDir}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LogDirectory}" TextWrapping="Wrap" Foreground="#4B5563" />
+            <TextBlock Grid.Row="4" Text="{Binding SettingsTab.LabelLogFormat}" VerticalAlignment="Center" Foreground="#374151" />
+            <ComboBox Grid.Row="4" Grid.Column="1" SelectedIndex="{Binding SettingsTab.LogFormatIndex}" Width="160" HorizontalAlignment="Left">
+              <ComboBoxItem Content="Json" />
+              <ComboBoxItem Content="Xml" />
+            </ComboBox>
+            <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" MinWidth="200" />
+            <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="#374151" />
+            <Grid Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" MinWidth="200" />
+              <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
+            </Grid>
+            <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="#374151" />
+            <Grid Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
+              <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
+            </Grid>
+            <Button Grid.Row="8" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+                    Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
+            <TextBlock Grid.Row="9" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+          </Grid>
+        </Border>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</Window>

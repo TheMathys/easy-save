@@ -8,7 +8,7 @@ namespace EasySave.Core.Entities
     /// </summary>
     public class BackupJob
     {
-        ///<summary>Unique job identifier ranging from 1 to 5</summary>
+        ///<summary>Unique job identifier (positive integer)</summary>
         public int Id { get; set; }
 
         ///<summary>Name of the backup</summary>

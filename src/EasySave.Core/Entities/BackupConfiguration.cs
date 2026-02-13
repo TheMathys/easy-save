@@ -20,7 +20,7 @@ namespace EasySave.Core.Entities
         public LogFileFormat LogFileFormat { get; init; } = LogFileFormat.Json;
 
         /// <summary>
-        /// List of backup jobs (max 5).
+        /// List of backup jobs.
         /// </summary>
         public IReadOnlyList<BackupJob> Jobs { get; init; } = Array.Empty<BackupJob>();
 
@@ -28,5 +28,24 @@ namespace EasySave.Core.Entities
         /// Date of the last full backup per job identifier (used for differential backups).
         /// </summary>
         public IReadOnlyDictionary<int, DateTime> LastFullBackupUtcByJobId { get; init; } = new Dictionary<int, DateTime>();
+
+        /// <summary>
+        /// File extensions that must be encrypted during backup (e.g. .doc, .pdf).
+        /// Only files with these extensions are passed to the external encryption process.
+        /// </summary>
+        public IReadOnlyList<string> EncryptExtensions { get; init; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Full path to the encryption key file used by the external encryption tool.
+        /// If null or empty, encryption is skipped even when <see cref="EncryptExtensions"/> is set.
+        /// </summary>
+        public string? EncryptionKeyPath { get; init; }
+
+        /// <summary>
+        /// Process name of the "business software" to detect (e.g. "Calculator" for Calculator.exe).
+        /// When set, backup start is blocked if this process is running; during backup, execution stops after the current file.
+        /// Null or empty = feature disabled.
+        /// </summary>
+        public string? BusinessSoftwareProcessName { get; init; }
     }
 }
