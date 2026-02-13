@@ -61,7 +61,7 @@
 
     <TabControl Grid.Row="1" Margin="24,20">
       <TabItem Header="{Binding TabJobs}">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16" Margin="0,8,0,0">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="16" Margin="0,8,0,0">
           <StackPanel Orientation="Horizontal" Spacing="12">
             <Button Content="{Binding JobsTab.RefreshButtonText}" Command="{Binding JobsTab.Refresh}"
                     IsEnabled="{Binding JobsTab.CanRefresh}" Classes="primary" />
@@ -101,8 +101,27 @@
               </StackPanel>
             </Border>
           </Grid>
-          <TextBlock Grid.Row="2" Text="{Binding JobsTab.JobsHintText}" FontSize="12" Foreground="#9CA3AF" />
-          <TextBlock Grid.Row="3" Text="{Binding JobsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+          <Border Grid.Row="2" Classes="card" Padding="16" IsVisible="{Binding JobsTab.IsProgressVisible}">
+            <StackPanel Spacing="10">
+              <TextBlock Text="{Binding JobsTab.ProgressTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
+              <TextBlock Text="{Binding JobsTab.ProgressJobName}" FontSize="13" Foreground="#0067C0" />
+              <ProgressBar Minimum="0" Maximum="100" Value="{Binding JobsTab.ProgressPercent}" Height="8" />
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="{Binding JobsTab.ProgressFilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressEtaText}" Foreground="#6B7280" FontSize="12" VerticalAlignment="Center" />
+              </Grid>
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <TextBlock Text="{Binding JobsTab.ProgressSizeLabel}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressSizeText}" Foreground="#4B5563" FontSize="13" VerticalAlignment="Center" />
+              </Grid>
+              <StackPanel>
+                <TextBlock Text="{Binding JobsTab.ProgressCurrentFileLabel}" FontSize="12" Foreground="#9CA3AF" />
+                <TextBlock Text="{Binding JobsTab.ProgressCurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="12" MaxLines="1" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <TextBlock Grid.Row="3" Text="{Binding JobsTab.JobsHintText}" FontSize="12" Foreground="#9CA3AF" />
+          <TextBlock Grid.Row="4" Text="{Binding JobsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
         </Grid>
       </TabItem>
 

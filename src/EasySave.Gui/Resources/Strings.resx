@@ -172,4 +172,25 @@
   <data name="Gui_JobCancelledByUser" xml:space="preserve">
     <value>The job has been cancelled by the user.</value>
   </data>
+  <data name="Gui_ProgressTitle" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="Gui_ProgressFilesFormat" xml:space="preserve">
+    <value>{0} / {1} files</value>
+  </data>
+  <data name="Gui_ProgressEtaMinutes" xml:space="preserve">
+    <value>~{0} min</value>
+  </data>
+  <data name="Gui_ProgressEtaSeconds" xml:space="preserve">
+    <value>~{0} s</value>
+  </data>
+  <data name="Gui_ProgressCurrentFile" xml:space="preserve">
+    <value>Current file:</value>
+  </data>
+  <data name="Gui_ProgressSizeFormat" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Gui_ProgressSizeLabel" xml:space="preserve">
+    <value>Size:</value>
+  </data>
 </root>
