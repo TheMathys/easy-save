@@ -1,7 +1,5 @@
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Gui.Services;
@@ -38,7 +36,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
         _localization = localization;
         _folderPicker = folderPicker;
         ExistingJobs = new ObservableCollection<JobItemViewModel>();
-        _configHolder.ConfigurationChanged += (_, _) => RefreshExistingJobs();
+        _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(RefreshExistingJobs);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         RefreshExistingJobs();
     }
