@@ -68,16 +68,30 @@
             <Button Content="{Binding JobsTab.RunSelectedButtonText}" Command="{Binding JobsTab.RunSelected}"
                     CommandParameter="{Binding JobsTab.SelectedJob}"
                     IsEnabled="{Binding JobsTab.CanRunSelected}" />
+            <Button Content="{Binding JobsTab.StopButtonText}" Command="{Binding JobsTab.Stop}"
+                IsEnabled="{Binding JobsTab.CanStop}" />
             <Button Content="Supprimer" Command="{Binding JobsTab.DeleteSelected}"
                     IsEnabled="{Binding JobsTab.CanDelete}" />
           </StackPanel>
+
           <Grid Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
             <Border Grid.Column="0" Classes="card">
               <StackPanel Spacing="12">
                 <TextBlock Text="{Binding JobsTab.JobsListTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
                 <ListBox ItemsSource="{Binding JobsTab.Jobs}"
-                         SelectedItem="{Binding JobsTab.SelectedJob}"
-                         MinHeight="240" Background="Transparent" BorderThickness="0" />
+                         SelectedItems="{Binding JobsTab.SelectedJobs}"
+                         SelectionMode="Multiple,Toggle"
+                         MinHeight="240" Background="Transparent" BorderThickness="0">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="Auto,*" Margin="4"> 
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding Name}"
+                                   VerticalAlignment="Center"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
               </StackPanel>
             </Border>
             <Border Grid.Column="1" Classes="card">
