@@ -59,13 +59,15 @@ public static class CompositionRoot
         // Backup execution
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
         services.AddSingleton<IFileEncryptor, CryptoSoftFileEncryptor>();
+        services.AddSingleton<EasySave.Core.Interfaces.IBusinessSoftwareDetector, BusinessSoftwareDetector>();
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),
             sp.GetRequiredService<IBackupStrategyFactory>(),
             sp.GetRequiredService<IFileSystemService>(),
             sp.GetRequiredService<IStateWriter>(),
             sp.GetRequiredService<ILogWriter>(),
-            sp.GetRequiredService<IFileEncryptor>()));
+            sp.GetRequiredService<IFileEncryptor>(),
+            sp.GetRequiredService<EasySave.Core.Interfaces.IBusinessSoftwareDetector>()));
 
         // GUI services (abstractions for SOLID)
         services.AddSingleton<ILocalizationProvider, LocalizationProvider>();

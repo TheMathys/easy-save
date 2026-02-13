@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
+using EasySave.Core.Exceptions;
 using EasySave.Core.Interfaces;
 using EasySave.Gui.Services;
 
@@ -320,6 +321,10 @@ public sealed class JobsTabViewModel : ViewModelBase
         catch (OperationCanceledException)
         {
             Dispatcher.UIThread.Post(() => { StatusText = cancelMessage; });
+        }
+        catch (BusinessSoftwareDetectedException)
+        {
+            StatusText = _localization.GetString("Gui_BusinessSoftwareDetected");
         }
         catch (Exception ex)
         {

@@ -95,7 +95,8 @@ namespace EasySave.Infrastructure.Persistence
                 Jobs = jobs,
                 LastFullBackupUtcByJobId = lastFull,
                 EncryptExtensions = encryptExtensions,
-                EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim()
+                EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim(),
+                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim()
             };
         }
 
@@ -116,6 +117,7 @@ namespace EasySave.Infrastructure.Persistence
                 LogFileFormat = backupConfiguration.LogFileFormat.ToString(),
                 EncryptExtensions = backupConfiguration.EncryptExtensions?.ToList() ?? new List<string>(),
                 EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
+                BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -164,7 +166,8 @@ namespace EasySave.Infrastructure.Persistence
                     Jobs = config.Jobs,
                     LastFullBackupUtcByJobId = dict,
                     EncryptExtensions = config.EncryptExtensions,
-                    EncryptionKeyPath = config.EncryptionKeyPath
+                    EncryptionKeyPath = config.EncryptionKeyPath,
+                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
                 };
                 await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
             }
@@ -183,6 +186,7 @@ namespace EasySave.Infrastructure.Persistence
             public string? LogFileFormat { get; set; }
             public List<string>? EncryptExtensions { get; set; }
             public string? EncryptionKeyPath { get; set; }
+            public string? BusinessSoftwareProcessName { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }

@@ -136,6 +136,18 @@
   <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
     <value>Fichier clé de chiffrement :</value>
   </data>
+  <data name="Gui_LabelBusinessSoftware" xml:space="preserve">
+    <value>Logiciel métier (nom du processus) :</value>
+  </data>
+  <data name="Gui_NoBusinessSoftware" xml:space="preserve">
+    <value>(Aucun)</value>
+  </data>
+  <data name="Gui_RefreshProcessList" xml:space="preserve">
+    <value>Rafraîchir la liste</value>
+  </data>
+  <data name="Gui_BusinessSoftwareDetected" xml:space="preserve">
+    <value>Lancement impossible : le logiciel métier est en cours d'exécution. Fermez-le pour lancer la sauvegarde.</value>
+  </data>
   <data name="Gui_BrowseEncryptionKey" xml:space="preserve">
     <value>Parcourir…</value>
   </data>

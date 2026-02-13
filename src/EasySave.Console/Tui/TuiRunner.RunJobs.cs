@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EasySave.Console.Resources;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
+using EasySave.Core.Exceptions;
 using EasySave.Core.Interfaces;
 using ProgressDisplay = EasySave.Console.ProgressDisplay;
 
@@ -111,6 +112,12 @@ namespace EasySave.Console.Tui
                 ProgressDisplay.ClearProgressLine();
                 string? backupCancelMsg = LangHelper.GetString("BackupCancel");
                 System.Console.WriteLine(backupCancelMsg ?? "Backup cancelled by user.");
+            }
+            catch (BusinessSoftwareDetectedException)
+            {
+                ProgressDisplay.ClearProgressLine();
+                string? msg = LangHelper.GetString("BusinessSoftwareDetected");
+                System.Console.WriteLine(msg ?? "Backup blocked: business software is running.");
             }
             catch (Exception ex)
             {
