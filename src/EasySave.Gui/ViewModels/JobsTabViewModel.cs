@@ -17,6 +17,7 @@ public sealed class JobsTabViewModel : ViewModelBase
     private readonly IConfigurationHolder _configHolder;
     private readonly IBackupExecutor _backupExecutor;
     private readonly ILocalizationProvider _localization;
+    private readonly IConfirmationService _confirmation;
     private JobItemViewModel? _selectedJob;
     private string _jobDetailsText = string.Empty;
     private string _statusText = string.Empty;
@@ -28,14 +29,16 @@ public sealed class JobsTabViewModel : ViewModelBase
     /// <param name="configHolder">Configuration holder providing the current jobs.</param>
     /// <param name="backupExecutor">Executor used to run backup jobs.</param>
     /// <param name="localization">Localization provider for UI strings.</param>
-    public JobsTabViewModel(
+        public JobsTabViewModel(
         IConfigurationHolder configHolder,
         IBackupExecutor backupExecutor,
-        ILocalizationProvider localization)
+        ILocalizationProvider localization,
+        IConfirmationService confirmation)
     {
         _configHolder = configHolder;
         _backupExecutor = backupExecutor;
         _localization = localization;
+        _confirmation = confirmation;
         Jobs = new ObservableCollection<JobItemViewModel>();
         _configHolder.ConfigurationChanged += (_, _) => RefreshJobsFromConfig();
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
@@ -62,6 +65,8 @@ public sealed class JobsTabViewModel : ViewModelBase
         {
             UpdateDetails();
             RaisePropertyChanged(nameof(CanRunSelected));
+            RaisePropertyChanged(nameof(CanDelete));
+            RaisePropertyChanged(nameof(DeleteButtonText));
         }
     }
     }
@@ -89,6 +94,52 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string RefreshButtonText => _localization.GetString("Gui_Refresh");
     public string RunSelectedButtonText => _localization.GetString("Gui_RunSelected");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
+
+    public string DeleteButtonText => "Supprimer";
+
+    public bool CanDelete => SelectedJob != null && !IsRunning;
+
+    public void DeleteSelected(object _)
+    {
+        _ = DeleteSelectedAsync();
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedJob == null)
+        {
+            StatusText = _localization.GetString("Gui_SelectJobFirst");
+            return;
+        }
+
+        bool confirmed = await _confirmation.ConfirmAsync(
+            _localization.GetString("TuiConfirmDelete") ?? "Confirm deletion",
+            $"Êtes-vous sur de vouloir supprimer : {SelectedJob.Name}");
+
+        if (!confirmed)
+        {
+            StatusText = _localization.GetString("Gui_DeleteCancelled") ?? "Cancelled.";
+            return;
+        }
+
+        var config = _configHolder.Current;
+        var newJobs = config.Jobs.Where(j => j.Id != SelectedJob.Id).ToList();
+        var newLastFull = config.LastFullBackupUtcByJobId
+            .Where(kv => kv.Key != SelectedJob.Id)
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        var updated = new BackupConfiguration
+        {
+            LogAndStateDirectory = config.LogAndStateDirectory,
+            LogFileFormat = config.LogFileFormat,
+            Jobs = newJobs,
+            LastFullBackupUtcByJobId = newLastFull
+        };
+
+        await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
+        StatusText = _localization.GetString("TuiJobDeleted", SelectedJob.Id);
+        RefreshJobsFromConfig();
+    }
 
     public bool CanRefresh => !IsRunning;
 

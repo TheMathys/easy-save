@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Avoid duplicate auto-generated assembly attributes when projects include explicit attributes -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>

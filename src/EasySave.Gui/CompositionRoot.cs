@@ -68,6 +68,7 @@ public static class CompositionRoot
         services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
         services.AddSingleton<IConfigurationHolder, ConfigurationHolder>();
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
+        services.AddSingleton<IConfirmationService, MessageBoxConfirmationService>();
 
         // ViewModels (one per screen / tab)
         services.AddTransient<JobsTabViewModel>();

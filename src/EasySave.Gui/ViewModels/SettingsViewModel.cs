@@ -58,6 +58,10 @@ public sealed class SettingsViewModel : ViewModelBase
         set => SetProperty(ref _statusText, value);
     }
 
+    // Localization keys used by JobsTabViewModel
+    public string DeleteButtonText => _localization.GetString("Gui_Delete");
+    public string ConfirmDeleteMessage => _localization.GetString("Gui_ConfirmDeleteMessage");
+
     public string LabelBasePath => _localization.GetString("Gui_LabelBasePath");
     public string LabelConfigPath => _localization.GetString("Gui_LabelConfigPath");
     public string LabelStatePath => _localization.GetString("Gui_LabelStatePath");
