@@ -68,6 +68,8 @@
             <Button Content="{Binding JobsTab.RunSelectedButtonText}" Command="{Binding JobsTab.RunSelected}"
                     CommandParameter="{Binding JobsTab.SelectedJob}"
                     IsEnabled="{Binding JobsTab.CanRunSelected}" />
+            <Button Content="Supprimer" Command="{Binding JobsTab.DeleteSelected}"
+                    IsEnabled="{Binding JobsTab.CanDelete}" />
           </StackPanel>
           <Grid Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
             <Border Grid.Column="0" Classes="card">

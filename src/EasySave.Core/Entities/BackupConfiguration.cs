@@ -20,7 +20,7 @@ namespace EasySave.Core.Entities
         public LogFileFormat LogFileFormat { get; init; } = LogFileFormat.Json;
 
         /// <summary>
-        /// List of backup jobs (max 5).
+        /// List of backup jobs.
         /// </summary>
         public IReadOnlyList<BackupJob> Jobs { get; init; } = Array.Empty<BackupJob>();
 
