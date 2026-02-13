@@ -24,19 +24,22 @@ namespace EasySave.Infrastructure.Backup
         private readonly IFileSystemService _fileSystem;
         private readonly IStateWriter _stateWriter;
         private readonly ILogWriter _logWriter;
+        private readonly IFileEncryptor? _fileEncryptor;
 
         public BackupExecutor(
             IConfigurationRepository configRepository,
             IBackupStrategyFactory strategyFactory,
             IFileSystemService fileSystem,
             IStateWriter stateWriter,
-            ILogWriter logWriter)
+            ILogWriter logWriter,
+            IFileEncryptor? fileEncryptor = null)
         {
             _configRepository = configRepository;
             _strategyFactory = strategyFactory;
             _fileSystem = fileSystem;
             _stateWriter = stateWriter;
             _logWriter = logWriter;
+            _fileEncryptor = fileEncryptor;
         }
 
         private const int ProgressReportThrottleMs = 150;
@@ -138,6 +141,24 @@ namespace EasySave.Infrastructure.Backup
                     };
                 }
 
+                var encryptExtensionsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (config.EncryptExtensions?.Count > 0 == true)
+                {
+                    foreach (string ext in config.EncryptExtensions)
+                    {
+                        string normalized = ext.Trim();
+                        if (normalized.Length > 0 && normalized[0] != '.')
+                            normalized = "." + normalized;
+                        if (normalized.Length > 0)
+                            encryptExtensionsSet.Add(normalized);
+                    }
+                }
+
+                string cryptoSoftExePath = Path.Combine(AppContext.BaseDirectory, "CryptoSoft", "CryptoSoft.exe");
+                bool useEncryption = encryptExtensionsSet.Count > 0
+                    && !string.IsNullOrWhiteSpace(config.EncryptionKeyPath)
+                    && _fileEncryptor != null;
+
                 IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
                 await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
                 {
@@ -151,18 +172,30 @@ namespace EasySave.Infrastructure.Backup
                     string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDest = _fileSystem.GetUncPath(destPath);
 
-                    var fileProgress = new Progress<long>(bytesCopied =>
+                    long transferMs;
+                    if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                     {
-                        UpdateProgress(bytesCopied, uncSource, uncDest);
-                        long now = Environment.TickCount64;
-                        if (now - lastReportTicks >= ProgressReportThrottleMs)
+                        transferMs = await _fileEncryptor!.EncryptFileAsync(
+                            item.FullSourcePath,
+                            destPath,
+                            config.EncryptionKeyPath!.Trim(),
+                            cryptoSoftExePath,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        var fileProgress = new Progress<long>(bytesCopied =>
                         {
-                            lastReportTicks = now;
-                            progress?.Report(progressList[idx]);
-                        }
-                    });
-
-                    long transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                            UpdateProgress(bytesCopied, uncSource, uncDest);
+                            long now = Environment.TickCount64;
+                            if (now - lastReportTicks >= ProgressReportThrottleMs)
+                            {
+                                lastReportTicks = now;
+                                progress?.Report(progressList[idx]);
+                            }
+                        });
+                        transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                    }
 
                     string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDestLog = _fileSystem.GetUncPath(destPath);

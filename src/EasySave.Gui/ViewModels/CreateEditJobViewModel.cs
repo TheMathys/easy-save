@@ -99,7 +99,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
     internal void RefreshExistingJobs()
     {
         ExistingJobs.Clear();
-        foreach (var j in _configHolder.Current.Jobs.OrderBy(x => x.Id))
+        foreach (BackupJob? j in _configHolder.Current.Jobs.OrderBy(x => x.Id))
             ExistingJobs.Add(new JobItemViewModel(j.Id, j.Name, j.Type));
     }
 
@@ -119,7 +119,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
 
     public async void PickSourceFolder(object _)
     {
-        var path = await _folderPicker.PickFolderAsync(_localization.GetString("Gui_PickSourceFolder")).ConfigureAwait(true);
+        string? path = await _folderPicker.PickFolderAsync(_localization.GetString("Gui_PickSourceFolder")).ConfigureAwait(true);
         if (!string.IsNullOrEmpty(path))
             SourcePath = path;
     }
@@ -128,7 +128,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
 
     public async void PickTargetFolder(object _)
     {
-        var path = await _folderPicker.PickFolderAsync(_localization.GetString("Gui_PickTargetFolder")).ConfigureAwait(true);
+        string? path = await _folderPicker.PickFolderAsync(_localization.GetString("Gui_PickTargetFolder")).ConfigureAwait(true);
         if (!string.IsNullOrEmpty(path))
             TargetPath = path;
     }
@@ -139,7 +139,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
     {
         if (SelectedExistingJob == null)
             return;
-        var job = _configHolder.Current.Jobs.FirstOrDefault(j => j.Id == SelectedExistingJob.Id);
+        BackupJob? job = _configHolder.Current.Jobs.FirstOrDefault(j => j.Id == SelectedExistingJob.Id);
         if (job == null)
             return;
         Name = job.Name;
@@ -153,20 +153,20 @@ public sealed class CreateEditJobViewModel : ViewModelBase
 
     public async void SaveJob(object _)
     {
-        var name = Name.Trim();
-        var source = SourcePath.Trim();
-        var target = TargetPath.Trim();
+        string? name = Name.Trim();
+        string? source = SourcePath.Trim();
+        string? target = TargetPath.Trim();
         if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target))
         {
             StatusText = _localization.GetString("Gui_RequiredFields");
             return;
         }
 
-        var type = SelectedTypeIndex == 1 ? BackupType.Differential : BackupType.Full;
-        var excludeExt = ParseList(ExcludeExtensions);
-        var excludeDirs = ParseList(ExcludeDirectories);
-        var config = _configHolder.Current;
-        var jobs = config.Jobs.ToList();
+        BackupType type = SelectedTypeIndex == 1 ? BackupType.Differential : BackupType.Full;
+        List<string>? excludeExt = ParseList(ExcludeExtensions);
+        List<string>? excludeDirs = ParseList(ExcludeDirectories);
+        BackupConfiguration? config = _configHolder.Current;
+        List<BackupJob>? jobs = config.Jobs.ToList();
 
         if (SelectedExistingJob == null)
         {
@@ -181,7 +181,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
                 ExcludeExtensions = excludeExt,
                 ExcludeDirectoryNames = excludeDirs
             });
-            var newConfig = new BackupConfiguration
+            BackupConfiguration newConfig = new()
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
                 LogFileFormat = config.LogFileFormat,
@@ -195,7 +195,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
         }
 
         int editId = SelectedExistingJob.Id;
-        var updated = new BackupJob
+        BackupJob updated = new()
         {
             Id = editId,
             Name = name,
@@ -205,8 +205,8 @@ public sealed class CreateEditJobViewModel : ViewModelBase
             ExcludeExtensions = excludeExt,
             ExcludeDirectoryNames = excludeDirs
         };
-        var replaced = jobs.Select(j => j.Id == editId ? updated : j).ToList();
-        var updatedConfig = new BackupConfiguration
+        List<BackupJob> replaced = jobs.Select(j => j.Id == editId ? updated : j).ToList();
+        BackupConfiguration updatedConfig = new()
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = config.LogFileFormat,

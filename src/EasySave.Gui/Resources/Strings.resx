@@ -130,6 +130,18 @@
   <data name="Gui_LabelLogFormat" xml:space="preserve">
     <value>Log format:</value>
   </data>
+  <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
+    <value>Extensions to encrypt (comma-separated):</value>
+  </data>
+  <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
+    <value>Encryption key file path:</value>
+  </data>
+  <data name="Gui_BrowseEncryptionKey" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="Gui_EncryptionKeyFileDialogTitle" xml:space="preserve">
+    <value>Select encryption key file</value>
+  </data>
   <data name="Gui_SaveSettings" xml:space="preserve">
     <value>Save settings</value>
   </data>

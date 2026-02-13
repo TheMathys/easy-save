@@ -2,6 +2,7 @@ using EasyLog;
 using EasySave.Console;
 using EasySave.Core.Interfaces;
 using EasySave.Infrastructure.Backup;
+using EasySave.Infrastructure.Encryption;
 using EasySave.Infrastructure.FileSystem;
 using EasySave.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,12 +49,14 @@ public static class CompositionRoot
             return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
         });
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
+        services.AddSingleton<IFileEncryptor, CryptoSoftFileEncryptor>();
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),
             sp.GetRequiredService<IBackupStrategyFactory>(),
             sp.GetRequiredService<IFileSystemService>(),
             sp.GetRequiredService<IStateWriter>(),
-            sp.GetRequiredService<ILogWriter>()));
+            sp.GetRequiredService<ILogWriter>(),
+            sp.GetRequiredService<IFileEncryptor>()));
 
         return services.BuildServiceProvider();
     }

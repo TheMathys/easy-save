@@ -163,18 +163,20 @@ public sealed class JobsTabViewModel : ViewModelBase
             return;
         }
 
-        var config = _configHolder.Current;
-        var newJobs = config.Jobs.Where(j => j.Id != SelectedJob.Id).ToList();
-        var newLastFull = config.LastFullBackupUtcByJobId
+        BackupConfiguration config = _configHolder.Current;
+        List<BackupJob> newJobs = config.Jobs.Where(j => j.Id != SelectedJob.Id).ToList();
+        Dictionary<int, DateTime> newLastFull = config.LastFullBackupUtcByJobId
             .Where(kv => kv.Key != SelectedJob.Id)
             .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        var updated = new BackupConfiguration
+        BackupConfiguration updated = new BackupConfiguration
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = config.LogFileFormat,
             Jobs = newJobs,
-            LastFullBackupUtcByJobId = newLastFull
+            LastFullBackupUtcByJobId = newLastFull,
+            EncryptExtensions = config.EncryptExtensions,
+            EncryptionKeyPath = config.EncryptionKeyPath
         };
 
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);

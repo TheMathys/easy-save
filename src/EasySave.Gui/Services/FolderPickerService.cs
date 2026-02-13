@@ -23,7 +23,7 @@ public sealed class FolderPickerService : IFolderPickerService
         if (_owner == null)
             return null;
 
-        var folders = await _owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        IReadOnlyList<IStorageFolder> folders = await _owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = title ?? "Select folder",
             AllowMultiple = false
@@ -32,7 +32,7 @@ public sealed class FolderPickerService : IFolderPickerService
         if (folders.Count == 0)
             return null;
 
-        var path = folders[0].TryGetLocalPath();
+        string? path = folders[0].TryGetLocalPath();
         return path;
     }
 }

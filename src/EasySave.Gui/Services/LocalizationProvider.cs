@@ -24,13 +24,13 @@ public sealed class LocalizationProvider : ILocalizationProvider
 
     public string GetString(string key)
     {
-        var value = _resourceManager.GetString(key, _currentCulture);
+        string? value = _resourceManager.GetString(key, _currentCulture);
         return value ?? key;
     }
 
     public string GetString(string key, params object[] args)
     {
-        var format = GetString(key);
+        string? format = GetString(key);
         return args.Length > 0 ? string.Format(format, args) : format;
     }
 

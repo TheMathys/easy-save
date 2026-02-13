@@ -5,6 +5,7 @@ using EasySave.Core.Interfaces;
 using EasySave.Gui.Services;
 using EasySave.Gui.ViewModels;
 using EasySave.Infrastructure.Backup;
+using EasySave.Infrastructure.Encryption;
 using EasySave.Infrastructure.FileSystem;
 using EasySave.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +32,7 @@ public static class CompositionRoot
             throw new ArgumentNullException(nameof(basePath));
 
         string normalizedBasePath = Path.GetFullPath(basePath);
-        var services = new ServiceCollection();
+        ServiceCollection services = new ServiceCollection();
 
         // Paths and persistence
         services.AddSingleton(new EasySavePaths(normalizedBasePath));
@@ -40,7 +41,7 @@ public static class CompositionRoot
         services.AddSingleton<IFileSystemService>(_ => new FileSystemService());
         services.AddSingleton<IStateWriter>(sp =>
         {
-            var paths = sp.GetRequiredService<EasySavePaths>();
+            EasySavePaths paths = sp.GetRequiredService<EasySavePaths>();
             return new JsonStateWriter(paths.StateFilePath);
         });
 
@@ -49,26 +50,29 @@ public static class CompositionRoot
         services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
         services.AddSingleton<ILogWriter>(sp =>
         {
-            var configRepo = sp.GetRequiredService<IConfigurationRepository>();
-            var jsonWriter = sp.GetRequiredService<DailyLogWriter>();
-            var xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
+            IConfigurationRepository configRepo = sp.GetRequiredService<IConfigurationRepository>();
+            DailyLogWriter jsonWriter = sp.GetRequiredService<DailyLogWriter>();
+            XmlDailyLogWriter xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
             return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
         });
 
         // Backup execution
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
+        services.AddSingleton<IFileEncryptor, CryptoSoftFileEncryptor>();
         services.AddSingleton<IBackupExecutor>(sp => new BackupExecutor(
             sp.GetRequiredService<IConfigurationRepository>(),
             sp.GetRequiredService<IBackupStrategyFactory>(),
             sp.GetRequiredService<IFileSystemService>(),
             sp.GetRequiredService<IStateWriter>(),
-            sp.GetRequiredService<ILogWriter>()));
+            sp.GetRequiredService<ILogWriter>(),
+            sp.GetRequiredService<IFileEncryptor>()));
 
         // GUI services (abstractions for SOLID)
         services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
         services.AddSingleton<IConfigurationHolder, ConfigurationHolder>();
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
         services.AddSingleton<IConfirmationService, MessageBoxConfirmationService>();
+        services.AddSingleton<IFilePickerService, FilePickerService>();
 
         // ViewModels (one per screen / tab)
         services.AddTransient<JobsTabViewModel>();

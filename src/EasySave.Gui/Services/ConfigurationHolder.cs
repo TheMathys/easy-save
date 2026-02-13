@@ -36,7 +36,7 @@ public sealed class ConfigurationHolder : IConfigurationHolder
     /// <inheritdoc />
     public async Task ReloadAsync(CancellationToken cancellationToken = default)
     {
-        var loaded = await _repository.LoadAsync(cancellationToken).ConfigureAwait(false);
+        BackupConfiguration? loaded = await _repository.LoadAsync(cancellationToken).ConfigureAwait(false);
         _current = loaded ?? BuildDefault(_baseDirectory);
         ConfigurationChanged?.Invoke(this, EventArgs.Empty);
     }
