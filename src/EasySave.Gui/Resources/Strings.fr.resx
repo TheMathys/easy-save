@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Gui_WindowTitle" xml:space="preserve">
+    <value>EasySave</value>
+  </data>
+  <data name="Gui_HeaderTitle" xml:space="preserve">
+    <value>EasySave</value>
+  </data>
+  <data name="Gui_TabJobs" xml:space="preserve">
+    <value>Travaux</value>
+  </data>
+  <data name="Gui_TabCreateEdit" xml:space="preserve">
+    <value>Créer / Modifier</value>
+  </data>
+  <data name="Gui_TabSettings" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="Gui_JobsListTitle" xml:space="preserve">
+    <value>Liste des travaux</value>
+  </data>
+  <data name="Gui_DetailsTitle" xml:space="preserve">
+    <value>Détails</value>
+  </data>
+  <data name="Gui_Refresh" xml:space="preserve">
+    <value>Rafraîchir</value>
+  </data>
+  <data name="Gui_RunSelected" xml:space="preserve">
+    <value>Lancer le travail sélectionné</value>
+  </data>
+  <data name="Gui_JobsRefreshed" xml:space="preserve">
+    <value>Travaux rechargés depuis la configuration.</value>
+  </data>
+  <data name="Gui_SelectJobFirst" xml:space="preserve">
+    <value>Veuillez sélectionner un travail.</value>
+  </data>
+  <data name="Gui_JobRunning" xml:space="preserve">
+    <value>Exécution du travail #{0}...</value>
+  </data>
+  <data name="Gui_JobSuccess" xml:space="preserve">
+    <value>Travail #{0} terminé avec succès.</value>
+  </data>
+  <data name="Gui_JobError" xml:space="preserve">
+    <value>Erreur : {0}</value>
+  </data>
+  <data name="Gui_JobDetailsFormat" xml:space="preserve">
+    <value>ID : {0}&#x0a;Nom : {1}&#x0a;Type : {2}&#x0a;Source : {3}&#x0a;Cible : {4}&#x0a;Extensions exclues : {5}&#x0a;Dossiers exclus : {6}</value>
+  </data>
+  <data name="Gui_JobsHint" xml:space="preserve">
+    <value>Cliquez sur un travail pour afficher ses informations.</value>
+  </data>
+  <data name="Gui_ExistingJob" xml:space="preserve">
+    <value>Travail existant :</value>
+  </data>
+  <data name="Gui_NewJob" xml:space="preserve">
+    <value>Nouveau travail</value>
+  </data>
+  <data name="Gui_EditHint" xml:space="preserve">
+    <value>Laisser vide pour conserver la valeur actuelle lors de la modification.</value>
+  </data>
+  <data name="Gui_LabelName" xml:space="preserve">
+    <value>Nom :</value>
+  </data>
+  <data name="Gui_LabelSource" xml:space="preserve">
+    <value>Dossier source :</value>
+  </data>
+  <data name="Gui_Browse" xml:space="preserve">
+    <value>Parcourir...</value>
+  </data>
+  <data name="Gui_PickSourceFolder" xml:space="preserve">
+    <value>Choisir le dossier source</value>
+  </data>
+  <data name="Gui_PickTargetFolder" xml:space="preserve">
+    <value>Choisir le dossier cible</value>
+  </data>
+  <data name="Gui_LabelTarget" xml:space="preserve">
+    <value>Dossier cible :</value>
+  </data>
+  <data name="Gui_LabelType" xml:space="preserve">
+    <value>Type :</value>
+  </data>
+  <data name="Gui_LabelExcludeExtensions" xml:space="preserve">
+    <value>Extensions exclues :</value>
+  </data>
+  <data name="Gui_LabelExcludeDirs" xml:space="preserve">
+    <value>Dossiers exclus :</value>
+  </data>
+  <data name="Gui_Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Gui_EditModeCreate" xml:space="preserve">
+    <value>Mode création : saisissez les informations puis cliquez sur Enregistrer.</value>
+  </data>
+  <data name="Gui_EditModeEdit" xml:space="preserve">
+    <value>Édition du travail #{0}.</value>
+  </data>
+  <data name="Gui_RequiredFields" xml:space="preserve">
+    <value>Nom, source et cible sont obligatoires.</value>
+  </data>
+  <data name="Gui_MaxJobsDeleteOne" xml:space="preserve">
+    <value>Nombre max de travaux atteint. Supprimez-en un pour en ajouter.</value>
+  </data>
+  <data name="Gui_LabelBasePath" xml:space="preserve">
+    <value>Chemin de base :</value>
+  </data>
+  <data name="Gui_LabelConfigPath" xml:space="preserve">
+    <value>Fichier config :</value>
+  </data>
+  <data name="Gui_LabelStatePath" xml:space="preserve">
+    <value>Fichier d'état :</value>
+  </data>
+  <data name="Gui_LabelLogDir" xml:space="preserve">
+    <value>Dossier des logs :</value>
+  </data>
+  <data name="Gui_LabelLogFormat" xml:space="preserve">
+    <value>Format des logs :</value>
+  </data>
+  <data name="Gui_SaveSettings" xml:space="preserve">
+    <value>Enregistrer les paramètres</value>
+  </data>
+  <data name="Gui_SettingsSaved" xml:space="preserve">
+    <value>Paramètres enregistrés. Format actif : {0}.</value>
+  </data>
+  <data name="FullBackup" xml:space="preserve">
+    <value>Sauvegarde complète</value>
+  </data>
+  <data name="DifferentialBackup" xml:space="preserve">
+    <value>Sauvegarde différentielle</value>
+  </data>
+  <data name="NoJobsFound" xml:space="preserve">
+    <value>Aucun travail de sauvegarde trouvé.</value>
+  </data>
+  <data name="MaxJobsReached" xml:space="preserve">
+    <value>Nombre maximum de travaux (5) atteint.</value>
+  </data>
+  <data name="JobCreated" xml:space="preserve">
+    <value>Travail {0} créé avec succès.</value>
+  </data>
+  <data name="TuiJobUpdated" xml:space="preserve">
+    <value>Le travail {0} a été mis à jour.</value>
+  </data>
+</root>
