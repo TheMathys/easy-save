@@ -97,7 +97,7 @@ public sealed class CommandLineParserTests
 
         IReadOnlyList<int> result = CommandLineParser.Parse(args);
 
-        Assert.Equal(new List<int> { 1, 3 }, result);
+        Assert.Equal(new List<int> { 1, 6, 3 }, result);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class CommandLineParserTests
 
         IReadOnlyList<int> result = CommandLineParser.Parse(args);
 
-        Assert.Equal(new List<int> { 1, 2, 3, 4, 5 }, result);
+        Assert.Equal(new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, result);
     }
 
     [Fact]
