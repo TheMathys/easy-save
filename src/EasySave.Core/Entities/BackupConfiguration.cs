@@ -40,5 +40,12 @@ namespace EasySave.Core.Entities
         /// If null or empty, encryption is skipped even when <see cref="EncryptExtensions"/> is set.
         /// </summary>
         public string? EncryptionKeyPath { get; init; }
+
+        /// <summary>
+        /// Process name of the "business software" to detect (e.g. "Calculator" for Calculator.exe).
+        /// When set, backup start is blocked if this process is running; during backup, execution stops after the current file.
+        /// Null or empty = feature disabled.
+        /// </summary>
+        public string? BusinessSoftwareProcessName { get; init; }
     }
 }

@@ -1,8 +1,11 @@
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
+using EasySave.Core.Interfaces;
 using EasySave.Gui.Services;
 
 namespace EasySave.Gui.ViewModels;
@@ -17,24 +20,31 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly ILocalizationProvider _localization;
     private readonly EasySavePaths _paths;
     private readonly IFilePickerService _filePicker;
+    private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
     private int _logFormatIndex;
     private string _statusText = string.Empty;
     private string _encryptExtensionsText = string.Empty;
     private string _encryptionKeyPath = string.Empty;
+    private string _businessSoftwareProcessName = string.Empty;
+    private string _selectedProcessChoice = string.Empty;
 
     public SettingsViewModel(
         IConfigurationHolder configHolder,
         ILocalizationProvider localization,
         EasySavePaths paths,
-        IFilePickerService filePicker)
+        IFilePickerService filePicker,
+        IBusinessSoftwareDetector businessSoftwareDetector)
     {
         _configHolder = configHolder;
         _localization = localization;
         _paths = paths;
         _filePicker = filePicker;
+        _businessSoftwareDetector = businessSoftwareDetector;
+        RunningProcessChoices = new ObservableCollection<string>();
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
+        RefreshRunningProcessesList();
     }
 
     private void RaiseLocalizedProperties()
@@ -46,6 +56,8 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelLogFormat));
         RaisePropertyChanged(nameof(LabelEncryptExtensions));
         RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
+        RaisePropertyChanged(nameof(LabelBusinessSoftware));
+        RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
     }
@@ -78,6 +90,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelLogFormat => _localization.GetString("Gui_LabelLogFormat");
     public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
     public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
+    public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
+    public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
 
@@ -93,13 +107,74 @@ public sealed class SettingsViewModel : ViewModelBase
         set => SetProperty(ref _encryptionKeyPath, value ?? string.Empty);
     }
 
+    public string BusinessSoftwareProcessName
+    {
+        get => _businessSoftwareProcessName;
+        set => SetProperty(ref _businessSoftwareProcessName, value ?? string.Empty);
+    }
+
+    /// <summary>List of choices for the business software ComboBox: "(None)" + running process names.</summary>
+    public ObservableCollection<string> RunningProcessChoices { get; }
+
+    public string SelectedProcessChoice
+    {
+        get => _selectedProcessChoice;
+        set
+        {
+            if (!SetProperty(ref _selectedProcessChoice, value ?? string.Empty))
+                return;
+            string noneLabel = _localization.GetString("Gui_NoBusinessSoftware");
+            _businessSoftwareProcessName = (value == noneLabel || string.IsNullOrWhiteSpace(value)) ? string.Empty : value.Trim();
+            RaisePropertyChanged(nameof(BusinessSoftwareProcessName));
+        }
+    }
+
     internal void SyncFromConfig()
     {
         BackupConfiguration c = _configHolder.Current;
         LogFormatIndex = c.LogFileFormat == LogFileFormat.Xml ? 1 : 0;
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
+        BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
+        RefreshRunningProcessesList();
+        ApplySelectedProcessFromConfig();
     }
+
+    private void ApplySelectedProcessFromConfig()
+    {
+        string noneLabel = _localization.GetString("Gui_NoBusinessSoftware");
+        if (string.IsNullOrWhiteSpace(_businessSoftwareProcessName))
+        {
+            _selectedProcessChoice = noneLabel;
+            RaisePropertyChanged(nameof(SelectedProcessChoice));
+            return;
+        }
+        string? match = RunningProcessChoices.FirstOrDefault(s => string.Equals(s, _businessSoftwareProcessName, StringComparison.OrdinalIgnoreCase));
+        if (match != null)
+            _selectedProcessChoice = match;
+        else
+            _selectedProcessChoice = _businessSoftwareProcessName;
+        RaisePropertyChanged(nameof(SelectedProcessChoice));
+    }
+
+    private void RefreshRunningProcessesList()
+    {
+        string noneLabel = _localization.GetString("Gui_NoBusinessSoftware");
+        var names = _businessSoftwareDetector.GetRunningProcessNames();
+        var list = new List<string> { noneLabel };
+        foreach (string name in names)
+            list.Add(name);
+        if (!string.IsNullOrWhiteSpace(_businessSoftwareProcessName) && !names.Contains(_businessSoftwareProcessName, StringComparer.OrdinalIgnoreCase))
+            list.Insert(1, _businessSoftwareProcessName);
+        RunningProcessChoices.Clear();
+        foreach (string item in list)
+            RunningProcessChoices.Add(item);
+        ApplySelectedProcessFromConfig();
+    }
+
+    public void RefreshRunningProcesses(object _) => RefreshRunningProcessesList();
+
+    public bool CanRefreshRunningProcesses(object _) => true;
 
     public async void SaveSettings(object _)
     {
@@ -122,7 +197,8 @@ public sealed class SettingsViewModel : ViewModelBase
             Jobs = config.Jobs,
             LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
             EncryptExtensions = extensions,
-            EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim()
+            EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
+            BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim()
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
         StatusText = _localization.GetString("Gui_SettingsSaved", format.ToString());

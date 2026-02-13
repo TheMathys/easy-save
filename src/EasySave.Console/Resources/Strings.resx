@@ -89,6 +89,9 @@
   <data name="BackupCancelled" xml:space="preserve">
     <value>Backup cancelled by user (Ctrl+C).</value>
   </data>
+  <data name="BusinessSoftwareDetected" xml:space="preserve">
+    <value>Backup blocked: business software is running. Close it to start the backup.</value>
+  </data>
 
   <!-- TUI menu -->
   <data name="MenuTitle" xml:space="preserve">

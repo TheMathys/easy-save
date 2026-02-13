@@ -136,6 +136,18 @@
   <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
     <value>Encryption key file path:</value>
   </data>
+  <data name="Gui_LabelBusinessSoftware" xml:space="preserve">
+    <value>Business software (process name):</value>
+  </data>
+  <data name="Gui_NoBusinessSoftware" xml:space="preserve">
+    <value>(None)</value>
+  </data>
+  <data name="Gui_RefreshProcessList" xml:space="preserve">
+    <value>Refresh list</value>
+  </data>
+  <data name="Gui_BusinessSoftwareDetected" xml:space="preserve">
+    <value>Backup blocked: business software is running. Close it to start the backup.</value>
+  </data>
   <data name="Gui_BrowseEncryptionKey" xml:space="preserve">
     <value>Browse…</value>
   </data>
