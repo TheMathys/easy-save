@@ -154,4 +154,10 @@
   <data name="TuiJobUpdated" xml:space="preserve">
     <value>Job {0} has been updated.</value>
   </data>
+  <data name="Gui_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Gui_JobCancelledByUser" xml:space="preserve">
+    <value>The job has been cancelled by the user.</value>
+  </data>
 </root>

@@ -1,6 +1,4 @@
-using System.Collections.ObjectModel;
 using Avalonia.Controls;
-using EasySave.Core.Entities;
 
 namespace EasySave.Gui;
 
@@ -10,10 +8,6 @@ namespace EasySave.Gui;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public ObservableCollection<BackupJob> SelectedJobs { get; } = new();  // Auto-sync with CheckBox
-    public string TabHeader => "Jobs";  // Ou resource localisé [web:67]
-
-    
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class.
     /// </summary>

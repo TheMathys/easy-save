@@ -91,14 +91,14 @@ public sealed class JobsTabViewModel : ViewModelBase
         get => _selectedJob;
         set
         {
-        if (SetProperty(ref _selectedJob, value))
-        {
-            UpdateDetails();
-            RaisePropertyChanged(nameof(CanRunSelected));
-            RaisePropertyChanged(nameof(CanDelete));
-            RaisePropertyChanged(nameof(DeleteButtonText));
+            if (SetProperty(ref _selectedJob, value))
+            {
+                UpdateDetails();
+                RaisePropertyChanged(nameof(CanRunSelected));
+                RaisePropertyChanged(nameof(CanDelete));
+                RaisePropertyChanged(nameof(DeleteButtonText));
+            }
         }
-    }
     }
 
     public string JobDetailsText
@@ -220,7 +220,7 @@ public sealed class JobsTabViewModel : ViewModelBase
             return;
         }
 
-        var ids = SelectedJobs.Select(j => j.Id).ToArray();
+        int[] ids = SelectedJobs.Select(j => j.Id).ToArray();
 
         // prepare cancellation
         _cts?.Dispose();
@@ -270,19 +270,18 @@ public sealed class JobsTabViewModel : ViewModelBase
 
     internal void RefreshJobsFromConfig()
     {
-        var config = _configHolder.Current;
-        // preserve selected ids so we can re-select after reload
-        var previouslySelectedIds = SelectedJobs.Select(x => x.Id).ToList();
+        BackupConfiguration config = _configHolder.Current;
+        List<int> previouslySelectedIds = SelectedJobs.Select(x => x.Id).ToList();
 
         Jobs.Clear();
-        foreach (var j in config.Jobs.OrderBy(x => x.Id))
+        foreach (BackupJob j in config.Jobs.OrderBy(x => x.Id))
             Jobs.Add(new JobItemViewModel(j.Id, j.Name, j.Type));
 
         // restore selection
         SelectedJobs.Clear();
-        foreach (var id in previouslySelectedIds)
+        foreach (int id in previouslySelectedIds)
         {
-            var item = Jobs.FirstOrDefault(x => x.Id == id);
+            JobItemViewModel? item = Jobs.FirstOrDefault(x => x.Id == id);
             if (item != null)
                 SelectedJobs.Add(item);
         }
@@ -294,7 +293,7 @@ public sealed class JobsTabViewModel : ViewModelBase
             SelectedJob = Jobs[0];
         else if (SelectedJob != null)
         {
-            var stillSelected = Jobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
+            JobItemViewModel? stillSelected = Jobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
             SelectedJob = stillSelected;
         }
 
@@ -309,12 +308,12 @@ public sealed class JobsTabViewModel : ViewModelBase
     {
         if (SelectedJob == null)
             return;
-        var config = _configHolder.Current;
-        var job = config.Jobs.FirstOrDefault(j => j.Id == SelectedJob.Id);
+        BackupConfiguration config = _configHolder.Current;
+        BackupJob? job = config.Jobs.FirstOrDefault(j => j.Id == SelectedJob.Id);
         if (job == null)
             return;
 
-        var typeStr = job.Type == BackupType.Differential
+        string typeStr = job.Type == BackupType.Differential
             ? _localization.GetString("DifferentialBackup")
             : _localization.GetString("FullBackup");
         JobDetailsText = string.Format(
