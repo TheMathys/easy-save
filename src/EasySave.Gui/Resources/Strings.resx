@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Gui_WindowTitle" xml:space="preserve">
+    <value>EasySave</value>
+  </data>
+  <data name="Gui_HeaderTitle" xml:space="preserve">
+    <value>EasySave</value>
+  </data>
+  <data name="Gui_TabJobs" xml:space="preserve">
+    <value>Jobs</value>
+  </data>
+  <data name="Gui_TabCreateEdit" xml:space="preserve">
+    <value>Create / Edit</value>
+  </data>
+  <data name="Gui_TabSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Gui_JobsListTitle" xml:space="preserve">
+    <value>Job list</value>
+  </data>
+  <data name="Gui_DetailsTitle" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Gui_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Gui_RunSelected" xml:space="preserve">
+    <value>Run selected job</value>
+  </data>
+  <data name="Gui_JobsRefreshed" xml:space="preserve">
+    <value>Jobs reloaded from configuration.</value>
+  </data>
+  <data name="Gui_SelectJobFirst" xml:space="preserve">
+    <value>Please select a job first.</value>
+  </data>
+  <data name="Gui_JobRunning" xml:space="preserve">
+    <value>Running job #{0}...</value>
+  </data>
+  <data name="Gui_JobSuccess" xml:space="preserve">
+    <value>Job #{0} completed successfully.</value>
+  </data>
+  <data name="Gui_JobError" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Gui_JobDetailsFormat" xml:space="preserve">
+    <value>ID: {0}&#x0a;Name: {1}&#x0a;Type: {2}&#x0a;Source: {3}&#x0a;Target: {4}&#x0a;Excluded extensions: {5}&#x0a;Excluded directories: {6}</value>
+  </data>
+  <data name="Gui_JobsHint" xml:space="preserve">
+    <value>Click a job to view its details.</value>
+  </data>
+  <data name="Gui_ExistingJob" xml:space="preserve">
+    <value>Existing job:</value>
+  </data>
+  <data name="Gui_NewJob" xml:space="preserve">
+    <value>New job</value>
+  </data>
+  <data name="Gui_EditHint" xml:space="preserve">
+    <value>Leave a field empty to keep the current value when editing.</value>
+  </data>
+  <data name="Gui_LabelName" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+  <data name="Gui_LabelSource" xml:space="preserve">
+    <value>Source folder:</value>
+  </data>
+  <data name="Gui_Browse" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="Gui_PickSourceFolder" xml:space="preserve">
+    <value>Select source folder</value>
+  </data>
+  <data name="Gui_PickTargetFolder" xml:space="preserve">
+    <value>Select target folder</value>
+  </data>
+  <data name="Gui_LabelTarget" xml:space="preserve">
+    <value>Target folder:</value>
+  </data>
+  <data name="Gui_LabelType" xml:space="preserve">
+    <value>Type:</value>
+  </data>
+  <data name="Gui_LabelExcludeExtensions" xml:space="preserve">
+    <value>Excluded extensions:</value>
+  </data>
+  <data name="Gui_LabelExcludeDirs" xml:space="preserve">
+    <value>Excluded directories:</value>
+  </data>
+  <data name="Gui_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Gui_EditModeCreate" xml:space="preserve">
+    <value>Create mode: enter details and click Save.</value>
+  </data>
+  <data name="Gui_EditModeEdit" xml:space="preserve">
+    <value>Editing job #{0}.</value>
+  </data>
+  <data name="Gui_RequiredFields" xml:space="preserve">
+    <value>Name, source and target are required.</value>
+  </data>
+  <data name="Gui_MaxJobsDeleteOne" xml:space="preserve">
+    <value>Maximum jobs reached. Delete one to add a new job.</value>
+  </data>
+  <data name="Gui_LabelBasePath" xml:space="preserve">
+    <value>Base path:</value>
+  </data>
+  <data name="Gui_LabelConfigPath" xml:space="preserve">
+    <value>Config file:</value>
+  </data>
+  <data name="Gui_LabelStatePath" xml:space="preserve">
+    <value>State file:</value>
+  </data>
+  <data name="Gui_LabelLogDir" xml:space="preserve">
+    <value>Log directory:</value>
+  </data>
+  <data name="Gui_LabelLogFormat" xml:space="preserve">
+    <value>Log format:</value>
+  </data>
+  <data name="Gui_SaveSettings" xml:space="preserve">
+    <value>Save settings</value>
+  </data>
+  <data name="Gui_SettingsSaved" xml:space="preserve">
+    <value>Settings saved. Active format: {0}.</value>
+  </data>
+  <data name="FullBackup" xml:space="preserve">
+    <value>Full backup</value>
+  </data>
+  <data name="DifferentialBackup" xml:space="preserve">
+    <value>Differential backup</value>
+  </data>
+  <data name="NoJobsFound" xml:space="preserve">
+    <value>No backup jobs found.</value>
+  </data>
+  <data name="MaxJobsReached" xml:space="preserve">
+    <value>Maximum number of jobs (5) reached.</value>
+  </data>
+  <data name="JobCreated" xml:space="preserve">
+    <value>Job {0} created successfully.</value>
+  </data>
+  <data name="TuiJobUpdated" xml:space="preserve">
+    <value>Job {0} has been updated.</value>
+  </data>
+</root>
