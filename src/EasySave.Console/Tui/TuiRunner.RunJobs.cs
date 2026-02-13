@@ -54,16 +54,20 @@ namespace EasySave.Console.Tui
                     {
                         for (int i = Math.Min(start, end); i <= Math.Max(start, end); i++)
                         {
-                            if (i >= 1 && i <= 5 && !jobIds.Contains(i))
+                            if (i >= 1 && !jobIds.Contains(i))
                                 jobIds.Add(i);
                         }
                     }
                 }
-                else if (int.TryParse(trimmed, out int id) && id >= 1 && id <= 5 && !jobIds.Contains(id))
+                else if (int.TryParse(trimmed, out int id) && id >= 1 && !jobIds.Contains(id))
                 {
                     jobIds.Add(id);
                 }
             }
+
+            // Filter job IDs to those actually present in configuration
+            var existingIds = new HashSet<int>(config.Jobs.Select(j => j.Id));
+            jobIds = jobIds.Where(id => existingIds.Contains(id)).ToList();
 
             if (jobIds.Count == 0)
             {

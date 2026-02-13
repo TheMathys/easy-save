@@ -170,17 +170,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
 
         if (SelectedExistingJob == null)
         {
-            if (jobs.Count >= 5)
-            {
-                StatusText = _localization.GetString("MaxJobsReached");
-                return;
-            }
             int newId = jobs.Count > 0 ? jobs.Max(j => j.Id) + 1 : 1;
-            if (newId > 5)
-            {
-                StatusText = _localization.GetString("Gui_MaxJobsDeleteOne");
-                return;
-            }
             jobs.Add(new BackupJob
             {
                 Id = newId,

@@ -8,7 +8,7 @@ namespace EasySave.Console.Cli
 
     /// <summary>
     /// Parses the command-line arguments to determine which backup jobs must be executed.
-    /// The <see cref="Parse"/> method accepts raw arguments and returns a list of job identifiers between 1 and 5.
+    /// The <see cref="Parse"/> method accepts raw arguments and returns a list of positive job identifiers.
     /// Invalid or out-of-range identifiers are excluded from the result.
     /// </summary>
     public static class CommandLineParser
@@ -48,7 +48,7 @@ namespace EasySave.Console.Cli
                     int.TryParse(parts[1].Trim(), out int end))
                 {
                     for (int i = Math.Min(start, end); i <= Math.Max(start, end); i++)
-                        if (i >= 1 && i <= 5)
+                        if (i >= 1)
                             result.Add(i);
                     return result;
                 }
@@ -57,7 +57,7 @@ namespace EasySave.Console.Cli
             char[] separators = new[] { ';', ',' };
             foreach (string token in raw.Split(separators, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (int.TryParse(token.Trim(), out int id) && id >= 1 && id <= 5 && !result.Contains(id))
+                if (int.TryParse(token.Trim(), out int id) && id >= 1 && !result.Contains(id))
                     result.Add(id);
             }
 
