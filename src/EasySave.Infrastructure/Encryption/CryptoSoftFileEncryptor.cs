@@ -37,10 +37,6 @@ public sealed class CryptoSoftFileEncryptor : IFileEncryptor
         process.Start();
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
-        int exitCode = process.ExitCode;
-        if (exitCode == -1 || exitCode == -4)
-            return exitCode;
-
-        return exitCode;
+        return process.ExitCode;
     }
 }
