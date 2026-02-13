@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Threading;
 using System;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
@@ -45,7 +46,7 @@ public sealed class JobsTabViewModel : ViewModelBase
         _confirmation = confirmation;
         Jobs = new ObservableCollection<JobItemViewModel>();
         SelectedJobs.CollectionChanged += SelectedJobs_CollectionChanged;
-        _configHolder.ConfigurationChanged += (_, _) => RefreshJobsFromConfig();
+        _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(RefreshJobsFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         RefreshJobsFromConfig();
     }
@@ -163,18 +164,20 @@ public sealed class JobsTabViewModel : ViewModelBase
             return;
         }
 
-        var config = _configHolder.Current;
-        var newJobs = config.Jobs.Where(j => j.Id != SelectedJob.Id).ToList();
-        var newLastFull = config.LastFullBackupUtcByJobId
+        BackupConfiguration config = _configHolder.Current;
+        List<BackupJob> newJobs = config.Jobs.Where(j => j.Id != SelectedJob.Id).ToList();
+        Dictionary<int, DateTime> newLastFull = config.LastFullBackupUtcByJobId
             .Where(kv => kv.Key != SelectedJob.Id)
             .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        var updated = new BackupConfiguration
+        BackupConfiguration updated = new BackupConfiguration
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = config.LogFileFormat,
             Jobs = newJobs,
-            LastFullBackupUtcByJobId = newLastFull
+            LastFullBackupUtcByJobId = newLastFull,
+            EncryptExtensions = config.EncryptExtensions,
+            EncryptionKeyPath = config.EncryptionKeyPath
         };
 
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
@@ -194,14 +197,26 @@ public sealed class JobsTabViewModel : ViewModelBase
         IsRunning = true;
         try
         {
-            await _configHolder.ReloadAsync(CancellationToken.None).ConfigureAwait(true);
-            StatusText = _localization.GetString("Gui_JobsRefreshed");
+            await _configHolder.ReloadAsync(CancellationToken.None).ConfigureAwait(false);
+            string message = _localization.GetString("Gui_JobsRefreshed");
+            Dispatcher.UIThread.Post(() =>
+            {
+                StatusText = message;
+                IsRunning = false;
+                RaisePropertyChanged(nameof(CanRefresh));
+                RaisePropertyChanged(nameof(CanRunSelected));
+            });
         }
-        finally
+        catch (Exception ex)
         {
-            IsRunning = false;
-            RaisePropertyChanged(nameof(CanRefresh));
-            RaisePropertyChanged(nameof(CanRunSelected));
+            string errorMessage = _localization.GetString("Gui_JobError", ex.Message);
+            Dispatcher.UIThread.Post(() =>
+            {
+                StatusText = errorMessage;
+                IsRunning = false;
+                RaisePropertyChanged(nameof(CanRefresh));
+                RaisePropertyChanged(nameof(CanRunSelected));
+            });
         }
     }
 

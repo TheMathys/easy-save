@@ -20,4 +20,11 @@
     <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\CryptoSoft\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest">
+      <Link>CryptoSoft\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
 </Project>

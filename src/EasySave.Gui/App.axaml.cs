@@ -1,9 +1,10 @@
-using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using EasySave.Gui.Services;
+using EasySave.Gui.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace EasySave.Gui;
 
@@ -30,13 +31,15 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && ServiceProvider != null)
         {
-            var mainVm = ServiceProvider.GetRequiredService<ViewModels.MainWindowViewModel>();
+            MainWindowViewModel mainVm = ServiceProvider.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
 
-            var folderPicker = ServiceProvider.GetRequiredService<IFolderPickerService>();
+            IFolderPickerService folderPicker = ServiceProvider.GetRequiredService<IFolderPickerService>();
             folderPicker.SetOwner(desktop.MainWindow);
+            IFilePickerService filePicker = ServiceProvider.GetRequiredService<IFilePickerService>();
+            filePicker.SetOwner(desktop.MainWindow);
 
-            var configHolder = ServiceProvider.GetRequiredService<IConfigurationHolder>();
+            IConfigurationHolder configHolder = ServiceProvider.GetRequiredService<IConfigurationHolder>();
             // Trigger initial configuration load without blocking the UI thread.
             _ = configHolder.ReloadAsync();
         }

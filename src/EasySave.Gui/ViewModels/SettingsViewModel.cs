@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Gui.Services;
@@ -15,18 +16,23 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly IConfigurationHolder _configHolder;
     private readonly ILocalizationProvider _localization;
     private readonly EasySavePaths _paths;
+    private readonly IFilePickerService _filePicker;
     private int _logFormatIndex;
     private string _statusText = string.Empty;
+    private string _encryptExtensionsText = string.Empty;
+    private string _encryptionKeyPath = string.Empty;
 
     public SettingsViewModel(
         IConfigurationHolder configHolder,
         ILocalizationProvider localization,
-        EasySavePaths paths)
+        EasySavePaths paths,
+        IFilePickerService filePicker)
     {
         _configHolder = configHolder;
         _localization = localization;
         _paths = paths;
-        _configHolder.ConfigurationChanged += (_, _) => SyncFromConfig();
+        _filePicker = filePicker;
+        _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
     }
@@ -38,6 +44,9 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelStatePath));
         RaisePropertyChanged(nameof(LabelLogDir));
         RaisePropertyChanged(nameof(LabelLogFormat));
+        RaisePropertyChanged(nameof(LabelEncryptExtensions));
+        RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
+        RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
     }
 
@@ -67,27 +76,66 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelStatePath => _localization.GetString("Gui_LabelStatePath");
     public string LabelLogDir => _localization.GetString("Gui_LabelLogDir");
     public string LabelLogFormat => _localization.GetString("Gui_LabelLogFormat");
+    public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
+    public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
+    public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
+
+    public string EncryptExtensionsText
+    {
+        get => _encryptExtensionsText;
+        set => SetProperty(ref _encryptExtensionsText, value ?? string.Empty);
+    }
+
+    public string EncryptionKeyPath
+    {
+        get => _encryptionKeyPath;
+        set => SetProperty(ref _encryptionKeyPath, value ?? string.Empty);
+    }
 
     internal void SyncFromConfig()
     {
-        LogFormatIndex = _configHolder.Current.LogFileFormat == LogFileFormat.Xml ? 1 : 0;
+        BackupConfiguration c = _configHolder.Current;
+        LogFormatIndex = c.LogFileFormat == LogFileFormat.Xml ? 1 : 0;
+        EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
+        EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
     }
 
     public async void SaveSettings(object _)
     {
-        var format = LogFormatIndex == 1 ? LogFileFormat.Xml : LogFileFormat.Json;
-        var config = _configHolder.Current;
-        var updated = new BackupConfiguration
+        LogFileFormat format = LogFormatIndex == 1 ? LogFileFormat.Xml : LogFileFormat.Json;
+        BackupConfiguration config = _configHolder.Current;
+        List<string> extensions = new List<string>();
+        foreach (string part in (EncryptExtensionsText ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string ext = part.Trim();
+            if (ext.Length > 0)
+            {
+                if (ext[0] != '.') ext = "." + ext;
+                extensions.Add(ext);
+            }
+        }
+        BackupConfiguration updated = new BackupConfiguration
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = format,
             Jobs = config.Jobs,
-            LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId
+            LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
+            EncryptExtensions = extensions,
+            EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim()
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
         StatusText = _localization.GetString("Gui_SettingsSaved", format.ToString());
     }
 
     public bool CanSaveSettings(object _) => true;
+
+    public async void PickEncryptionKeyFile(object _)
+    {
+        string? path = await _filePicker.PickFileAsync(_localization.GetString("Gui_EncryptionKeyFileDialogTitle")).ConfigureAwait(true);
+        if (path != null)
+            EncryptionKeyPath = path;
+    }
+
+    public bool CanPickEncryptionKeyFile(object _) => true;
 }

@@ -130,6 +130,18 @@
   <data name="Gui_LabelLogFormat" xml:space="preserve">
     <value>Format des logs :</value>
   </data>
+  <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
+    <value>Extensions à chiffrer (séparées par des virgules) :</value>
+  </data>
+  <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
+    <value>Fichier clé de chiffrement :</value>
+  </data>
+  <data name="Gui_BrowseEncryptionKey" xml:space="preserve">
+    <value>Parcourir…</value>
+  </data>
+  <data name="Gui_EncryptionKeyFileDialogTitle" xml:space="preserve">
+    <value>Choisir le fichier clé de chiffrement</value>
+  </data>
   <data name="Gui_SaveSettings" xml:space="preserve">
     <value>Enregistrer les paramètres</value>
   </data>

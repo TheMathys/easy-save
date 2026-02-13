@@ -152,7 +152,7 @@
 
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" Margin="0,8,0,0" MaxWidth="700" HorizontalAlignment="Left">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="160,*" RowSpacing="14" ColumnSpacing="16">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="160,*" RowSpacing="14" ColumnSpacing="16">
             <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
             <TextBlock Grid.Column="1" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
             <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
@@ -166,9 +166,16 @@
               <ComboBoxItem Content="Json" />
               <ComboBoxItem Content="Xml" />
             </ComboBox>
-            <Button Grid.Row="5" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+            <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" />
+            <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="#374151" />
+            <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" />
+              <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
+            </Grid>
+            <Button Grid.Row="7" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
                     Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-            <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+            <TextBlock Grid.Row="8" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
           </Grid>
         </Border>
       </TabItem>
