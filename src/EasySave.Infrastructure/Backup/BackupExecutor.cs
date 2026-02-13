@@ -173,6 +173,7 @@ namespace EasySave.Infrastructure.Backup
                     string uncDest = _fileSystem.GetUncPath(destPath);
 
                     long transferMs;
+                    long encryptionTimeMs;
                     if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                     {
                         transferMs = await _fileEncryptor!.EncryptFileAsync(
@@ -181,10 +182,11 @@ namespace EasySave.Infrastructure.Backup
                             config.EncryptionKeyPath!.Trim(),
                             cryptoSoftExePath,
                             cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = transferMs;
                     }
                     else
                     {
-                        var fileProgress = new Progress<long>(bytesCopied =>
+                        Progress<long> fileProgress = new Progress<long>(bytesCopied =>
                         {
                             UpdateProgress(bytesCopied, uncSource, uncDest);
                             long now = Environment.TickCount64;
@@ -195,12 +197,13 @@ namespace EasySave.Infrastructure.Backup
                             }
                         });
                         transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = 0;
                     }
 
                     string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
                     string uncDestLog = _fileSystem.GetUncPath(destPath);
                     TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime), cancellationToken).ConfigureAwait(false);
+                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
 
                     bytesCompleted += fileSize;
                     processedCount++;

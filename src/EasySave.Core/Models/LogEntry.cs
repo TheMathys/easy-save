@@ -38,6 +38,12 @@ namespace EasySave.Core.Models
         public TimeSpan TransferTimeMs { get; }
 
         /// <summary>
+        /// Time required to encrypt the file in milliseconds (log journalier).
+        /// 0 = pas de cryptage, &gt;0 = temps de cryptage (ms), &lt;0 = code erreur.
+        /// </summary>
+        public long EncryptionTimeMs { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LogEntry"/> class.
         /// </summary>
         /// <param name="timeStamp">Date and time of the log entry.</param>
@@ -46,7 +52,8 @@ namespace EasySave.Core.Models
         /// <param name="destinationPath">Destination path of the backup.</param>
         /// <param name="fileSizeBytes">Size of the file transferred in bytes.</param>
         /// <param name="transferTimeMs">Time taken to transfer the file.</param>
-        public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs)
+        /// <param name="encryptionTimeMs">Temps nécessaire au cryptage (ms): 0 = pas de cryptage, &gt;0 = temps en ms, &lt;0 = code erreur.</param>
+        public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs, long encryptionTimeMs = 0)
         {
             TimeStamp = timeStamp;
             BackupName = backupName;
@@ -54,6 +61,7 @@ namespace EasySave.Core.Models
             DestinationPath = destinationPath;
             FileSizeBytes = fileSizeBytes;
             TransferTimeMs = transferTimeMs;
+            EncryptionTimeMs = encryptionTimeMs;
         }
     }
 }

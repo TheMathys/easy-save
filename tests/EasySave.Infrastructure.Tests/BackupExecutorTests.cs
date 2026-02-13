@@ -404,6 +404,7 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Contains("test.txt", entry.SourcePath);
         Assert.Contains("test.txt", entry.DestinationPath);
         Assert.True(entry.TransferTimeMs >= TimeSpan.Zero);
+        Assert.Equal(0L, entry.EncryptionTimeMs); // pas de cryptage = 0
     }
 
     [Fact]
