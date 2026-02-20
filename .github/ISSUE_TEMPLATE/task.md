@@ -1,7 +1,7 @@
 ---
 name: "🛠️ Tâche / ✨ Feature"
 about: Créer une tâche technique ou fonctionnelle pour EasySave
-title: "[Tx.y.z] Titre court de la tâche"
+title: "T/F0.0.0 Titre court de la tâche"
 labels: ["task"]
 assignees: []
 ---
