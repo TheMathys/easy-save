@@ -3,11 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.VisualTree;
-using EasySave.Gui.Services;
 using System;
 using System.Speech.Synthesis;
 
-namespace EasySave.Gui.Service
+namespace EasySave.Gui.Services
 {
     internal class Audiodescription : IAudiodescription
     {
