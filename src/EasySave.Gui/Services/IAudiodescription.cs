@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EasySave.Gui.Audiodescription.IViewModel
+namespace EasySave.Gui.Services
 {
     internal interface IAudiodescription
     {
