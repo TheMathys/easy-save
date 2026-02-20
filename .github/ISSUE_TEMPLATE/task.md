@@ -1,67 +1,34 @@
 ---
-name: "📋 Tâche"
-about: "Template avec Definition of Ready (DoR) intégrée."
-title: "[TASK] "
-labels: ["task", "DoR"]
+name: "🛠️ Tâche / ✨ Feature"
+about: Créer une tâche technique ou fonctionnelle pour EasySave
+title: "T/F0.0.0 Titre court de la tâche"
+labels: ["task"]
+assignees: []
 ---
-
-## Contexte  
-_Fournis le contexte métier ou technique de cette tâche (but, objectif, problème à résoudre)._  
-> Exemple : Créer un template d'issue GitHub standardisé pour homogénéiser les tickets du projet.
-
----
-
-## Lien fonctionnel  
-_Epic, user story ou issues liées._  
-> Exemple :  
-> - Epic : #3  
-> - User Story : #12  
-
----
-
-## Travail à réaliser  
-_Liste les actions ou étapes concrètes à effectuer._  
-- [ ] Créer le dossier `.github/ISSUE_TEMPLATE`  
-- [ ] Ajouter le fichier `task.yml`  
-- [ ] Ajouter le template `task.md`  
-
----
-
-# ✅ Definition of Ready (DoR) – À valider  
-**Copie-colle et coche TOUS les critères avant de considérer la tâche “Ready”.**
-
-### Une tâche est Ready quand :  
-- **✅ Titre et description claire et concise** de la fonctionnalité ou de la tâche.  
-- **✅ Acceptation des critères par l'équipe** (Product Owner, développeurs, testeurs, Scrum Master).  
-- **✅ Estimation de la complexité** (en points d’histoire, jours, etc.).  
-- **✅ Critères d’acceptation bien définis**, spécifiques et testables.  
-
-### Conforme aux principes INVEST :  
-- **I**ndépendante  
-- **N**égociable  
-- **V**aluable  
-- **E**stimable  
-- **P**etite  
-- **T**estable  
-
-**Status DoR :** [ ] READY / [ ] À raffiner  
-
----
-
-## Critères d’acceptation (DoD)  
-_Critères mesurables ou testables qui attestent que la tâche est bien terminée._  
-- [ ] Fichier `task.yml` créé et valide  
-- [ ] Template visible et fonctionnel sur GitHub  
-
----
-
-## Dépendances  
-_Liste des tickets ou tâches dont celle-ci dépend._  
-> Exemple :  
-> - [ ] Dépend de : #4  
-
----
-
-## Estimation  
-_Indique la charge estimée (en points ou en jours)._  
-> Exemple : **3 SP**
+ 
+## Contexte
+ 
+Décrire en 2–3 phrases le but de la tâche et le problème adressé.
+ 
+## Lien fonctionnel
+ 
+- **Epic** : <!-- Ex : Epic 2 – Architecture & domaine (EasySave.Core) -->
+- **Feature** : <!-- Ex : F2.1 – Rédaction du document d'architecture -->
+ 
+## Travail à réaliser
+ 
+- [ ] Étape 1
+- [ ] Étape 2
+- [ ] Étape 3
+ 
+## Critères d'acceptation (DoR/DoD)
+ 
+- [ ] La tâche est clairement comprise et estimable
+- [ ] Le code compile et les tests passent
+- [ ] Le comportement attendu est vérifié (test manuel/auto)
+- [ ] La doc / README / commentaires sont à jour si nécessaire
+ 
+## Dépendances
+ 
+- [ ] Aucune
+- [ ] Dépend de : #ID_ISSUE
