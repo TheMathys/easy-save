@@ -29,8 +29,10 @@
       <Setter Property="BorderBrush" Value="#E5E7EB" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Padding" Value="20" />
     </Style>
+      <Style Selector="ScrollViewer.cardScroll">
+        <Setter Property="Padding" Value="20" />
+      </Style>
     <Style Selector="Button.primary">
       <Setter Property="Background" Value="#0067C0" />
       <Setter Property="Foreground" Value="White" />
@@ -42,6 +44,16 @@
     </Style>
     <Style Selector="Button.primary:pressed">
       <Setter Property="Background" Value="#004578" />
+    </Style>
+    <Style Selector="ProgressBar">
+      <Setter Property="Background" Value="#E5E7EB" />
+    </Style>
+    <Style Selector="Slider">
+      <Setter Property="Height" Value="24" />
+    </Style>
+    <Style Selector="ToggleSwitch">
+      <Setter Property="OffContent" Value="" />
+      <Setter Property="OnContent" Value="" />
     </Style>
   </Window.Styles>
 
@@ -170,37 +182,46 @@
       </TabItem>
 
       <TabItem Header="{Binding TabSettings}">
-        <Border Classes="card" Margin="0,8,0,0" MaxWidth="720" HorizontalAlignment="Left">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
-            <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
-            <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
-            <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
-            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="#4B5563" />
-            <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="#374151" />
-            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatePath}" TextWrapping="Wrap" Foreground="#4B5563" />
-            <TextBlock Grid.Row="3" Text="{Binding SettingsTab.LabelLogDir}" VerticalAlignment="Center" Foreground="#374151" />
-            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LogDirectory}" TextWrapping="Wrap" Foreground="#4B5563" />
-            <TextBlock Grid.Row="4" Text="{Binding SettingsTab.LabelLogFormat}" VerticalAlignment="Center" Foreground="#374151" />
-            <ComboBox Grid.Row="4" Grid.Column="1" SelectedIndex="{Binding SettingsTab.LogFormatIndex}" Width="160" HorizontalAlignment="Left">
-              <ComboBoxItem Content="Json" />
-              <ComboBoxItem Content="Xml" />
-            </ComboBox>
-            <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="#374151" />
-            <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" MinWidth="200" />
-            <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="#374151" />
-            <Grid Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" MinWidth="200" />
-              <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
+        <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
+          <ScrollViewer Classes="cardScroll">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+              <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
+              <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="#4B5563" />
+              <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatePath}" TextWrapping="Wrap" Foreground="#4B5563" />
+              <TextBlock Grid.Row="3" Text="{Binding SettingsTab.LabelLogDir}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LogDirectory}" TextWrapping="Wrap" Foreground="#4B5563" />
+              <TextBlock Grid.Row="4" Text="{Binding SettingsTab.LabelLogFormat}" VerticalAlignment="Center" Foreground="#374151" />
+              <ComboBox Grid.Row="4" Grid.Column="1" SelectedIndex="{Binding SettingsTab.LogFormatIndex}" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem Content="Json" />
+                <ComboBoxItem Content="Xml" />
+              </ComboBox>
+              <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" MinWidth="200" />
+              <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="#374151" />
+              <Grid Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" MinWidth="200" />
+                <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
+              </Grid>
+              <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="#374151" />
+              <Grid Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
+                <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
+              </Grid>
+              
+              <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="#374151" />
+              <ToggleSwitch Grid.Row="8" Grid.Column="1" IsChecked="False" HorizontalAlignment="Left"/>
+              
+              <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
+              <Slider Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Value="50" Minimum="0" Maximum="100"/>
+              
+              <Button Grid.Row="10" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+                      Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
+              <TextBlock Grid.Row="11" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
             </Grid>
-            <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="#374151" />
-            <Grid Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
-              <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
-            </Grid>
-            <Button Grid.Row="8" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
-                    Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-            <TextBlock Grid.Row="9" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
-          </Grid>
+          </ScrollViewer>
         </Border>
       </TabItem>
     </TabControl>

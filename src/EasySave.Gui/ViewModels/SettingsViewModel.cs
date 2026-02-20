@@ -57,6 +57,8 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelEncryptExtensions));
         RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
+        RaisePropertyChanged(nameof(LabelAudioDescription));
+        RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
@@ -91,6 +93,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
     public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
+    public string LabelAudioDescription => _localization.GetString("Gui_LabelAudioDescription");
+    public string LabelAudioDescriptionVolume => _localization.GetString("Gui_LabelAudioDescriptionVolume");
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
