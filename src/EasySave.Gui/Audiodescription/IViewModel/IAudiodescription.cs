@@ -6,11 +6,11 @@ namespace EasySave.Gui.Audiodescription.IViewModel
 {
     internal interface IAudiodescription
     {
-        void SetVolume(double volume);
+        void SetVolume(int volume);
         void ServiceStatement(bool onOff);
         void Start();
         void Stop();
 
-        double GetVolume();
+        int GetVolume();
     }
 }

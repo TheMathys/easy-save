@@ -11,7 +11,7 @@ namespace EasySave.Gui.Audiodescription.Service
 {
     internal class Audiodescription : IAudiodescription
     {
-        private double Volume { get; set; } = 100;
+        private int Volume { get; set; } = 100;
         private SpeechSynthesizer _synthesizer;
         private bool _enabled;
         private Window? _mainWindow;
@@ -88,8 +88,7 @@ namespace EasySave.Gui.Audiodescription.Service
 
                 case ToggleSwitch toggleSwitch:
                     string toggleName = !string.IsNullOrWhiteSpace(toggleSwitch.Content?.ToString()) 
-                        ? toggleSwitch.Content.ToString() 
-                        : "Interrupteur";
+                        ? toggleSwitch.Content.ToString() : "Interrupteur";
                     string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
                     textToRead = $"{toggleName}: {toggleState}";
                     break;
@@ -189,18 +188,18 @@ namespace EasySave.Gui.Audiodescription.Service
         /// <summary>
         /// Audiodescription.SetVolume() sets the volume level.
         /// </summary>
-        public void SetVolume(double volume)
+        public void SetVolume(int volume)
         {
             Volume = volume;
 
             if (_synthesizer != null)
-                _synthesizer.Volume = (int)Volume;
+                _synthesizer.Volume = Volume;
         }
 
         /// <summary>
         /// Audiodescription.GetVolume() returns the current volume.
         /// </summary>
-        public double GetVolume()
+        public int GetVolume()
         {
             return Volume;
         }
