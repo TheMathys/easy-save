@@ -8,7 +8,7 @@ using System.Speech.Synthesis;
 
 namespace EasySave.Gui.Services
 {
-    internal class Audiodescription : IAudiodescription
+    public class Audiodescription : IAudiodescription
     {
         private int Volume { get; set; } = 100;
         private SpeechSynthesizer _synthesizer;
