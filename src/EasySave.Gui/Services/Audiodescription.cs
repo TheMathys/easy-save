@@ -81,7 +81,7 @@ namespace EasySave.Gui.Services
             {
                 case Slider slider:
                     string sliderName = !string.IsNullOrWhiteSpace(slider.Name) ? slider.Name : "Curseur";
-                    double sliderValue = Math.Round(slider.Value, 0);
+                    int sliderValue = (int)slider.Value;
                     textToRead = $"{sliderName}: {sliderValue} pourcent";
                     break;
 
