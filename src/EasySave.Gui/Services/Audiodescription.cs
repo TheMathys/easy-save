@@ -29,7 +29,7 @@ namespace EasySave.Gui.Services
 
             _synthesizer = new SpeechSynthesizer();
             _synthesizer.SetOutputToDefaultAudioDevice();
-            _synthesizer.Volume = (int)Volume;
+            _synthesizer.Volume = Volume;
 
             AttachToMainWindow();
         }
