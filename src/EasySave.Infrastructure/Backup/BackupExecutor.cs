@@ -15,9 +15,10 @@ using FileItem = EasySave.Core.Models.FileItem;
 namespace EasySave.Infrastructure.Backup
 {
     /// <summary>
-    /// Executes backup jobs sequentially: logging, real-time state, full/differential strategy.
-    /// Progress by size (bytes) with ETA and report during file copy.
+    /// Executes backup jobs in parallel when multiple are selected, otherwise runs a single job.
+    /// Logging, real-time state, full/differential strategy. Progress by size (bytes) with ETA and report during file copy.
     /// Blocks start and stops during backup when business software is detected.
+    /// State and log writes are coordinated so that the state file and logs remain consistent when several jobs run concurrently.
     /// </summary>
     public sealed class BackupExecutor : IBackupExecutor
     {
@@ -28,6 +29,7 @@ namespace EasySave.Infrastructure.Backup
         private readonly ILogWriter _logWriter;
         private readonly IFileEncryptor? _fileEncryptor;
         private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
+        private readonly SemaphoreSlim _stateWriteLock = new(1, 1);
 
         public const string StopReasonBusinessSoftware = "BusinessSoftwareDetected";
 
@@ -68,40 +70,156 @@ namespace EasySave.Infrastructure.Backup
                 State = BackupState.Inactive
             }).ToList();
 
-            await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
+            await WriteStateUnderLockAsync(progressList, cancellationToken).ConfigureAwait(false);
 
-            bool stoppedDueToBusinessSoftware = false;
+            List<(BackupJob Job, int ProgressIndex)> toRun = new();
             foreach (int jobId in jobIds)
             {
-                if (stoppedDueToBusinessSoftware)
-                    break;
-
                 if (!jobById.TryGetValue(jobId, out BackupJob? job))
                     continue;
-
-                if (!string.IsNullOrWhiteSpace(job.TargetPath))
-                    _fileSystem.EnsureDirectoryExists(job.TargetPath);
-
                 int idx = progressList.FindIndex(p => p.BackupName == job.Name);
-                if (idx < 0) continue;
+                if (idx >= 0)
+                    toRun.Add((job, idx));
+            }
 
-                IBackupStrategy strategy = _strategyFactory.GetStrategy(job.Type);
-                DateTime? differentialSince = job.Type == BackupType.Differential && config.LastFullBackupUtcByJobId.TryGetValue(job.Id, out DateTime since) ? since : null;
+            if (toRun.Count == 0)
+                return;
 
-                var enumOptions = new BackupEnumerationOptions
+            if (toRun.Count == 1)
+            {
+                (BackupJob job, int idx) = toRun[0];
+                await ExecuteSingleJobAsync(job, idx, progressList, config, cancellationToken, progress, onBusinessSoftwareDetected: null).ConfigureAwait(false);
+                return;
+            }
+
+            // Parallel execution: several jobs at once (Task.WhenAll), shared cancellation when business software is detected.
+            using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            Action onBusinessSoftwareDetected = () => linkedCts.Cancel();
+
+            IReadOnlyList<Task> tasks = toRun.Select(t => ExecuteSingleJobAsync(
+                t.Job,
+                t.ProgressIndex,
+                progressList,
+                config,
+                linkedCts.Token,
+                progress,
+                onBusinessSoftwareDetected)).ToList();
+
+            try
+            {
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (linkedCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+                // Stopped due to business software (or internal cancel), do not rethrow.
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Writes the current progress list to state under the shared lock so that concurrent jobs produce a consistent state file.
+        /// </summary>
+        private async Task WriteStateUnderLockAsync(List<BackupProgress> progressList, CancellationToken cancellationToken)
+        {
+            await _stateWriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                IReadOnlyList<BackupProgress> snapshot = progressList.ToList();
+                await _stateWriter.WriteStateAsync(snapshot, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _stateWriteLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Writes state and reports progress for one job under the shared lock (used after updating a single slot in progressList).
+        /// </summary>
+        private async Task WriteStateAndReportAsync(
+            List<BackupProgress> progressList,
+            int progressIndex,
+            IProgress<BackupProgress>? progress,
+            CancellationToken cancellationToken)
+        {
+            await _stateWriteLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                IReadOnlyList<BackupProgress> snapshot = progressList.ToList();
+                await _stateWriter.WriteStateAsync(snapshot, cancellationToken).ConfigureAwait(false);
+                progress?.Report(progressList[progressIndex]);
+            }
+            finally
+            {
+                _stateWriteLock.Release();
+            }
+        }
+
+        private async Task ExecuteSingleJobAsync(
+            BackupJob job,
+            int idx,
+            List<BackupProgress> progressList,
+            BackupConfiguration config,
+            CancellationToken cancellationToken,
+            IProgress<BackupProgress>? progress,
+            Action? onBusinessSoftwareDetected)
+        {
+            if (!string.IsNullOrWhiteSpace(job.TargetPath))
+                _fileSystem.EnsureDirectoryExists(job.TargetPath);
+
+            IBackupStrategy strategy = _strategyFactory.GetStrategy(job.Type);
+            DateTime? differentialSince = job.Type == BackupType.Differential && config.LastFullBackupUtcByJobId.TryGetValue(job.Id, out DateTime since) ? since : null;
+
+            BackupEnumerationOptions enumOptions = new BackupEnumerationOptions
+            {
+                ExcludeExtensions = job.ExcludeExtensions ?? Array.Empty<string>(),
+                ExcludeDirectoryNames = job.ExcludeDirectoryNames ?? Array.Empty<string>()
+            };
+
+            long totalSize = 0L;
+            int fileCount = 0;
+            IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
+            await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, pass1Stream, differentialSince, cancellationToken))
+            {
+                totalSize += _fileSystem.GetFileSize(f.FullSourcePath);
+                fileCount++;
+            }
+
+            progressList[idx] = new BackupProgress
+            {
+                BackupName = job.Name,
+                LastActionTimestamp = DateTime.UtcNow,
+                State = BackupState.Active,
+                TotalFilesCount = fileCount,
+                TotalSizeBytes = totalSize,
+                ProgressPercent = 0,
+                RemainingFilesCount = fileCount,
+                RemainingSizeBytes = totalSize,
+                CurrentSourcePath = null,
+                CurrentDestinationPath = null,
+                EstimatedTimeRemainingSeconds = null
+            };
+            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+
+            DateTime jobStartUtc = DateTime.UtcNow;
+            long bytesCompleted = 0L;
+            int processedCount = 0;
+            long lastReportTicks = 0;
+
+            void UpdateProgress(long bytesCopiedInCurrentFile, string? uncSource, string? uncDest)
+            {
+                long totalCompleted = bytesCompleted + bytesCopiedInCurrentFile;
+                long remainingSize = totalSize - totalCompleted;
+                double percentDone = totalSize > 0 ? Math.Round((double)totalCompleted / totalSize * 100.0, 2) : 100.0;
+                double elapsedSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds;
+                double? etaSeconds = null;
+                if (elapsedSeconds > 0.5 && totalCompleted > 0 && remainingSize > 0)
                 {
-                    ExcludeExtensions = job.ExcludeExtensions ?? Array.Empty<string>(),
-                    ExcludeDirectoryNames = job.ExcludeDirectoryNames ?? Array.Empty<string>()
-                };
-
-                // First pass: compute total size and file count without keeping the list in memory.
-                long totalSize = 0L;
-                int fileCount = 0;
-                IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
-                await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, pass1Stream, differentialSince, cancellationToken))
-                {
-                    totalSize += _fileSystem.GetFileSize(f.FullSourcePath);
-                    fileCount++;
+                    double speedBytesPerSec = totalCompleted / elapsedSeconds;
+                    etaSeconds = remainingSize / speedBytesPerSec;
                 }
 
                 progressList[idx] = new BackupProgress
@@ -111,169 +229,131 @@ namespace EasySave.Infrastructure.Backup
                     State = BackupState.Active,
                     TotalFilesCount = fileCount,
                     TotalSizeBytes = totalSize,
-                    ProgressPercent = 0,
-                    RemainingFilesCount = fileCount,
-                    RemainingSizeBytes = totalSize,
-                    CurrentSourcePath = null,
-                    CurrentDestinationPath = null,
-                    EstimatedTimeRemainingSeconds = null
+                    ProgressPercent = percentDone,
+                    RemainingFilesCount = fileCount - processedCount,
+                    RemainingSizeBytes = remainingSize,
+                    CurrentSourcePath = uncSource,
+                    CurrentDestinationPath = uncDest,
+                    EstimatedTimeRemainingSeconds = etaSeconds
                 };
-                await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
-                progress?.Report(progressList[idx]);
+            }
 
-                DateTime jobStartUtc = DateTime.UtcNow;
-                long bytesCompleted = 0L;
-                int processedCount = 0;
-                long lastReportTicks = 0;
-
-                void UpdateProgress(long bytesCopiedInCurrentFile, string? uncSource, string? uncDest)
+            HashSet<string> encryptExtensionsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (config.EncryptExtensions?.Count > 0 == true)
+            {
+                foreach (string ext in config.EncryptExtensions)
                 {
-                    long totalCompleted = bytesCompleted + bytesCopiedInCurrentFile;
-                    long remainingSize = totalSize - totalCompleted;
-                    double percentDone = totalSize > 0 ? Math.Round((double)totalCompleted / totalSize * 100.0, 2) : 100.0;
-                    double elapsedSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds;
-                    double? etaSeconds = null;
-                    if (elapsedSeconds > 0.5 && totalCompleted > 0 && remainingSize > 0)
-                    {
-                        double speedBytesPerSec = totalCompleted / elapsedSeconds;
-                        etaSeconds = remainingSize / speedBytesPerSec;
-                    }
-
-                    progressList[idx] = new BackupProgress
-                    {
-                        BackupName = job.Name,
-                        LastActionTimestamp = DateTime.UtcNow,
-                        State = BackupState.Active,
-                        TotalFilesCount = fileCount,
-                        TotalSizeBytes = totalSize,
-                        ProgressPercent = percentDone,
-                        RemainingFilesCount = fileCount - processedCount,
-                        RemainingSizeBytes = remainingSize,
-                        CurrentSourcePath = uncSource,
-                        CurrentDestinationPath = uncDest,
-                        EstimatedTimeRemainingSeconds = etaSeconds
-                    };
+                    string normalized = ext.Trim();
+                    if (normalized.Length > 0 && normalized[0] != '.')
+                        normalized = "." + normalized;
+                    if (normalized.Length > 0)
+                        encryptExtensionsSet.Add(normalized);
                 }
+            }
 
-                var encryptExtensionsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                if (config.EncryptExtensions?.Count > 0 == true)
+            string cryptoSoftExePath = Path.Combine(AppContext.BaseDirectory, "CryptoSoft", "CryptoSoft.exe");
+            bool useEncryption = encryptExtensionsSet.Count > 0
+                && !string.IsNullOrWhiteSpace(config.EncryptionKeyPath)
+                && _fileEncryptor != null;
+
+            IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
+            await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string destPath = Path.Combine(job.TargetPath, item.RelativePath);
+                string? dir = Path.GetDirectoryName(destPath);
+                if (!string.IsNullOrEmpty(dir))
+                    _fileSystem.EnsureDirectoryExists(dir);
+
+                long fileSize = _fileSystem.GetFileSize(item.FullSourcePath);
+                string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
+                string uncDest = _fileSystem.GetUncPath(destPath);
+
+                long transferMs;
+                long encryptionTimeMs;
+                if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                 {
-                    foreach (string ext in config.EncryptExtensions)
-                    {
-                        string normalized = ext.Trim();
-                        if (normalized.Length > 0 && normalized[0] != '.')
-                            normalized = "." + normalized;
-                        if (normalized.Length > 0)
-                            encryptExtensionsSet.Add(normalized);
-                    }
+                    transferMs = await _fileEncryptor!.EncryptFileAsync(
+                        item.FullSourcePath,
+                        destPath,
+                        config.EncryptionKeyPath!.Trim(),
+                        cryptoSoftExePath,
+                        cancellationToken).ConfigureAwait(false);
+                    encryptionTimeMs = transferMs;
                 }
-
-                string cryptoSoftExePath = Path.Combine(AppContext.BaseDirectory, "CryptoSoft", "CryptoSoft.exe");
-                bool useEncryption = encryptExtensionsSet.Count > 0
-                    && !string.IsNullOrWhiteSpace(config.EncryptionKeyPath)
-                    && _fileEncryptor != null;
-
-                IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
-                await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
+                else
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    string destPath = Path.Combine(job.TargetPath, item.RelativePath);
-                    string? dir = Path.GetDirectoryName(destPath);
-                    if (!string.IsNullOrEmpty(dir))
-                        _fileSystem.EnsureDirectoryExists(dir);
-
-                    long fileSize = _fileSystem.GetFileSize(item.FullSourcePath);
-                    string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
-                    string uncDest = _fileSystem.GetUncPath(destPath);
-
-                    long transferMs;
-                    long encryptionTimeMs;
-                    if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
+                    Progress<long> fileProgress = new Progress<long>(bytesCopied =>
                     {
-                        transferMs = await _fileEncryptor!.EncryptFileAsync(
-                            item.FullSourcePath,
-                            destPath,
-                            config.EncryptionKeyPath!.Trim(),
-                            cryptoSoftExePath,
-                            cancellationToken).ConfigureAwait(false);
-                        encryptionTimeMs = transferMs;
-                    }
-                    else
-                    {
-                        Progress<long> fileProgress = new Progress<long>(bytesCopied =>
+                        UpdateProgress(bytesCopied, uncSource, uncDest);
+                        long now = Environment.TickCount64;
+                        if (now - lastReportTicks >= ProgressReportThrottleMs)
                         {
-                            UpdateProgress(bytesCopied, uncSource, uncDest);
-                            long now = Environment.TickCount64;
-                            if (now - lastReportTicks >= ProgressReportThrottleMs)
-                            {
-                                lastReportTicks = now;
-                                progress?.Report(progressList[idx]);
-                            }
-                        });
-                        transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
-                        encryptionTimeMs = 0;
-                    }
-
-                    string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
-                    string uncDestLog = _fileSystem.GetUncPath(destPath);
-                    TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                    await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
-
-                    bytesCompleted += fileSize;
-                    processedCount++;
-                    int remainingFiles = fileCount - processedCount;
-                    long remainingSize = totalSize - bytesCompleted;
-                    double percentDone = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0;
-
-                    progressList[idx] = new BackupProgress
-                    {
-                        BackupName = job.Name,
-                        LastActionTimestamp = DateTime.UtcNow,
-                        State = BackupState.Active,
-                        TotalFilesCount = fileCount,
-                        TotalSizeBytes = totalSize,
-                        ProgressPercent = percentDone,
-                        RemainingFilesCount = remainingFiles,
-                        RemainingSizeBytes = remainingSize,
-                        CurrentSourcePath = uncSource,
-                        CurrentDestinationPath = uncDest,
-                        EstimatedTimeRemainingSeconds = remainingSize > 0 && (DateTime.UtcNow - jobStartUtc).TotalSeconds > 0.5
-                            ? (double?)(remainingSize / (bytesCompleted / (DateTime.UtcNow - jobStartUtc).TotalSeconds))
-                            : null
-                    };
-                    await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
-                    progress?.Report(progressList[idx]);
-
-                    // After finishing the current file: if business software is detected, stop and log.
-                    if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
-                    {
-                        var stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
-                        await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
-                        stoppedDueToBusinessSoftware = true;
-                        break;
-                    }
+                            lastReportTicks = now;
+                            progress?.Report(progressList[idx]);
+                        }
+                    });
+                    transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                    encryptionTimeMs = 0;
                 }
+
+                string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
+                string uncDestLog = _fileSystem.GetUncPath(destPath);
+                TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
+                await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
+
+                bytesCompleted += fileSize;
+                processedCount++;
+                int remainingFiles = fileCount - processedCount;
+                long remainingSize = totalSize - bytesCompleted;
+                double percentDone = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0;
 
                 progressList[idx] = new BackupProgress
                 {
                     BackupName = job.Name,
                     LastActionTimestamp = DateTime.UtcNow,
-                    State = BackupState.Completed,
+                    State = BackupState.Active,
                     TotalFilesCount = fileCount,
                     TotalSizeBytes = totalSize,
-                    ProgressPercent = 100,
-                    RemainingFilesCount = 0,
-                    RemainingSizeBytes = 0,
-                    CurrentSourcePath = null,
-                    CurrentDestinationPath = null,
-                    EstimatedTimeRemainingSeconds = null
+                    ProgressPercent = percentDone,
+                    RemainingFilesCount = remainingFiles,
+                    RemainingSizeBytes = remainingSize,
+                    CurrentSourcePath = uncSource,
+                    CurrentDestinationPath = uncDest,
+                    EstimatedTimeRemainingSeconds = remainingSize > 0 && (DateTime.UtcNow - jobStartUtc).TotalSeconds > 0.5
+                        ? (double?)(remainingSize / (bytesCompleted / (DateTime.UtcNow - jobStartUtc).TotalSeconds))
+                        : null
                 };
+                await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
 
-                if (job.Type == BackupType.Full)
-                    await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
-
-                await _stateWriter.WriteStateAsync(progressList, cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
+                {
+                    LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
+                    await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                    onBusinessSoftwareDetected?.Invoke();
+                    return;
+                }
             }
+
+            progressList[idx] = new BackupProgress
+            {
+                BackupName = job.Name,
+                LastActionTimestamp = DateTime.UtcNow,
+                State = BackupState.Completed,
+                TotalFilesCount = fileCount,
+                TotalSizeBytes = totalSize,
+                ProgressPercent = 100,
+                RemainingFilesCount = 0,
+                RemainingSizeBytes = 0,
+                CurrentSourcePath = null,
+                CurrentDestinationPath = null,
+                EstimatedTimeRemainingSeconds = null
+            };
+
+            if (job.Type == BackupType.Full)
+                await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
+
+            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
         }
     }
 }

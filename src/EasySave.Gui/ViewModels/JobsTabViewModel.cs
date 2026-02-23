@@ -23,6 +23,7 @@ public sealed class JobsTabViewModel : ViewModelBase
     private readonly IBackupExecutor _backupExecutor;
     private readonly ILocalizationProvider _localization;
     private readonly IConfirmationService _confirmation;
+    private readonly IBackupProgressAggregator _progressAggregator;
     private JobItemViewModel? _selectedJob;
     private string _jobDetailsText = string.Empty;
     private string _statusText = string.Empty;
@@ -41,16 +42,20 @@ public sealed class JobsTabViewModel : ViewModelBase
     /// <param name="configHolder">Configuration holder providing the current jobs.</param>
     /// <param name="backupExecutor">Executor used to run backup jobs.</param>
     /// <param name="localization">Localization provider for UI strings.</param>
-        public JobsTabViewModel(
+    /// <param name="confirmation">Confirmation service for delete and other prompts.</param>
+    /// <param name="progressAggregator">Aggregates backup progress into per-job view models for the UI.</param>
+    public JobsTabViewModel(
         IConfigurationHolder configHolder,
         IBackupExecutor backupExecutor,
         ILocalizationProvider localization,
-        IConfirmationService confirmation)
+        IConfirmationService confirmation,
+        IBackupProgressAggregator progressAggregator)
     {
         _configHolder = configHolder;
         _backupExecutor = backupExecutor;
         _localization = localization;
         _confirmation = confirmation;
+        _progressAggregator = progressAggregator ?? throw new ArgumentNullException(nameof(progressAggregator));
         Jobs = new ObservableCollection<JobItemViewModel>();
         SelectedJobs.CollectionChanged += SelectedJobs_CollectionChanged;
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(RefreshJobsFromConfig);
@@ -203,8 +208,10 @@ public sealed class JobsTabViewModel : ViewModelBase
         private set => SetProperty(ref _progressSizeText, value ?? string.Empty);
     }
 
-    /// <summary>True when progress data should be shown (job running and progress received).</summary>
-    public bool IsProgressVisible => IsRunning && !string.IsNullOrEmpty(_progressJobName);
+    public ObservableCollection<JobProgressViewModel> JobProgressItems => _progressAggregator.Items;
+
+    /// <summary>True when at least one job is reporting progress.</summary>
+    public bool IsProgressVisible => IsRunning && JobProgressItems.Count > 0;
 
     public string JobsListTitle => _localization.GetString("Gui_JobsListTitle");
     public string DetailsTitle => _localization.GetString("Gui_DetailsTitle");
@@ -214,6 +221,7 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
 
+    public string DeleteButtonText => _localization.GetString("Gui_Delete") ?? "Delete";
 
     public bool CanDelete => SelectedJob != null && !IsRunning;
 
@@ -359,6 +367,7 @@ public sealed class JobsTabViewModel : ViewModelBase
 
     private void ClearProgress()
     {
+        _progressAggregator.Clear();
         ProgressPercent = 0;
         ProgressJobName = string.Empty;
         ProgressCurrentFile = string.Empty;
@@ -368,41 +377,18 @@ public sealed class JobsTabViewModel : ViewModelBase
         RaisePropertyChanged(nameof(IsProgressVisible));
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        const long Ko = 1024L;
-        const long Mo = Ko * 1024;
-        const long Go = Mo * 1024;
-        if (bytes >= Go)
-            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Go", (double)bytes / Go);
-        if (bytes >= Mo)
-            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Mo", (double)bytes / Mo);
-        if (bytes >= Ko)
-            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0:N1} Ko", (double)bytes / Ko);
-        return string.Format(System.Globalization.CultureInfo.CurrentUICulture, "{0} o", bytes);
-    }
-
     private void UpdateProgress(BackupProgress p)
     {
-        ProgressPercent = p.ProgressPercent;
-        ProgressJobName = p.BackupName;
-        ProgressCurrentFile = string.IsNullOrEmpty(p.CurrentSourcePath)
-            ? string.Empty
-            : System.IO.Path.GetFileName(p.CurrentSourcePath) ?? p.CurrentSourcePath;
-        int done = p.TotalFilesCount - p.RemainingFilesCount;
-        ProgressFilesText = string.Format(_localization.GetString("Gui_ProgressFilesFormat") ?? "{0} / {1} files", done, p.TotalFilesCount);
-        long transferredBytes = p.TotalSizeBytes - p.RemainingSizeBytes;
-        ProgressSizeText = string.Format(_localization.GetString("Gui_ProgressSizeFormat") ?? "{0} / {1}", FormatBytes(transferredBytes), FormatBytes(p.TotalSizeBytes));
-        if (p.EstimatedTimeRemainingSeconds.HasValue && p.EstimatedTimeRemainingSeconds.Value >= 1)
+        JobProgressViewModel? item = _progressAggregator.Update(p);
+        if (item != null)
         {
-            int sec = (int)Math.Round(p.EstimatedTimeRemainingSeconds.Value);
-            if (sec >= 60)
-                ProgressEtaText = string.Format(_localization.GetString("Gui_ProgressEtaMinutes") ?? "~{0} min", (sec + 30) / 60);
-            else
-                ProgressEtaText = string.Format(_localization.GetString("Gui_ProgressEtaSeconds") ?? "~{0} s", sec);
+            ProgressPercent = item.Percent;
+            ProgressJobName = item.JobName;
+            ProgressCurrentFile = item.CurrentFile;
+            ProgressFilesText = item.FilesText;
+            ProgressSizeText = item.SizeText;
+            ProgressEtaText = item.EtaText;
         }
-        else
-            ProgressEtaText = string.Empty;
         RaisePropertyChanged(nameof(IsProgressVisible));
     }
 
@@ -478,5 +464,55 @@ public sealed class JobsTabViewModel : ViewModelBase
             job.TargetPath,
             string.Join(", ", job.ExcludeExtensions ?? Array.Empty<string>()),
             string.Join(", ", job.ExcludeDirectoryNames ?? Array.Empty<string>()));
+    }
+}
+
+/// <summary>
+/// View model for a single job's progress in the GUI (name, percent, files, size, ETA, current file).
+/// Used as the data item for each row in the multi-job progress list (Composite display).
+/// </summary>
+public sealed class JobProgressViewModel : ViewModelBase
+{
+    private double _percent;
+    private string _jobName = string.Empty;
+    private string _currentFile = string.Empty;
+    private string _filesText = string.Empty;
+    private string _etaText = string.Empty;
+    private string _sizeText = string.Empty;
+
+    public double Percent
+    {
+        get => _percent;
+        set => SetProperty(ref _percent, value);
+    }
+
+    public string JobName
+    {
+        get => _jobName;
+        set => SetProperty(ref _jobName, value ?? string.Empty);
+    }
+
+    public string CurrentFile
+    {
+        get => _currentFile;
+        set => SetProperty(ref _currentFile, value ?? string.Empty);
+    }
+
+    public string FilesText
+    {
+        get => _filesText;
+        set => SetProperty(ref _filesText, value ?? string.Empty);
+    }
+
+    public string EtaText
+    {
+        get => _etaText;
+        set => SetProperty(ref _etaText, value ?? string.Empty);
+    }
+
+    public string SizeText
+    {
+        get => _sizeText;
+        set => SetProperty(ref _sizeText, value ?? string.Empty);
     }
 }
