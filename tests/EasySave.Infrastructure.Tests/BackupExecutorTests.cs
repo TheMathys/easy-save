@@ -356,12 +356,17 @@ public sealed class BackupExecutorTests : IDisposable
         IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
         Assert.True(states.Count >= 2, "Expected at least 2 state snapshots (initial + updates).");
 
-        // In parallel runs the last snapshot may be from the first job that completed (other still Active).
-        // Allow a short delay so the second job's completion write is visible (CI timing).
-        await Task.Delay(100);
-        states = stateWriter.WrittenStates;
-        IReadOnlyList<BackupProgress>? finalSnapshot = states
-            .FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+        // After parallel execution, the last snapshot may be from the first job that completed (other still Active).
+        // Poll for a snapshot with both Completed so we tolerate CI thread scheduling (up to ~300ms).
+        IReadOnlyList<BackupProgress>? finalSnapshot = null;
+        for (int i = 0; i < 6; i++)
+        {
+            await Task.Delay(50);
+            states = stateWriter.WrittenStates;
+            finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+            if (finalSnapshot != null)
+                break;
+        }
         Assert.True(finalSnapshot != null,
             "Expected at least one state snapshot with both jobs Completed. " +
             "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
@@ -601,11 +606,17 @@ public sealed class BackupExecutorTests : IDisposable
     private sealed class FakeStateWriter : IStateWriter
     {
         private readonly List<IReadOnlyList<BackupProgress>> _writtenStates = new();
-        public List<IReadOnlyList<BackupProgress>> WrittenStates => _writtenStates;
+        private readonly object _lock = new();
+
+        /// <summary>Returns a snapshot of all written states under lock so tests see a consistent view after parallel execution.</summary>
+        public IReadOnlyList<IReadOnlyList<BackupProgress>> WrittenStates
+        {
+            get { lock (_lock) { return _writtenStates.ToList(); } }
+        }
 
         public Task WriteStateAsync(IReadOnlyList<BackupProgress> progressList, CancellationToken cancellationToken = default)
         {
-            lock (_writtenStates)
+            lock (_lock)
             {
                 _writtenStates.Add(progressList.ToList());
             }
