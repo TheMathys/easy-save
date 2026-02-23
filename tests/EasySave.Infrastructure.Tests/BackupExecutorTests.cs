@@ -356,8 +356,10 @@ public sealed class BackupExecutorTests : IDisposable
         IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
         Assert.True(states.Count >= 2, "Expected at least 2 state snapshots (initial + updates).");
 
-        // With parallel execution, the very last snapshot may be from the first job that completed (other still Active).
-        // Require that at least one snapshot has both jobs Completed; do not rely on the last snapshot only.
+        // In parallel runs the last snapshot may be from the first job that completed (other still Active).
+        // Allow a short delay so the second job's completion write is visible (CI timing).
+        await Task.Delay(100);
+        states = stateWriter.WrittenStates;
         IReadOnlyList<BackupProgress>? finalSnapshot = states
             .FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
         Assert.True(finalSnapshot != null,
@@ -396,9 +398,16 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Equal("job1", await File.ReadAllTextAsync(Path.Combine(target1, "f1.txt")));
         Assert.Equal("job2", await File.ReadAllTextAsync(Path.Combine(target2, "f2.txt")));
 
-        IReadOnlyList<BackupProgress> lastState = stateWriter.WrittenStates[^1];
-        Assert.Equal(2, lastState.Count);
-        Assert.All(lastState, p => Assert.Equal(BackupState.Completed, p.State));
+        // With parallel execution, the last snapshot may be from the first job that completed (other still Active).
+        // Require that at least one snapshot has both jobs Completed; do not rely on the last snapshot only.
+        await Task.Delay(100);
+        IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
+        Assert.Equal(2, states[^1].Count);
+        IReadOnlyList<BackupProgress>? finalSnapshot = states
+            .FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+        Assert.True(finalSnapshot != null,
+            "Expected at least one state snapshot with both jobs Completed. " +
+            "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
     }
 
     [Fact]
