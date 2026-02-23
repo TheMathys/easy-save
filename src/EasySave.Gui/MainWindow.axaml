@@ -184,7 +184,7 @@
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
           <ScrollViewer Classes="cardScroll">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
               <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
               <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
               <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />

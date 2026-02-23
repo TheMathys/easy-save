@@ -318,10 +318,19 @@ Excluded directories: {6}</value>
   <data name="Gui_LabelAudioDescriptionVolume" xml:space="preserve">
     <value>Audio description volume :</value>
   </data>
-  <data name="Gui_LabelLangueSelection" xml:space="preserve">
-    <value>Language:</value>
+  <data name="Gui_LabelChangeLanguage" xml:space="preserve">
+    <value>Change language :</value>
+  </data>
+  <data name="Gui_LabelLangEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Gui_LabelLangFrench" xml:space="preserve">
+    <value>French</value>
   </data>
   <data name="Gui_DeleteJobLabel" xml:space="preserve">
     <value>Delete</value>
+  </data>
+  <data name="Gui_LabelLangueSelection" xml:space="preserve">
+    <value>EasySave Language:</value>
   </data>
 </root>

@@ -70,6 +70,18 @@ public sealed class JobsTabViewModel : ViewModelBase
         RaisePropertyChanged(nameof(ProgressTitle));
         RaisePropertyChanged(nameof(ProgressCurrentFileLabel));
         RaisePropertyChanged(nameof(ProgressSizeLabel));
+
+        // Update job details with new language
+        System.Diagnostics.Debug.WriteLine($"JobsTabViewModel: Language changed, updating details. Jobs.Count={Jobs.Count}, SelectedJob={SelectedJob?.Name ?? "null"}");
+
+        if (Jobs.Count == 0)
+        {
+            JobDetailsText = _localization.GetString("NoJobsFound");
+        }
+        else
+        {
+            UpdateDetails();
+        }
     }
 
     public string ProgressTitle => _localization.GetString("Gui_ProgressTitle");
@@ -201,6 +213,7 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string StopButtonText => _localization.GetString("Gui_Stop");
     public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
+
 
     public bool CanDelete => SelectedJob != null && !IsRunning;
 
@@ -441,11 +454,17 @@ public sealed class JobsTabViewModel : ViewModelBase
     private void UpdateDetails()
     {
         if (SelectedJob == null)
+        {
+            JobDetailsText = string.Empty;
             return;
+        }
         BackupConfiguration config = _configHolder.Current;
         BackupJob? job = config.Jobs.FirstOrDefault(j => j.Id == SelectedJob.Id);
         if (job == null)
+        {
+            JobDetailsText = string.Empty;
             return;
+        }
 
         string typeStr = job.Type == BackupType.Differential
             ? _localization.GetString("DifferentialBackup")

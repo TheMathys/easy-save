@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reflection;
 using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
@@ -30,7 +32,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _selectedProcessChoice = string.Empty;
     private bool _audioDescriptionEnabled;
     private double _volumeValue = 50;
+
     private string _selectedLanguage = "Français";
+
 
     public SettingsViewModel(
         IConfigurationHolder configHolder,
@@ -67,6 +71,7 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelAudioDescription));
         RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
         RaisePropertyChanged(nameof(LabelLangueSelection));
+
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
