@@ -404,12 +404,19 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Equal("job2", await File.ReadAllTextAsync(Path.Combine(target2, "f2.txt")));
 
         // With parallel execution, the last snapshot may be from the first job that completed (other still Active).
-        // Require that at least one snapshot has both jobs Completed; do not rely on the last snapshot only.
-        await Task.Delay(100);
+        // Poll for a snapshot with both Completed so we tolerate CI thread scheduling (same as ExecuteAsync_ExecutesMultipleJobsInParallel_WhenMultipleSelected).
         IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
-        Assert.Equal(2, states[^1].Count);
-        IReadOnlyList<BackupProgress>? finalSnapshot = states
-            .FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+        IReadOnlyList<BackupProgress>? finalSnapshot = null;
+        for (int i = 0; i < 6; i++)
+        {
+            await Task.Delay(50);
+            states = stateWriter.WrittenStates;
+            Assert.True(states.Count >= 1);
+            Assert.Equal(2, states[^1].Count);
+            finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+            if (finalSnapshot != null)
+                break;
+        }
         Assert.True(finalSnapshot != null,
             "Expected at least one state snapshot with both jobs Completed. " +
             "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
