@@ -124,34 +124,17 @@ namespace EasySave.Gui.Services
             switch (control)
             {
                 case Slider slider:
+                    string sliderName = !string.IsNullOrWhiteSpace(slider.Name) ? slider.Name : "Curseur";
                     int sliderValue = (int)slider.Value;
-                    // Always read the slider value
-                    if (!string.IsNullOrWhiteSpace(slider.Name))
-                    {
-                        textToRead = $"{slider.Name}: {sliderValue} pourcent";
-                    }
-                    else
-                    {
-                        textToRead = $"Curseur: {sliderValue} pourcent";
-                    }
+                    textToRead = $"{sliderName}: {sliderValue} pourcent";
                     break;
 
                 case ToggleSwitch toggleSwitch:
-                    string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
-
-                    // Try to extract text content if available
-                    string toggleContent = ExtractTextContent(toggleSwitch.Content);
-                    if (!string.IsNullOrWhiteSpace(toggleContent))
+                    // Only read the text content, not the control itself
+                    if (toggleSwitch.Content is string content && !string.IsNullOrWhiteSpace(content))
                     {
-                        textToRead = $"{toggleContent}: {toggleState}";
-                    }
-                    else if (!string.IsNullOrWhiteSpace(toggleSwitch.Name))
-                    {
-                        textToRead = $"{toggleSwitch.Name}: {toggleState}";
-                    }
-                    else
-                    {
-                        textToRead = $"Interrupteur: {toggleState}";
+                        string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
+                        textToRead = $"{content}: {toggleState}";
                     }
                     break;
 
@@ -164,9 +147,8 @@ namespace EasySave.Gui.Services
                     break;
 
                 case Button button:
-                    // Extract text content from the button
-                    string buttonContent = ExtractTextContent(button.Content);
-                    if (!string.IsNullOrWhiteSpace(buttonContent))
+                    // Only read the text content of the button
+                    if (button.Content is string buttonContent && !string.IsNullOrWhiteSpace(buttonContent))
                     {
                         textToRead = $"Bouton {buttonContent}";
                     }
@@ -191,9 +173,8 @@ namespace EasySave.Gui.Services
                     break;
 
                 case ListBoxItem listBoxItem:
-                    // Extract text content from the list item
-                    string itemContent = ExtractTextContent(listBoxItem.Content);
-                    if (!string.IsNullOrWhiteSpace(itemContent))
+                    // Only read the text content
+                    if (listBoxItem.Content is string itemContent && !string.IsNullOrWhiteSpace(itemContent))
                     {
                         textToRead = itemContent;
                     }

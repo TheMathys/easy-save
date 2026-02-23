@@ -212,7 +212,7 @@
               </Grid>
               
               <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="#374151" />
-              <ToggleSwitch Name="Audiodescription" Grid.Row="8" Grid.Column="1"  IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
+              <ToggleSwitch Grid.Row="8" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
               
               <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
               <Slider Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
