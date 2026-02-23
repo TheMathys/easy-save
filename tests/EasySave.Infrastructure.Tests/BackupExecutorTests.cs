@@ -353,12 +353,19 @@ public sealed class BackupExecutorTests : IDisposable
 
         Assert.True(File.Exists(Path.Combine(target1, "f1_0.txt")));
         Assert.True(File.Exists(Path.Combine(target2, "f2_0.txt")));
-        IReadOnlyList<BackupProgress> lastState = stateWriter.WrittenStates[^1];
-        Assert.Equal(2, lastState.Count);
-        Assert.All(lastState, p => Assert.Equal(BackupState.Completed, p.State));
+        IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
+        Assert.True(states.Count >= 2, "Expected at least 2 state snapshots (initial + updates).");
+
+        // With parallel execution, the very last snapshot may be from the first job that completed (other still Active).
+        // Require that at least one snapshot has both jobs Completed; do not rely on the last snapshot only.
+        IReadOnlyList<BackupProgress>? finalSnapshot = states
+            .FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+        Assert.True(finalSnapshot != null,
+            "Expected at least one state snapshot with both jobs Completed. " +
+            "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
 
         // Prove parallelism: at least one snapshot had both jobs Active at the same time.
-        bool hadBothActive = stateWriter.WrittenStates.Any(snapshot =>
+        bool hadBothActive = states.Any(snapshot =>
             snapshot.Count(p => p.State == BackupState.Active) >= 2);
         Assert.True(hadBothActive, "Expected at least one state snapshot with two jobs Active (parallel execution).");
     }
