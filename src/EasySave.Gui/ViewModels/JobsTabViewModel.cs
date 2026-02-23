@@ -220,8 +220,6 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string StopButtonText => _localization.GetString("Gui_Stop");
     public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
-
-
     public bool CanDelete => SelectedJob != null && !IsRunning;
 
     public void DeleteSelected(object _)
