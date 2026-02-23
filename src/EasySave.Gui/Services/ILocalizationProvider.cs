@@ -25,4 +25,10 @@ public interface ILocalizationProvider
     /// </summary>
     /// <param name="cultureCode">Culture code to apply.</param>
     void SetCulture(string cultureCode);
+
+    /// <summary>
+    /// Gets the list of available languages supported by the provider.
+    /// </summary>
+    /// <returns>List of available languages</returns>
+    Array GetLanguages();
 }

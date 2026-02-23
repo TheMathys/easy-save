@@ -205,4 +205,19 @@
   <data name="Gui_ProgressSizeLabel" xml:space="preserve">
     <value>Size:</value>
   </data>
+  <data name="Gui_LabelAudioDescription" xml:space="preserve">
+    <value>Activate / Desactivate audio description :</value>
+  </data>
+  <data name="Gui_LabelAudioDescriptionVolume" xml:space="preserve">
+    <value>Audio description volume :</value>
+  </data>
+  <data name="Gui_LabelChangeLanguage" xml:space="preserve">
+    <value>Change language :</value>
+  </data>
+  <data name="Gui_LabelLangEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Gui_LabelLangFrench" xml:space="preserve">
+    <value>French</value>
+  </data>
 </root>
