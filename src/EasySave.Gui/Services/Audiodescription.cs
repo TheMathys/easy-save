@@ -62,11 +62,54 @@ namespace EasySave.Gui.Services
             Point position = e.GetPosition(_mainWindow);
             var visual = _mainWindow.InputHitTest(position);
 
-            if (visual is Control control && control != _lastHoveredControl)
+            // Find the actual control by traversing up the visual tree
+            Control? control = FindRelevantControl(visual as Visual);
+
+            if (control != null && control != _lastHoveredControl)
             {
                 _lastHoveredControl = control;
                 ReadControlContent(control);
             }
+        }
+
+        /// <summary>
+        /// Finds a relevant control by traversing up the visual tree.
+        /// This helps detect parent controls like Slider, ToggleSwitch when hovering over their internal parts.
+        /// </summary>
+        private Control? FindRelevantControl(Visual? visual)
+        {
+            var current = visual;
+
+            while (current != null)
+            {
+                if (current is Control control)
+                {
+                    // Check if this is a control type we want to read
+                    if (IsReadableControl(control))
+                    {
+                        return control;
+                    }
+                }
+
+                // Move up the visual tree
+                current = current.GetVisualParent();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Determines if a control is one we want to read aloud.
+        /// </summary>
+        private bool IsReadableControl(Control control)
+        {
+            return control is Slider
+                || control is ToggleSwitch
+                || control is Button
+                || control is TextBlock
+                || control is TextBox
+                || control is ComboBox
+                || control is ListBoxItem;
         }
 
         /// <summary>
@@ -81,17 +124,34 @@ namespace EasySave.Gui.Services
             switch (control)
             {
                 case Slider slider:
-                    string sliderName = !string.IsNullOrWhiteSpace(slider.Name) ? slider.Name : "Curseur";
                     int sliderValue = (int)slider.Value;
-                    textToRead = $"{sliderName}: {sliderValue} pourcent";
+                    // Always read the slider value
+                    if (!string.IsNullOrWhiteSpace(slider.Name))
+                    {
+                        textToRead = $"{slider.Name}: {sliderValue} pourcent";
+                    }
+                    else
+                    {
+                        textToRead = $"Curseur: {sliderValue} pourcent";
+                    }
                     break;
 
                 case ToggleSwitch toggleSwitch:
-                    // Only read the text content, not the control itself
-                    if (toggleSwitch.Content is string content && !string.IsNullOrWhiteSpace(content))
+                    string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
+
+                    // Try to extract text content if available
+                    string toggleContent = ExtractTextContent(toggleSwitch.Content);
+                    if (!string.IsNullOrWhiteSpace(toggleContent))
                     {
-                        string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
-                        textToRead = $"{content}: {toggleState}";
+                        textToRead = $"{toggleContent}: {toggleState}";
+                    }
+                    else if (!string.IsNullOrWhiteSpace(toggleSwitch.Name))
+                    {
+                        textToRead = $"{toggleSwitch.Name}: {toggleState}";
+                    }
+                    else
+                    {
+                        textToRead = $"Interrupteur: {toggleState}";
                     }
                     break;
 
@@ -104,8 +164,9 @@ namespace EasySave.Gui.Services
                     break;
 
                 case Button button:
-                    // Only read the text content of the button
-                    if (button.Content is string buttonContent && !string.IsNullOrWhiteSpace(buttonContent))
+                    // Extract text content from the button
+                    string buttonContent = ExtractTextContent(button.Content);
+                    if (!string.IsNullOrWhiteSpace(buttonContent))
                     {
                         textToRead = $"Bouton {buttonContent}";
                     }
@@ -130,8 +191,9 @@ namespace EasySave.Gui.Services
                     break;
 
                 case ListBoxItem listBoxItem:
-                    // Only read the text content
-                    if (listBoxItem.Content is string itemContent && !string.IsNullOrWhiteSpace(itemContent))
+                    // Extract text content from the list item
+                    string itemContent = ExtractTextContent(listBoxItem.Content);
+                    if (!string.IsNullOrWhiteSpace(itemContent))
                     {
                         textToRead = itemContent;
                     }
@@ -150,6 +212,33 @@ namespace EasySave.Gui.Services
             {
                 SpeakText(textToRead);
             }
+        }
+
+        /// <summary>
+        /// Extracts readable text content from a control's Content property.
+        /// Handles both direct strings and nested controls like TextBlock.
+        /// </summary>
+        private string ExtractTextContent(object? content)
+        {
+            if (content == null)
+                return string.Empty;
+
+            // If it's already a string, return it
+            if (content is string str)
+                return str;
+
+            // If it's a TextBlock, extract its Text property
+            if (content is TextBlock textBlock)
+                return textBlock.Text ?? string.Empty;
+
+            // For other types, use ToString() but filter out type names
+            string result = content.ToString() ?? string.Empty;
+
+            // Avoid reading type names (e.g., "Avalonia.Controls.TextBlock")
+            if (result.Contains("Avalonia.") || result.Contains("EasySave."))
+                return string.Empty;
+
+            return result;
         }
 
         /// <summary>
