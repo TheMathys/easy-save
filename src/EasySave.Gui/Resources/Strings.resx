@@ -237,6 +237,21 @@ Excluded directories: {6}</value>
   <data name="Gui_LabelLogFormat" xml:space="preserve">
     <value>Log format:</value>
   </data>
+  <data name="Gui_LabelLogDestination" xml:space="preserve">
+    <value>Log destination:</value>
+  </data>
+  <data name="Gui_LabelCentralizedLogServer" xml:space="preserve">
+    <value>Centralized log server (host:port):</value>
+  </data>
+  <data name="Gui_LogDestination_Local" xml:space="preserve">
+    <value>Local only</value>
+  </data>
+  <data name="Gui_LogDestination_Centralized" xml:space="preserve">
+    <value>Centralized server only</value>
+  </data>
+  <data name="Gui_LogDestination_LocalAndCentralized" xml:space="preserve">
+    <value>Local and centralized</value>
+  </data>
   <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
     <value>Extensions to encrypt (comma-separated):</value>
   </data>

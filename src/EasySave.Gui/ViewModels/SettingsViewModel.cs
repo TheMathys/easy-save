@@ -25,6 +25,8 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly IFilePickerService _filePicker;
     private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
     private int _logFormatIndex;
+    private int _logDestinationIndex;
+    private string _centralizedLogServerAddress = string.Empty;
     private string _statusText = string.Empty;
     private string _encryptExtensionsText = string.Empty;
     private string _encryptionKeyPath = string.Empty;
@@ -52,10 +54,20 @@ public sealed class SettingsViewModel : ViewModelBase
         _businessSoftwareDetector = businessSoftwareDetector;
         RunningProcessChoices = new ObservableCollection<string>();
         LanguageChoices = new ObservableCollection<string> { "Français", "English" };
+        LogDestinationChoices = new ObservableCollection<string>();
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
         RefreshRunningProcessesListAsync();
+        UpdateLogDestinationChoices();
+    }
+
+    private void UpdateLogDestinationChoices()
+    {
+        LogDestinationChoices.Clear();
+        LogDestinationChoices.Add(_localization.GetString("Gui_LogDestination_Local"));
+        LogDestinationChoices.Add(_localization.GetString("Gui_LogDestination_Centralized"));
+        LogDestinationChoices.Add(_localization.GetString("Gui_LogDestination_LocalAndCentralized"));
     }
 
     private void RaiseLocalizedProperties()
@@ -65,6 +77,8 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelStatePath));
         RaisePropertyChanged(nameof(LabelLogDir));
         RaisePropertyChanged(nameof(LabelLogFormat));
+        RaisePropertyChanged(nameof(LabelLogDestination));
+        RaisePropertyChanged(nameof(LabelCentralizedLogServer));
         RaisePropertyChanged(nameof(LabelEncryptExtensions));
         RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
@@ -75,7 +89,11 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
+        UpdateLogDestinationChoices();
     }
+
+    /// <summary>Localized labels for log destination: Local, Centralized, LocalAndCentralized.</summary>
+    public ObservableCollection<string> LogDestinationChoices { get; }
 
     public string BasePath => _paths.BaseDirectory;
     public string ConfigPath => _paths.ConfigFilePath;
@@ -87,6 +105,28 @@ public sealed class SettingsViewModel : ViewModelBase
         get => _logFormatIndex;
         set => SetProperty(ref _logFormatIndex, value);
     }
+
+    /// <summary>Index for log destination: 0=Local, 1=Centralized, 2=LocalAndCentralized.</summary>
+    public int LogDestinationIndex
+    {
+        get => _logDestinationIndex;
+        set
+        {
+            if (!SetProperty(ref _logDestinationIndex, value))
+                return;
+            RaisePropertyChanged(nameof(IsCentralizedLogServerAddressVisible));
+        }
+    }
+
+    public string CentralizedLogServerAddress
+    {
+        get => _centralizedLogServerAddress;
+        set => SetProperty(ref _centralizedLogServerAddress, value ?? string.Empty);
+    }
+
+    /// <summary>True when destination is Centralized or LocalAndCentralized (show server address field).</summary>
+    public bool IsCentralizedLogServerAddressVisible =>
+        _logDestinationIndex == (int)LogDestination.Centralized || _logDestinationIndex == (int)LogDestination.LocalAndCentralized;
 
     public string StatusText
     {
@@ -103,6 +143,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelStatePath => _localization.GetString("Gui_LabelStatePath");
     public string LabelLogDir => _localization.GetString("Gui_LabelLogDir");
     public string LabelLogFormat => _localization.GetString("Gui_LabelLogFormat");
+    public string LabelLogDestination => _localization.GetString("Gui_LabelLogDestination");
+    public string LabelCentralizedLogServer => _localization.GetString("Gui_LabelCentralizedLogServer");
     public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
     public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
@@ -206,6 +248,8 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         BackupConfiguration c = _configHolder.Current;
         LogFormatIndex = c.LogFileFormat == LogFileFormat.Xml ? 1 : 0;
+        LogDestinationIndex = (int)c.LogDestination;
+        CentralizedLogServerAddress = c.CentralizedLogServerAddress ?? string.Empty;
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
@@ -264,6 +308,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public async void SaveSettings(object _)
     {
         LogFileFormat format = LogFormatIndex == 1 ? LogFileFormat.Xml : LogFileFormat.Json;
+        LogDestination destination = (LogDestination)Math.Clamp(LogDestinationIndex, 0, 2);
         BackupConfiguration config = _configHolder.Current;
         List<string> extensions = new List<string>();
         foreach (string part in (EncryptExtensionsText ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -279,6 +324,8 @@ public sealed class SettingsViewModel : ViewModelBase
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = format,
+            LogDestination = destination,
+            CentralizedLogServerAddress = string.IsNullOrWhiteSpace(CentralizedLogServerAddress) ? null : CentralizedLogServerAddress.Trim(),
             Jobs = config.Jobs,
             LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
             EncryptExtensions = extensions,

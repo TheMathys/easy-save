@@ -221,8 +221,6 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
 
-    public string DeleteButtonText => _localization.GetString("Gui_Delete") ?? "Delete";
-
     public bool CanDelete => SelectedJob != null && !IsRunning;
 
     public void DeleteSelected(object _)
@@ -258,10 +256,13 @@ public sealed class JobsTabViewModel : ViewModelBase
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = config.LogFileFormat,
+            LogDestination = config.LogDestination,
+            CentralizedLogServerAddress = config.CentralizedLogServerAddress,
             Jobs = newJobs,
             LastFullBackupUtcByJobId = newLastFull,
             EncryptExtensions = config.EncryptExtensions,
-            EncryptionKeyPath = config.EncryptionKeyPath
+            EncryptionKeyPath = config.EncryptionKeyPath,
+            BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
         };
 
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);

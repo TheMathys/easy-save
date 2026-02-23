@@ -7,6 +7,7 @@ using EasySave.Gui.ViewModels;
 using EasySave.Infrastructure.Backup;
 using EasySave.Infrastructure.Encryption;
 using EasySave.Infrastructure.FileSystem;
+using EasySave.Infrastructure.Logging;
 using EasySave.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -48,13 +49,18 @@ public static class CompositionRoot
         // Logging
         services.AddSingleton<DailyLogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
         services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
-        services.AddSingleton<ILogWriter>(sp =>
+        services.AddSingleton<ConfigurableLogWriter>(sp =>
         {
             IConfigurationRepository configRepo = sp.GetRequiredService<IConfigurationRepository>();
             DailyLogWriter jsonWriter = sp.GetRequiredService<DailyLogWriter>();
             XmlDailyLogWriter xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
             return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
         });
+        services.AddSingleton<ICentralizedLogClient, CentralizedLogClient>();
+        services.AddSingleton<ILogWriter>(sp => new DestinationLogWriter(
+            sp.GetRequiredService<IConfigurationRepository>(),
+            sp.GetRequiredService<ConfigurableLogWriter>(),
+            sp.GetRequiredService<ICentralizedLogClient>()));
 
         // Backup execution
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());

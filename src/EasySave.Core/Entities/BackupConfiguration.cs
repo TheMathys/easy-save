@@ -20,6 +20,18 @@ namespace EasySave.Core.Entities
         public LogFileFormat LogFileFormat { get; init; } = LogFileFormat.Json;
 
         /// <summary>
+        /// Where logs are written: local only, centralized server only, or both.
+        /// </summary>
+        public LogDestination LogDestination { get; init; } = LogDestination.Local;
+
+        /// <summary>
+        /// Address of the centralized log server (host or host:port). Used when
+        /// <see cref="LogDestination"/> is <see cref="LogDestination.Centralized"/> or
+        /// <see cref="LogDestination.LocalAndCentralized"/>. Default port is 9050.
+        /// </summary>
+        public string? CentralizedLogServerAddress { get; init; }
+
+        /// <summary>
         /// List of backup jobs.
         /// </summary>
         public IReadOnlyList<BackupJob> Jobs { get; init; } = Array.Empty<BackupJob>();

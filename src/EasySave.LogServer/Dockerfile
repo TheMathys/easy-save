@@ -12,7 +12,7 @@ COPY src/EasyLog/ EasyLog/
 COPY src/EasySave.Core/ EasySave.Core/
 
 WORKDIR /src/EasySave.LogServer
-RUN dotnet publish "EasySave.LogServer.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "./EasySave.LogServer.csproj" -c Release -o /app/publish --no-restore
 
 # Runtime stage: run the service
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
