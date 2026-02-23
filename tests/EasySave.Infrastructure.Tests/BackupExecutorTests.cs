@@ -117,7 +117,7 @@ public sealed class BackupExecutorTests : IDisposable
         IBackupStrategyFactory strategyFactory = new BackupStrategyFactory();
         FakeLogWriter logWriter = new();
 
-        var businessDetector = new BusinessSoftwareDetector();
+        BusinessSoftwareDetector businessDetector = new BusinessSoftwareDetector();
         BackupExecutor executor = new(configRepo, strategyFactory, fileSystem, stateWriter, logWriter, null, businessDetector);
 
         await executor.ExecuteAsync(new[] { 1 });
@@ -187,7 +187,7 @@ public sealed class BackupExecutorTests : IDisposable
         CancellationTokenSource cts = new();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => executor.ExecuteAsync(new[] { 1 }, null, cts.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => executor.ExecuteAsync(new[] { 1 }, null, cts.Token));
     }
 
     [Fact]
@@ -328,7 +328,43 @@ public sealed class BackupExecutorTests : IDisposable
     }
 
     [Fact]
-    public async Task ExecuteAsync_ExecutesMultipleJobsInSequence()
+    public async Task ExecuteAsync_ExecutesMultipleJobsInParallel_WhenMultipleSelected()
+    {
+        string source1 = Path.Combine(_tempRoot, "source1");
+        string target1 = Path.Combine(_tempRoot, "target1");
+        string source2 = Path.Combine(_tempRoot, "source2");
+        string target2 = Path.Combine(_tempRoot, "target2");
+        Directory.CreateDirectory(source1);
+        Directory.CreateDirectory(source2);
+        for (int i = 0; i < 15; i++)
+        {
+            await File.WriteAllTextAsync(Path.Combine(source1, $"f1_{i}.txt"), "job1");
+            await File.WriteAllTextAsync(Path.Combine(source2, $"f2_{i}.txt"), "job2");
+        }
+
+        BackupJob job1 = new() { Id = 1, Name = "Job1", SourcePath = source1, TargetPath = target1, Type = BackupType.Full };
+        BackupJob job2 = new() { Id = 2, Name = "Job2", SourcePath = source2, TargetPath = target2, Type = BackupType.Full };
+        BackupConfiguration config = new() { Jobs = new[] { job1, job2 } };
+        FakeConfigRepository configRepo = new(config);
+        FakeStateWriter stateWriter = new();
+        BackupExecutor executor = CreateExecutor(configRepository: configRepo, stateWriter: stateWriter);
+
+        await executor.ExecuteAsync(new[] { 1, 2 });
+
+        Assert.True(File.Exists(Path.Combine(target1, "f1_0.txt")));
+        Assert.True(File.Exists(Path.Combine(target2, "f2_0.txt")));
+        IReadOnlyList<BackupProgress> lastState = stateWriter.WrittenStates[^1];
+        Assert.Equal(2, lastState.Count);
+        Assert.All(lastState, p => Assert.Equal(BackupState.Completed, p.State));
+
+        // Prove parallelism: at least one snapshot had both jobs Active at the same time.
+        bool hadBothActive = stateWriter.WrittenStates.Any(snapshot =>
+            snapshot.Count(p => p.State == BackupState.Active) >= 2);
+        Assert.True(hadBothActive, "Expected at least one state snapshot with two jobs Active (parallel execution).");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MultipleJobs_BothCompleteAndFilesCopied()
     {
         string source1 = Path.Combine(_tempRoot, "source1");
         string target1 = Path.Combine(_tempRoot, "target1");
@@ -451,7 +487,9 @@ public sealed class BackupExecutorTests : IDisposable
         await executor.ExecuteAsync(new[] { 1, 2 });
 
         Assert.True(configRepo.UpdateLastFullBackupCalled);
-        Assert.Equal(2, configRepo.LastUpdatedJobId);
+        Assert.Equal(2, configRepo.LastUpdatedJobIds.Count);
+        Assert.Contains(1, configRepo.LastUpdatedJobIds);
+        Assert.Contains(2, configRepo.LastUpdatedJobIds);
     }
 
     [Fact]
@@ -518,7 +556,7 @@ public sealed class BackupExecutorTests : IDisposable
         stateWriter ??= new FakeStateWriter();
         logWriter ??= new FakeLogWriter();
 
-        var businessDetector = new BusinessSoftwareDetector();
+        BusinessSoftwareDetector businessDetector = new BusinessSoftwareDetector();
         return new BackupExecutor(configRepository, strategyFactory, fileSystem, stateWriter, logWriter, null, businessDetector);
     }
 
@@ -527,6 +565,9 @@ public sealed class BackupExecutorTests : IDisposable
         private readonly BackupConfiguration? _config;
         public bool UpdateLastFullBackupCalled { get; private set; }
         public int LastUpdatedJobId { get; private set; }
+        /// <summary>All job ids for which UpdateLastFullBackupAsync was called (order may vary in parallel).</summary>
+        public IReadOnlyList<int> LastUpdatedJobIds => _lastUpdatedJobIds;
+        private readonly List<int> _lastUpdatedJobIds = new();
 
         public FakeConfigRepository(BackupConfiguration? config) => _config = config;
 
@@ -536,6 +577,7 @@ public sealed class BackupExecutorTests : IDisposable
         {
             UpdateLastFullBackupCalled = true;
             LastUpdatedJobId = jobId;
+            _lastUpdatedJobIds.Add(jobId);
             return Task.CompletedTask;
         }
     }
