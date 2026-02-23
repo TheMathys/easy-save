@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.VisualTree;
 using System;
 using System.Speech.Synthesis;
+using System.Text.RegularExpressions;
 
 namespace EasySave.Gui.Services
 {
@@ -86,39 +87,62 @@ namespace EasySave.Gui.Services
                     break;
 
                 case ToggleSwitch toggleSwitch:
-                    string toggleName = !string.IsNullOrWhiteSpace(toggleSwitch.Content?.ToString()) 
-                        ? toggleSwitch.Content.ToString() : "Interrupteur";
-                    string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
-                    textToRead = $"{toggleName}: {toggleState}";
+                    // Only read the text content, not the control itself
+                    if (toggleSwitch.Content is string content && !string.IsNullOrWhiteSpace(content))
+                    {
+                        string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
+                        textToRead = $"{content}: {toggleState}";
+                    }
                     break;
 
                 case TextBlock textBlock:
-                    textToRead = textBlock.Text ?? string.Empty;
+                    // Only read if there's actual text content
+                    if (!string.IsNullOrWhiteSpace(textBlock.Text))
+                    {
+                        textToRead = textBlock.Text;
+                    }
                     break;
 
                 case Button button:
-                    textToRead = $"Bouton {button.Content?.ToString() ?? "sans titre"}";
+                    // Only read the text content of the button
+                    if (button.Content is string buttonContent && !string.IsNullOrWhiteSpace(buttonContent))
+                    {
+                        textToRead = $"Bouton {buttonContent}";
+                    }
                     break;
 
                 case TextBox textBox:
-                    string textBoxName = !string.IsNullOrWhiteSpace(textBox.Name) ? textBox.Name : "Zone de texte";
-                    textToRead = $"{textBoxName}: {textBox.Text ?? "vide"}";
+                    // Only read if there's text in the textbox
+                    if (!string.IsNullOrWhiteSpace(textBox.Text))
+                    {
+                        string textBoxName = !string.IsNullOrWhiteSpace(textBox.Name) ? textBox.Name : "Zone de texte";
+                        textToRead = $"{textBoxName}: {textBox.Text}";
+                    }
                     break;
+
                 case ComboBox comboBox:
-                    string comboName = !string.IsNullOrWhiteSpace(comboBox.Name) ? comboBox.Name : "Liste déroulante";
-                    textToRead = $"{comboName}: {comboBox.SelectedItem?.ToString() ?? "aucune sélection"}";
+                    // Only read if there's a selection
+                    if (comboBox.SelectedItem != null)
+                    {
+                        string comboName = !string.IsNullOrWhiteSpace(comboBox.Name) ? comboBox.Name : "Liste déroulante";
+                        textToRead = $"{comboName}: {comboBox.SelectedItem.ToString()}";
+                    }
                     break;
 
                 case ListBoxItem listBoxItem:
-                    textToRead = listBoxItem.Content?.ToString() ?? "Élément de liste";
+                    // Only read the text content
+                    if (listBoxItem.Content is string itemContent && !string.IsNullOrWhiteSpace(itemContent))
+                    {
+                        textToRead = itemContent;
+                    }
                     break;
 
                 default:
-                    // Try to get tooltip or name as fallback
+                    // Only use tooltip if explicitly set
                     if (ToolTip.GetTip(control) is string tooltip && !string.IsNullOrWhiteSpace(tooltip))
+                    {
                         textToRead = tooltip;
-                    else if (!string.IsNullOrWhiteSpace(control.Name))
-                        textToRead = control.Name;
+                    }
                     break;
             }
 
@@ -140,6 +164,7 @@ namespace EasySave.Gui.Services
             }
             _lastHoveredControl = null;
         }
+
 
         /// <summary>
         /// Audiodescription.Stop() will stop the service.
@@ -178,9 +203,13 @@ namespace EasySave.Gui.Services
         {
             if (_enabled && _synthesizer != null && !string.IsNullOrWhiteSpace(text))
             {
-                // Cancel previous speech to avoid overlap
-                _synthesizer.SpeakAsyncCancelAll();
-                _synthesizer.SpeakAsync(text);
+
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    // Cancel previous speech to avoid overlap
+                    _synthesizer.SpeakAsyncCancelAll();
+                    _synthesizer.SpeakAsync(text);
+                }
             }
         }
 
