@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Globalization;
 using System.Resources;
 using System.Reflection;
@@ -18,8 +19,15 @@ public sealed class LocalizationProvider : ILocalizationProvider
     /// </summary>
     public LocalizationProvider()
     {
+        var systemCulture = CultureInfo.InstalledUICulture;
+
+        CultureInfo.CurrentCulture = systemCulture;
+        CultureInfo.CurrentUICulture = systemCulture;
+        CultureInfo.DefaultThreadCurrentCulture = systemCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = systemCulture;
+
         _resourceManager = new ResourceManager("EasySave.Gui.Resources.Strings", Assembly.GetExecutingAssembly());
-        _currentCulture = CultureInfo.CurrentUICulture;
+        _currentCulture = systemCulture;
     }
 
     public string GetString(string key)
@@ -44,5 +52,30 @@ public sealed class LocalizationProvider : ILocalizationProvider
         CultureInfo.DefaultThreadCurrentCulture = _currentCulture;
         CultureInfo.DefaultThreadCurrentUICulture = _currentCulture;
         CultureChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public Array GetLanguages()
+    {
+        var languages = new System.Collections.Generic.List<string>();
+
+        var resourceSet = _resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+        if (resourceSet == null) return languages.ToArray();
+
+        const string prefix = "Gui_LabelLang";
+
+        foreach (DictionaryEntry entry in resourceSet)
+        {
+            if (entry.Key is string key && key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                // Get the resource value (display name like "English", "French")
+                string? displayName = entry.Value?.ToString();
+                if (!string.IsNullOrWhiteSpace(displayName) && !languages.Contains(displayName))
+                {
+                    languages.Add(displayName);
+                }
+            }
+        }
+
+        return languages.ToArray();
     }
 }

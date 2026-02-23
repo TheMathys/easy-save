@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reflection;
 using Avalonia.Threading;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
@@ -31,6 +33,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _audioDescriptionEnabled;
     private double _volumeValue = 50;
 
+    private string _selectedLanguage = "Français";
+
+
     public SettingsViewModel(
         IConfigurationHolder configHolder,
         ILocalizationProvider localization,
@@ -46,6 +51,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _filePicker = filePicker;
         _businessSoftwareDetector = businessSoftwareDetector;
         RunningProcessChoices = new ObservableCollection<string>();
+        LanguageChoices = new ObservableCollection<string> { "Français", "English" };
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
@@ -64,6 +70,8 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
         RaisePropertyChanged(nameof(LabelAudioDescription));
         RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
+        RaisePropertyChanged(nameof(LabelLangueSelection));
+
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
@@ -100,9 +108,11 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
     public string LabelAudioDescription => _localization.GetString("Gui_LabelAudioDescription");
     public string LabelAudioDescriptionVolume => _localization.GetString("Gui_LabelAudioDescriptionVolume");
+    public string LabelLangueSelection => _localization.GetString("Gui_LabelLangueSelection");
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
+    public string DeleteJobLabel => _localization.GetString("Gui_DeleteJobLabel");
 
     public string EncryptExtensionsText
     {
@@ -124,6 +134,30 @@ public sealed class SettingsViewModel : ViewModelBase
 
     /// <summary>List of choices for the business software ComboBox: "(None)" + running process names.</summary>
     public ObservableCollection<string> RunningProcessChoices { get; }
+
+    /// <summary>List of available languages.</summary>
+    public ObservableCollection<string> LanguageChoices { get; }
+
+    public string SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set
+        {
+            if (!SetProperty(ref _selectedLanguage, value ?? "Français"))
+                return;
+
+            // Change the culture based on the selected language
+            string cultureCode = value switch
+            {
+                "Deutch" => "de",
+                "English" => "en",
+                "Français" => "fr",
+                _ => "fr"
+            };
+
+            _localization.SetCulture(cultureCode);
+        }
+    }
 
     public string SelectedProcessChoice
     {
