@@ -591,11 +591,15 @@ public sealed class BackupExecutorTests : IDisposable
 
     private sealed class FakeStateWriter : IStateWriter
     {
-        public List<IReadOnlyList<BackupProgress>> WrittenStates { get; } = new();
+        private readonly List<IReadOnlyList<BackupProgress>> _writtenStates = new();
+        public List<IReadOnlyList<BackupProgress>> WrittenStates => _writtenStates;
 
         public Task WriteStateAsync(IReadOnlyList<BackupProgress> progressList, CancellationToken cancellationToken = default)
         {
-            WrittenStates.Add(progressList.ToList());
+            lock (_writtenStates)
+            {
+                _writtenStates.Add(progressList.ToList());
+            }
             return Task.CompletedTask;
         }
     }
