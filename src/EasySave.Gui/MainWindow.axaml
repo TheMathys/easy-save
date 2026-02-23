@@ -116,20 +116,32 @@
           <Border Grid.Row="2" Classes="card" Padding="16" IsVisible="{Binding JobsTab.IsProgressVisible}">
             <StackPanel Spacing="10">
               <TextBlock Text="{Binding JobsTab.ProgressTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
-              <TextBlock Text="{Binding JobsTab.ProgressJobName}" FontSize="13" Foreground="#0067C0" />
-              <ProgressBar Minimum="0" Maximum="100" Value="{Binding JobsTab.ProgressPercent}" Height="8" />
-              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="{Binding JobsTab.ProgressFilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressEtaText}" Foreground="#6B7280" FontSize="12" VerticalAlignment="Center" />
-              </Grid>
-              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Text="{Binding JobsTab.ProgressSizeLabel}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="{Binding JobsTab.ProgressSizeText}" Foreground="#4B5563" FontSize="13" VerticalAlignment="Center" />
-              </Grid>
-              <StackPanel>
-                <TextBlock Text="{Binding JobsTab.ProgressCurrentFileLabel}" FontSize="12" Foreground="#9CA3AF" />
-                <TextBlock Text="{Binding JobsTab.ProgressCurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="12" MaxLines="1" />
-              </StackPanel>
+              <ItemsControl ItemsSource="{Binding JobsTab.JobProgressItems}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel Spacing="6" Margin="0,6,0,6">
+                      <TextBlock Text="{Binding JobName}" FontSize="13" Foreground="#0067C0" />
+                      <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="8" />
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <TextBlock Text="{Binding FilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding EtaText}" Foreground="#6B7280" FontSize="12" VerticalAlignment="Center" />
+                      </Grid>
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <TextBlock
+                          Text="{Binding DataContext.JobsTab.ProgressSizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"
+                          FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding SizeText}" Foreground="#4B5563" FontSize="13" VerticalAlignment="Center" />
+                      </Grid>
+                      <StackPanel>
+                        <TextBlock
+                          Text="{Binding DataContext.JobsTab.ProgressCurrentFileLabel, RelativeSource={RelativeSource AncestorType=Window}}"
+                          FontSize="12" Foreground="#9CA3AF" />
+                        <TextBlock Text="{Binding CurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="12" MaxLines="1" />
+                      </StackPanel>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
             </StackPanel>
           </Border>
           <TextBlock Grid.Row="3" Text="{Binding JobsTab.JobsHintText}" FontSize="12" Foreground="#9CA3AF" />

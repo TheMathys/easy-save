@@ -1,5 +1,7 @@
 # Projet Easy Save
 
+Lorsque plusieurs travaux de sauvegarde sont sélectionnés, ils s’exécutent **en parallèle** (plusieurs jobs en même temps). Un seul travail sélectionné conserve le comportement classique.
+
 ## Logs (JSON / XML)
 
 EasySave écrit un log détaillé de chaque fichier copié dans un fichier quotidien.  

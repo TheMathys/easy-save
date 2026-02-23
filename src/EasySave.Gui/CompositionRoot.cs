@@ -77,6 +77,9 @@ public static class CompositionRoot
         services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<IAudiodescription, Audiodescription>();
 
+        // Progress aggregation: one per JobsTabViewModel (Adapter pattern for backup progress -> GUI list).
+        services.AddTransient<IBackupProgressAggregator, BackupProgressAggregator>();
+
         // ViewModels (one per screen / tab)
         services.AddTransient<JobsTabViewModel>();
         services.AddTransient<CreateEditJobViewModel>();

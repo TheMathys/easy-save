@@ -111,13 +111,15 @@ Le domaine (Core) ne dépend d’aucun autre projet. L’infrastructure et la co
 4. Composition des services (DI) dans `CompositionRoot`.
 5. Exécution des travaux demandés via `IBackupExecutor`.
 
-### 4.2 Exécution d’un travail de sauvegarde
+### 4.2 Exécution des travaux de sauvegarde
 
-1. `IBackupExecutor.ExecuteAsync(jobIds)` pour chaque travail.
-2. Pour chaque travail : résolution de la stratégie (`IBackupStrategy`) selon le type (complète / différentielle).
-3. Énumération des fichiers éligibles via `IFileSystemService`.
-4. Pour chaque fichier : copie, mise à jour de l’état temps réel (`IStateWriter`), écriture dans le log journalier (EasyLog).
-5. Gestion des erreurs (temps de transfert négatif dans le log en cas d’erreur).
+1. `IBackupExecutor.ExecuteAsync(jobIds)` exécute les travaux dont les identifiants sont fournis.
+2. **Un seul travail** : exécution classique (comportement inchangé).
+3. **Plusieurs travaux** : exécution **en parallèle** (`Task.WhenAll`) ; chaque travail met à jour sa propre entrée dans l’état temps réel ; les écritures dans le fichier d’état et le log sont coordonnées (sémaphore) pour garder état et logs cohérents.
+4. Pour chaque travail : résolution de la stratégie (`IBackupStrategy`) selon le type (complète / différentielle).
+5. Énumération des fichiers éligibles via `IFileSystemService`.
+6. Pour chaque fichier : copie, mise à jour de l’état temps réel (`IStateWriter`), écriture dans le log journalier (EasyLog).
+7. Si le logiciel métier est détecté pendant l’exécution, tous les travaux en cours sont annulés et une entrée de log est écrite.
 
 ### 4.3 Fichiers produits (hors code)
 
