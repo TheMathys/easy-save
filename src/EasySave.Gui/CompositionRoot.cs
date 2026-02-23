@@ -75,6 +75,7 @@ public static class CompositionRoot
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
         services.AddSingleton<IConfirmationService, MessageBoxConfirmationService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
+        services.AddSingleton<IAudiodescription, Audiodescription>();
 
         // ViewModels (one per screen / tab)
         services.AddTransient<JobsTabViewModel>();

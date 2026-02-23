@@ -18,6 +18,7 @@ public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly IConfigurationHolder _configHolder;
     private readonly ILocalizationProvider _localization;
+    private readonly IAudiodescription _audioDescription;
     private readonly EasySavePaths _paths;
     private readonly IFilePickerService _filePicker;
     private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
@@ -27,16 +28,20 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _encryptionKeyPath = string.Empty;
     private string _businessSoftwareProcessName = string.Empty;
     private string _selectedProcessChoice = string.Empty;
+    private bool _audioDescriptionEnabled;
+    private double _volumeValue = 50;
 
     public SettingsViewModel(
         IConfigurationHolder configHolder,
         ILocalizationProvider localization,
+        IAudiodescription audioDescription,
         EasySavePaths paths,
         IFilePickerService filePicker,
         IBusinessSoftwareDetector businessSoftwareDetector)
     {
         _configHolder = configHolder;
         _localization = localization;
+        _audioDescription = audioDescription;
         _paths = paths;
         _filePicker = filePicker;
         _businessSoftwareDetector = businessSoftwareDetector;
@@ -57,6 +62,8 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelEncryptExtensions));
         RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
+        RaisePropertyChanged(nameof(LabelAudioDescription));
+        RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
@@ -91,6 +98,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
     public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
+    public string LabelAudioDescription => _localization.GetString("Gui_LabelAudioDescription");
+    public string LabelAudioDescriptionVolume => _localization.GetString("Gui_LabelAudioDescriptionVolume");
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
@@ -126,6 +135,36 @@ public sealed class SettingsViewModel : ViewModelBase
             string noneLabel = _localization.GetString("Gui_NoBusinessSoftware");
             _businessSoftwareProcessName = (value == noneLabel || string.IsNullOrWhiteSpace(value)) ? string.Empty : value.Trim();
             RaisePropertyChanged(nameof(BusinessSoftwareProcessName));
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether audio description is enabled.
+    /// When enabled, starts the audio description service; when disabled, stops it.
+    /// </summary>
+    public bool AudioDescriptionEnabled
+    {
+        get => _audioDescriptionEnabled;
+        set
+        {
+            if (!SetProperty(ref _audioDescriptionEnabled, value))
+                return;
+            _audioDescription.ServiceStatement(value);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the volume level for audio description (0-100).
+    /// Changes are immediately applied to the audio description service.
+    /// </summary>
+    public double VolumeValue
+    {
+        get => _volumeValue;
+        set
+        {
+            if (!SetProperty(ref _volumeValue, value))
+                return;
+            _audioDescription.SetVolume((int)value);
         }
     }
 

@@ -205,4 +205,10 @@
   <data name="Gui_ProgressSizeLabel" xml:space="preserve">
     <value>Taille :</value>
   </data>
+  <data name="Gui_LabelAudioDescription" xml:space="preserve">
+    <value>Activer / Désactiver l'audio description :</value>
+  </data>
+  <data name="Gui_LabelAudioDescriptionVolume" xml:space="preserve">
+    <value>Volume de l'audio description :</value>
+  </data>
 </root>
