@@ -64,6 +64,8 @@ public sealed class JobsTabViewModel : ViewModelBase
         RaisePropertyChanged(nameof(DetailsTitle));
         RaisePropertyChanged(nameof(RefreshButtonText));
         RaisePropertyChanged(nameof(RunSelectedButtonText));
+        RaisePropertyChanged(nameof(StopButtonText));
+        RaisePropertyChanged(nameof(DeleteButtonText));
         RaisePropertyChanged(nameof(JobsHintText));
         RaisePropertyChanged(nameof(ProgressTitle));
         RaisePropertyChanged(nameof(ProgressCurrentFileLabel));
@@ -197,9 +199,8 @@ public sealed class JobsTabViewModel : ViewModelBase
     public string RefreshButtonText => _localization.GetString("Gui_Refresh");
     public string RunSelectedButtonText => _localization.GetString("Gui_RunSelected");
     public string StopButtonText => _localization.GetString("Gui_Stop");
+    public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
-
-    public string DeleteButtonText => "Supprimer";
 
     public bool CanDelete => SelectedJob != null && !IsRunning;
 

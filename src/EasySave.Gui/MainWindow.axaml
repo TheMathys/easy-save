@@ -82,11 +82,11 @@
                     IsEnabled="{Binding JobsTab.CanRunSelected}" />
             <Button Content="{Binding JobsTab.StopButtonText}" Command="{Binding JobsTab.Stop}"
                 IsEnabled="{Binding JobsTab.CanStop}" />
-            <Button Content="Supprimer" Command="{Binding JobsTab.DeleteSelected}"
+            <Button Content="{Binding JobsTab.DeleteButtonText}" Command="{Binding JobsTab.DeleteSelected}"
                     IsEnabled="{Binding JobsTab.CanDelete}" />
           </StackPanel>
 
-          <Grid Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
+          <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
             <Border Grid.Column="0" Classes="card">
               <StackPanel Spacing="12">
                 <TextBlock Text="{Binding JobsTab.JobsListTitle}" FontWeight="SemiBold" FontSize="14" Foreground="#374151" />
@@ -184,7 +184,7 @@
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
           <ScrollViewer Classes="cardScroll">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
               <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
               <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
               <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
@@ -216,10 +216,13 @@
               
               <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
               <Slider Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
-              
-              <Button Grid.Row="10" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+
+              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="#374151" />
+              <ComboBox Grid.Row="10" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
+
+              <Button Grid.Row="11" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
                       Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-              <TextBlock Grid.Row="11" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+              <TextBlock Grid.Row="12" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
             </Grid>
           </ScrollViewer>
         </Border>
