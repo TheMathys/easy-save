@@ -2,6 +2,13 @@
 
 Lorsque plusieurs travaux de sauvegarde sont sélectionnés, ils s’exécutent **en parallèle** (plusieurs jobs en même temps). Un seul travail sélectionné conserve le comportement classique.
 
+## Service de centralisation des logs (Docker)
+
+Un **serveur de logs** peut recevoir les entrées de logs de sauvegarde de plusieurs instances EasySave via le réseau (socket TCP) et les stocker dans des fichiers JSON journaliers, au même format que les logs locaux EasySave. Ce service est particulièrement utile lorsque EasySave tourne sur plusieurs machines ou serveurs dans l’entreprise.
+
+- **Projet** : [src/EasySave.LogServer/](src/EasySave.LogServer/)
+- **Exécution avec Docker** : `docker-compose up -d` (voir [EasySave.LogServer/README.md](src/EasySave.LogServer/README.md) pour le build, la configuration et les détails du protocole).
+
 ## Logs (JSON / XML)
 
 EasySave écrit un log détaillé de chaque fichier copié dans un fichier quotidien.  
