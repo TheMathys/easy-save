@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Exceptions;
@@ -37,7 +38,35 @@ namespace EasySave.Infrastructure.Backup
         /// </summary>
         private static readonly SemaphoreSlim LargeFileSemaphore = new(1, 1);
 
+        /// <summary>
+        /// Per-job control structure used to implement pause/resume semantics without
+        /// leaking synchronization primitives to higher layers (encapsulates the "Command" for a job).
+        /// </summary>
+        private sealed class JobControl : IDisposable
+        {
+            private int _stopRequested;
+
+            public JobControl()
+            {
+                PauseEvent = new ManualResetEventSlim(initialState: true);
+            }
+
+            /// <summary>
+            /// Event in signaled state when the job is allowed to run, and reset when it is paused.
+            /// </summary>
+            public ManualResetEventSlim PauseEvent { get; }
+
+            public void RequestStop() => Interlocked.Exchange(ref _stopRequested, 1);
+
+            public bool IsStopRequested => Volatile.Read(ref _stopRequested) == 1;
+
+            public void Dispose() => PauseEvent.Dispose();
+        }
+
+        private readonly ConcurrentDictionary<int, JobControl> _jobControls = new();
+
         public const string StopReasonBusinessSoftware = "BusinessSoftwareDetected";
+        public const string StopReasonUserRequested = "StoppedByUser";
 
         public BackupExecutor(
             IConfigurationRepository configRepository,
@@ -58,6 +87,35 @@ namespace EasySave.Infrastructure.Backup
         }
 
         private const int ProgressReportThrottleMs = 150;
+        private const int StateWriteThrottleMs = 500;
+
+        public Task PauseJobAsync(int jobId, CancellationToken cancellationToken = default)
+        {
+            if (_jobControls.TryGetValue(jobId, out JobControl? control))
+            {
+                control.PauseEvent.Reset();
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task ResumeJobAsync(int jobId, CancellationToken cancellationToken = default)
+        {
+            if (_jobControls.TryGetValue(jobId, out JobControl? control))
+            {
+                control.PauseEvent.Set();
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task StopJobAsync(int jobId, CancellationToken cancellationToken = default)
+        {
+            if (_jobControls.TryGetValue(jobId, out JobControl? control))
+            {
+                control.RequestStop();
+                control.PauseEvent.Set();
+            }
+            return Task.CompletedTask;
+        }
 
         public async Task ExecuteAsync(IReadOnlyList<int> jobIds, IProgress<BackupProgress>? progress = null, CancellationToken cancellationToken = default)
         {
@@ -71,6 +129,7 @@ namespace EasySave.Infrastructure.Backup
             Dictionary<int, BackupJob> jobById = config.Jobs.ToDictionary(j => j.Id);
             List<BackupProgress> progressList = config.Jobs.Select(j => new BackupProgress
             {
+                JobId = j.Id,
                 BackupName = j.Name,
                 LastActionTimestamp = DateTime.UtcNow,
                 State = BackupState.Inactive
@@ -94,7 +153,16 @@ namespace EasySave.Infrastructure.Backup
             if (toRun.Count == 1)
             {
                 (BackupJob job, int idx) = toRun[0];
-                await ExecuteSingleJobAsync(job, idx, progressList, config, cancellationToken, progress, onBusinessSoftwareDetected: null).ConfigureAwait(false);
+                JobControl control = _jobControls.GetOrAdd(job.Id, _ => new JobControl());
+                try
+                {
+                    await ExecuteSingleJobAsync(job, idx, progressList, config, cancellationToken, progress, onBusinessSoftwareDetected: null, control).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (_jobControls.TryRemove(job.Id, out JobControl? existing))
+                        existing.Dispose();
+                }
                 return;
             }
 
@@ -102,14 +170,19 @@ namespace EasySave.Infrastructure.Backup
             using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             Action onBusinessSoftwareDetected = () => linkedCts.Cancel();
 
-            IReadOnlyList<Task> tasks = toRun.Select(t => ExecuteSingleJobAsync(
-                t.Job,
-                t.ProgressIndex,
-                progressList,
-                config,
-                linkedCts.Token,
-                progress,
-                onBusinessSoftwareDetected)).ToList();
+            IReadOnlyList<Task> tasks = toRun.Select(t =>
+            {
+                JobControl control = _jobControls.GetOrAdd(t.Job.Id, _ => new JobControl());
+                return ExecuteSingleJobAsync(
+                    t.Job,
+                    t.ProgressIndex,
+                    progressList,
+                    config,
+                    linkedCts.Token,
+                    progress,
+                    onBusinessSoftwareDetected,
+                    control);
+            }).ToList();
 
             try
             {
@@ -123,9 +196,17 @@ namespace EasySave.Infrastructure.Backup
             {
                 throw;
             }
+            finally
+            {
+                foreach ((BackupJob job, _) in toRun)
+                {
+                    if (_jobControls.TryRemove(job.Id, out JobControl? existing))
+                        existing.Dispose();
+                }
 
-            // Write final state after all jobs complete to ensure a snapshot with all jobs in their final state exists
-            await WriteStateUnderLockAsync(progressList, cancellationToken).ConfigureAwait(false);
+                // Always publish a final snapshot after batch execution (including cancelled jobs).
+                await WriteStateUnderLockAsync(progressList, CancellationToken.None).ConfigureAwait(false);
+            }
         }
 
         /// <summary>
@@ -174,7 +255,8 @@ namespace EasySave.Infrastructure.Backup
             BackupConfiguration config,
             CancellationToken cancellationToken,
             IProgress<BackupProgress>? progress,
-            Action? onBusinessSoftwareDetected)
+            Action? onBusinessSoftwareDetected,
+            JobControl? jobControl)
         {
             if (!string.IsNullOrWhiteSpace(job.TargetPath))
                 _fileSystem.EnsureDirectoryExists(job.TargetPath);
@@ -190,15 +272,19 @@ namespace EasySave.Infrastructure.Backup
 
             long totalSize = 0L;
             int fileCount = 0;
-            IAsyncEnumerable<FileItem> pass1Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
-            await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, pass1Stream, differentialSince, cancellationToken))
+            List<(FileItem Item, long Size)> eligibleFiles = new();
+            IAsyncEnumerable<FileItem> fileStream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
+            await foreach (FileItem f in strategy.GetEligibleFilesAsync(job, fileStream, differentialSince, cancellationToken))
             {
-                totalSize += _fileSystem.GetFileSize(f.FullSourcePath);
+                long size = _fileSystem.GetFileSize(f.FullSourcePath);
+                totalSize += size;
                 fileCount++;
+                eligibleFiles.Add((f, size));
             }
 
             progressList[idx] = new BackupProgress
             {
+                JobId = job.Id,
                 BackupName = job.Name,
                 LastActionTimestamp = DateTime.UtcNow,
                 State = BackupState.Active,
@@ -209,7 +295,8 @@ namespace EasySave.Infrastructure.Backup
                 RemainingSizeBytes = totalSize,
                 CurrentSourcePath = null,
                 CurrentDestinationPath = null,
-                EstimatedTimeRemainingSeconds = null
+                EstimatedTimeRemainingSeconds = null,
+                ElapsedTimeSeconds = 0
             };
             await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
 
@@ -217,6 +304,7 @@ namespace EasySave.Infrastructure.Backup
             long bytesCompleted = 0L;
             int processedCount = 0;
             long lastReportTicks = 0;
+            long lastStateWriteTicks = 0;
 
             void UpdateProgress(long bytesCopiedInCurrentFile, string? uncSource, string? uncDest)
             {
@@ -233,6 +321,7 @@ namespace EasySave.Infrastructure.Backup
 
                 progressList[idx] = new BackupProgress
                 {
+                    JobId = job.Id,
                     BackupName = job.Name,
                     LastActionTimestamp = DateTime.UtcNow,
                     State = BackupState.Active,
@@ -243,7 +332,8 @@ namespace EasySave.Infrastructure.Backup
                     RemainingSizeBytes = remainingSize,
                     CurrentSourcePath = uncSource,
                     CurrentDestinationPath = uncDest,
-                    EstimatedTimeRemainingSeconds = etaSeconds
+                    EstimatedTimeRemainingSeconds = etaSeconds,
+                    ElapsedTimeSeconds = elapsedSeconds
                 };
             }
 
@@ -271,16 +361,96 @@ namespace EasySave.Infrastructure.Backup
                 largeFileThresholdBytes = config.LargeFileThresholdKb.Value * 1024L;
             }
 
-            IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
-            await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
+            async Task<bool> TryStopRequestedAsync()
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                string destPath = Path.Combine(job.TargetPath, item.RelativePath);
-                string? dir = Path.GetDirectoryName(destPath);
-                if (!string.IsNullOrEmpty(dir))
-                    _fileSystem.EnsureDirectoryExists(dir);
+                if (jobControl == null || !jobControl.IsStopRequested)
+                    return false;
 
-                long fileSize = _fileSystem.GetFileSize(item.FullSourcePath);
+                progressList[idx] = new BackupProgress
+                {
+                    JobId = job.Id,
+                    BackupName = job.Name,
+                    LastActionTimestamp = DateTime.UtcNow,
+                    State = BackupState.Inactive,
+                    TotalFilesCount = fileCount,
+                    TotalSizeBytes = totalSize,
+                    ProgressPercent = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0,
+                    RemainingFilesCount = fileCount - processedCount,
+                    RemainingSizeBytes = totalSize - bytesCompleted,
+                    CurrentSourcePath = null,
+                    CurrentDestinationPath = null,
+                    EstimatedTimeRemainingSeconds = null,
+                    ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                };
+                await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+                LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonUserRequested);
+                await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+
+            try
+            {
+                foreach ((FileItem item, long fileSize) in eligibleFiles)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (await TryStopRequestedAsync().ConfigureAwait(false))
+                        return;
+                    if (jobControl != null)
+                    {
+                        // If the job is paused, publish a Paused state and wait until it is resumed.
+                        if (!jobControl.PauseEvent.IsSet)
+                        {
+                            long remainingSizePaused = totalSize - bytesCompleted;
+                            progressList[idx] = new BackupProgress
+                            {
+                                JobId = job.Id,
+                                BackupName = job.Name,
+                                LastActionTimestamp = DateTime.UtcNow,
+                                State = BackupState.Paused,
+                                TotalFilesCount = fileCount,
+                                TotalSizeBytes = totalSize,
+                                ProgressPercent = totalSize > 0
+                                    ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2)
+                                    : 100.0,
+                                RemainingFilesCount = fileCount - processedCount,
+                                RemainingSizeBytes = remainingSizePaused,
+                                CurrentSourcePath = null,
+                                CurrentDestinationPath = null,
+                                EstimatedTimeRemainingSeconds = null,
+                                ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                            };
+                            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+
+                            jobControl.PauseEvent.Wait(cancellationToken);
+                            if (await TryStopRequestedAsync().ConfigureAwait(false))
+                                return;
+
+                            progressList[idx] = new BackupProgress
+                            {
+                                JobId = job.Id,
+                                BackupName = job.Name,
+                                LastActionTimestamp = DateTime.UtcNow,
+                                State = BackupState.Active,
+                                TotalFilesCount = fileCount,
+                                TotalSizeBytes = totalSize,
+                                ProgressPercent = totalSize > 0
+                                    ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2)
+                                    : 100.0,
+                                RemainingFilesCount = fileCount - processedCount,
+                                RemainingSizeBytes = totalSize - bytesCompleted,
+                                CurrentSourcePath = null,
+                                CurrentDestinationPath = null,
+                                EstimatedTimeRemainingSeconds = null,
+                                ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                            };
+                            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                    string destPath = Path.Combine(job.TargetPath, item.RelativePath);
+                    string? dir = Path.GetDirectoryName(destPath);
+                    if (!string.IsNullOrEmpty(dir))
+                        _fileSystem.EnsureDirectoryExists(dir);
+
                 string uncSource = _fileSystem.GetUncPath(item.FullSourcePath);
                 string uncDest = _fileSystem.GetUncPath(destPath);
 
@@ -325,10 +495,8 @@ namespace EasySave.Infrastructure.Backup
                         LargeFileSemaphore.Release();
                 }
 
-                string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);
-                string uncDestLog = _fileSystem.GetUncPath(destPath);
                 TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSourceLog, uncDestLog, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
+                await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSource, uncDest, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
 
                 bytesCompleted += fileSize;
                 processedCount++;
@@ -338,6 +506,7 @@ namespace EasySave.Infrastructure.Backup
 
                 progressList[idx] = new BackupProgress
                 {
+                    JobId = job.Id,
                     BackupName = job.Name,
                     LastActionTimestamp = DateTime.UtcNow,
                     State = BackupState.Active,
@@ -350,21 +519,52 @@ namespace EasySave.Infrastructure.Backup
                     CurrentDestinationPath = uncDest,
                     EstimatedTimeRemainingSeconds = remainingSize > 0 && (DateTime.UtcNow - jobStartUtc).TotalSeconds > 0.5
                         ? (double?)(remainingSize / (bytesCompleted / (DateTime.UtcNow - jobStartUtc).TotalSeconds))
-                        : null
+                        : null,
+                    ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
                 };
-                await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+                progress?.Report(progressList[idx]);
 
-                if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
+                long stateNow = Environment.TickCount64;
+                if (processedCount == fileCount || stateNow - lastStateWriteTicks >= StateWriteThrottleMs)
                 {
-                    LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
-                    await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
-                    onBusinessSoftwareDetected?.Invoke();
-                    return;
+                    lastStateWriteTicks = stateNow;
+                    await WriteStateUnderLockAsync(progressList, cancellationToken).ConfigureAwait(false);
                 }
+
+                    if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
+                    {
+                        LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
+                        await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                        onBusinessSoftwareDetected?.Invoke();
+                        return;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                progressList[idx] = new BackupProgress
+                {
+                    JobId = job.Id,
+                    BackupName = job.Name,
+                    LastActionTimestamp = DateTime.UtcNow,
+                    State = BackupState.Inactive,
+                    TotalFilesCount = fileCount,
+                    TotalSizeBytes = totalSize,
+                    ProgressPercent = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0,
+                    RemainingFilesCount = fileCount - processedCount,
+                    RemainingSizeBytes = totalSize - bytesCompleted,
+                    CurrentSourcePath = null,
+                    CurrentDestinationPath = null,
+                    EstimatedTimeRemainingSeconds = null,
+                    ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                };
+                await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
+                throw;
             }
 
             progressList[idx] = new BackupProgress
             {
+                JobId = job.Id,
                 BackupName = job.Name,
                 LastActionTimestamp = DateTime.UtcNow,
                 State = BackupState.Completed,
@@ -375,7 +575,8 @@ namespace EasySave.Infrastructure.Backup
                 RemainingSizeBytes = 0,
                 CurrentSourcePath = null,
                 CurrentDestinationPath = null,
-                EstimatedTimeRemainingSeconds = null
+                EstimatedTimeRemainingSeconds = null,
+                ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
             };
 
             if (job.Type == BackupType.Full)

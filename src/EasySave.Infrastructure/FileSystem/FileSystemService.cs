@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Collections.Concurrent;
 using System.Threading;
 
 namespace EasySave.Infrastructure.FileSystem
@@ -16,12 +17,14 @@ namespace EasySave.Infrastructure.FileSystem
     /// </summary>
     public sealed class FileSystemService : IFileSystemService
     {
+        private readonly ConcurrentDictionary<string, string> _uncRootCache = new(StringComparer.OrdinalIgnoreCase);
+
         public void EnsureDirectoryExists(string directoryPath)
         {
             Directory.CreateDirectory(directoryPath);
         }
 
-        private static string GetUncPathWindows(string path)
+        private string GetUncPathWindows(string path)
         {
             var fullPath = Path.GetFullPath(path);
             if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
@@ -31,12 +34,20 @@ namespace EasySave.Infrastructure.FileSystem
             if (string.IsNullOrEmpty(drive) || drive.Length < 2)
                 return fullPath;
 
+            string uncRoot = _uncRootCache.GetOrAdd(drive, ResolveUncRoot);
+            if (uncRoot != drive)
+                return fullPath.Replace(drive, uncRoot);
+
+            return fullPath;
+        }
+
+        private static string ResolveUncRoot(string drive)
+        {
             int length = 260;
             StringBuilder sb = new StringBuilder(length);
             if (NativeMethods.WNetGetConnectionW(drive.TrimEnd('\\'), sb, ref length) == 0)
-                return fullPath.Replace(drive, sb.ToString().TrimEnd('\\') + Path.DirectorySeparatorChar);
-
-            return fullPath;
+                return sb.ToString().TrimEnd('\\') + Path.DirectorySeparatorChar;
+            return drive;
         }
 
         public async IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, BackupEnumerationOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -160,7 +171,7 @@ namespace EasySave.Infrastructure.FileSystem
                     Mode = FileMode.Open,
                     Access = FileAccess.Read,
                     Share = FileShare.Read,
-                    Options = FileOptions.Asynchronous
+                    Options = FileOptions.Asynchronous | FileOptions.SequentialScan
                 };
                 var destOptions = new FileStreamOptions
                 {

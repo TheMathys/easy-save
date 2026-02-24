@@ -15,10 +15,15 @@ namespace EasySave.Core.Enums
 		/// </summary>
 		Active,
 
-		/// <summary>
-		/// The backup completed successfully (100%).
-		/// </summary>
-		Completed,
+        /// <summary>
+        /// The backup is temporarily paused by the user. Progress values remain frozen.
+        /// </summary>
+        Paused,
+
+        /// <summary>
+        /// The backup completed successfully (100%).
+        /// </summary>
+        Completed,
 
 		/// <summary>
 		/// A critical error occurred and the backup was interrupted.

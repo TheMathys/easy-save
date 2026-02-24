@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using EasySave.Core.Entities;
@@ -598,6 +599,29 @@ namespace EasySave.Infrastructure.Tests;
         Assert.Equal(1, fileSystem.MaxConcurrentLargeCopies);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ReusesComputedUncPaths_ForProgressAndLog()
+    {
+        string source = Path.Combine(_tempRoot, "source");
+        string target = Path.Combine(_tempRoot, "target");
+        string sourceFile = Path.Combine(source, "a.txt");
+        string destinationFile = Path.Combine(target, "a.txt");
+
+        CountingUncFileSystemService fileSystem = new(sourceFile, destinationFile, fileSize: 1024);
+        BackupJob job = new() { Id = 1, Name = "Job1", SourcePath = source, TargetPath = target, Type = BackupType.Full };
+        BackupConfiguration config = new() { Jobs = new[] { job } };
+
+        FakeConfigRepository configRepo = new(config);
+        FakeStateWriter stateWriter = new();
+        FakeLogWriter logWriter = new();
+        BackupExecutor executor = new(configRepo, new BackupStrategyFactory(), fileSystem, stateWriter, logWriter, null, new BusinessSoftwareDetector());
+
+        await executor.ExecuteAsync(new[] { 1 });
+
+        Assert.Equal(1, fileSystem.GetUncPathCallsByPath[sourceFile]);
+        Assert.Equal(1, fileSystem.GetUncPathCallsByPath[destinationFile]);
+    }
+
     private BackupExecutor CreateExecutor(
         IConfigurationRepository? configRepository = null,
         IBackupStrategyFactory? strategyFactory = null,
@@ -707,7 +731,7 @@ namespace EasySave.Infrastructure.Tests;
             return EnumerateAsync(list, cancellationToken);
         }
 
-        private static async IAsyncEnumerable<FileItem> EnumerateAsync(IEnumerable<FileItem> items, CancellationToken cancellationToken)
+        private static async IAsyncEnumerable<FileItem> EnumerateAsync(IEnumerable<FileItem> items, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             foreach (FileItem item in items)
             {
@@ -754,6 +778,56 @@ namespace EasySave.Infrastructure.Tests;
         {
             return _sizesByFullPath.TryGetValue(path, out long size) ? size : 0;
         }
+
+        public void EnsureDirectoryExists(string directoryPath)
+        {
+        }
+
+        public DateTime GetLastWriteTimeUtc(string path) => DateTime.UtcNow;
+    }
+
+    private sealed class CountingUncFileSystemService : IFileSystemService
+    {
+        private readonly string _sourceFile;
+        private readonly long _fileSize;
+
+        public CountingUncFileSystemService(string sourceFile, string destinationFile, long fileSize)
+        {
+            _sourceFile = sourceFile;
+            _fileSize = fileSize;
+        }
+
+        public Dictionary<string, int> GetUncPathCallsByPath { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, BackupEnumerationOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            return EnumerateAsync(cancellationToken);
+        }
+
+        private async IAsyncEnumerable<FileItem> EnumerateAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return new FileItem(Path.GetFileName(_sourceFile), _sourceFile, DateTime.UtcNow);
+            await Task.CompletedTask;
+        }
+
+        public Task<long> CopyFileAsync(string sourcePath, string destinationPath, IProgress<long>? progress = null, CancellationToken cancellationToken = default)
+        {
+            progress?.Report(_fileSize);
+            return Task.FromResult(1L);
+        }
+
+        public string GetUncPath(string path)
+        {
+            if (GetUncPathCallsByPath.TryGetValue(path, out int current))
+                GetUncPathCallsByPath[path] = current + 1;
+            else
+                GetUncPathCallsByPath[path] = 1;
+
+            return path;
+        }
+
+        public long GetFileSize(string path) => _fileSize;
 
         public void EnsureDirectoryExists(string directoryPath)
         {

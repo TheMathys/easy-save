@@ -329,6 +329,12 @@ public sealed class TuiRunnerTests : IDisposable
             Executions.Add(new List<int>(jobIds));
             return Task.CompletedTask;
         }
+
+            public Task PauseJobAsync(int jobId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+            public Task ResumeJobAsync(int jobId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+            public Task StopJobAsync(int jobId, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }
 

@@ -85,6 +85,10 @@
                     IsEnabled="{Binding JobsTab.CanRunSelected}" />
             <Button Content="{Binding JobsTab.StopButtonText}" Command="{Binding JobsTab.Stop}"
                 IsEnabled="{Binding JobsTab.CanStop}" />
+            <Button Content="{Binding JobsTab.PauseButtonText}" Command="{Binding JobsTab.PauseSelected}"
+                    IsEnabled="{Binding JobsTab.CanPauseSelected}" />
+            <Button Content="{Binding JobsTab.ResumeButtonText}" Command="{Binding JobsTab.ResumeSelected}"
+                    IsEnabled="{Binding JobsTab.CanResumeSelected}" />
             <Button Content="{Binding JobsTab.DeleteButtonText}" Command="{Binding JobsTab.DeleteSelected}"
                     IsEnabled="{Binding JobsTab.CanDelete}" />
           </StackPanel>
@@ -99,10 +103,13 @@
                          MinHeight="240" Background="Transparent" BorderThickness="0">
                   <ListBox.ItemTemplate>
                     <DataTemplate>
-                      <Grid ColumnDefinitions="Auto,*" Margin="4"> 
-                        <TextBlock Grid.Column="1" 
+                      <Grid ColumnDefinitions="*,Auto" Margin="4" ColumnSpacing="8"> 
+                        <TextBlock Grid.Column="0" 
                                    Text="{Binding Name}"
                                    VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{Binding StateBadgeBackground}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding StateText}" Foreground="{Binding StateBadgeForeground}" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
                       </Grid>
                     </DataTemplate>
                   </ListBox.ItemTemplate>
@@ -123,7 +130,27 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <StackPanel Spacing="6" Margin="0,6,0,6">
-                      <TextBlock Text="{Binding JobName}" FontSize="13" Foreground="{DynamicResource PrimaryBrush}" />
+                      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="6">
+                        <TextBlock Grid.Column="0" Text="{Binding JobName}" FontSize="13" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
+                        <Border Grid.Column="1" Background="{Binding StateBadgeBackground}" CornerRadius="10" Padding="8,2">
+                          <TextBlock Text="{Binding StateText}" Foreground="{Binding StateBadgeForeground}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </Border>
+                        <Button Grid.Column="2"
+                                Content="{Binding DataContext.JobsTab.PauseButtonText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Command="{Binding DataContext.JobsTab.PauseProgressJob, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding CanPause}" />
+                        <Button Grid.Column="3"
+                                Content="{Binding DataContext.JobsTab.ResumeButtonText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Command="{Binding DataContext.JobsTab.ResumeProgressJob, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding CanResume}" />
+                        <Button Grid.Column="4"
+                                Content="{Binding DataContext.JobsTab.StopButtonText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Command="{Binding DataContext.JobsTab.StopProgressJob, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding CanStop}" />
+                      </Grid>
                       <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="8" />
                       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <TextBlock Text="{Binding FilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
@@ -141,6 +168,7 @@
                           FontSize="12" Foreground="{DynamicResource MutedBrush}" />
                         <TextBlock Text="{Binding CurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="12" MaxLines="1" />
                       </StackPanel>
+                      <TextBlock Text="{Binding SummaryText}" Foreground="#6B7280" FontSize="12" TextWrapping="Wrap" />
                     </StackPanel>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>

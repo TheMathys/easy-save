@@ -8,6 +8,9 @@ namespace EasySave.Core.Entities
     /// </summary>
     public sealed class BackupProgress
     {
+        /// <summary>Backup job identifier.</summary>
+        public int JobId { get; init; }
+
         /// <summary>Backup job name.</summary>
         public string BackupName { get; init; } = string.Empty;
 
@@ -40,5 +43,8 @@ namespace EasySave.Core.Entities
 
         /// <summary>Estimated time remaining in seconds.</summary>
         public double? EstimatedTimeRemainingSeconds { get; set; }
+
+        /// <summary>Elapsed time in seconds since this backup job started.</summary>
+        public double? ElapsedTimeSeconds { get; set; }
     }
 }

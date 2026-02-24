@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyLog;
@@ -15,9 +16,14 @@ namespace EasySave.Infrastructure.Persistence;
 /// </summary>
 public sealed class DestinationLogWriter : ILogWriter
 {
+    private const int ConfigurationCacheDurationMs = 2000;
+
     private readonly IConfigurationRepository _configRepository;
     private readonly ConfigurableLogWriter _localWriter;
     private readonly ICentralizedLogClient _centralizedClient;
+    private readonly SemaphoreSlim _routingCacheLock = new(1, 1);
+    private LogRouting? _cachedRouting;
+    private long _nextRoutingRefreshAtUtcMs;
 
     public DestinationLogWriter(
         IConfigurationRepository configRepository,
@@ -32,18 +38,49 @@ public sealed class DestinationLogWriter : ILogWriter
     /// <inheritdoc />
     public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
     {
-        BackupConfiguration? config = await _configRepository.LoadAsync(cancellationToken).ConfigureAwait(false);
-        LogDestination destination = config?.LogDestination ?? LogDestination.Local;
-        string? serverAddress = config?.CentralizedLogServerAddress;
+        LogRouting routing = await GetRoutingAsync(cancellationToken).ConfigureAwait(false);
 
-        bool writeLocal = destination == LogDestination.Local || destination == LogDestination.LocalAndCentralized;
-        bool sendCentral = (destination == LogDestination.Centralized || destination == LogDestination.LocalAndCentralized)
-            && !string.IsNullOrWhiteSpace(serverAddress);
-
-        if (writeLocal)
+        if (routing.WriteLocal)
             await _localWriter.WriteAsync(logEntry, cancellationToken).ConfigureAwait(false);
 
-        if (sendCentral && logEntry is LogEntry entry)
-            await _centralizedClient.SendAsync(entry, serverAddress, cancellationToken).ConfigureAwait(false);
+        if (routing.SendCentral && logEntry is LogEntry entry)
+            await _centralizedClient.SendAsync(entry, routing.ServerAddress, cancellationToken).ConfigureAwait(false);
     }
+
+    private async Task<LogRouting> GetRoutingAsync(CancellationToken cancellationToken)
+    {
+        long nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        LogRouting? cached = Volatile.Read(ref _cachedRouting);
+        if (cached != null && nowMs < Volatile.Read(ref _nextRoutingRefreshAtUtcMs))
+            return cached;
+
+        await _routingCacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            cached = _cachedRouting;
+            if (cached != null && nowMs < _nextRoutingRefreshAtUtcMs)
+                return cached;
+
+            BackupConfiguration? config = await _configRepository.LoadAsync(cancellationToken).ConfigureAwait(false);
+            LogDestination destination = config?.LogDestination ?? LogDestination.Local;
+            string? serverAddress = config?.CentralizedLogServerAddress;
+
+            LogRouting refreshed = new(
+                WriteLocal: destination == LogDestination.Local || destination == LogDestination.LocalAndCentralized,
+                SendCentral: (destination == LogDestination.Centralized || destination == LogDestination.LocalAndCentralized)
+                    && !string.IsNullOrWhiteSpace(serverAddress),
+                ServerAddress: serverAddress);
+
+            Volatile.Write(ref _cachedRouting, refreshed);
+            Volatile.Write(ref _nextRoutingRefreshAtUtcMs, nowMs + ConfigurationCacheDurationMs);
+            return refreshed;
+        }
+        finally
+        {
+            _routingCacheLock.Release();
+        }
+    }
+
+    private sealed record LogRouting(bool WriteLocal, bool SendCentral, string? ServerAddress);
 }

@@ -156,6 +156,9 @@
   <data name="Gui_JobSuccess" xml:space="preserve">
     <value>Travail #{0} terminé avec succès.</value>
   </data>
+  <data name="Gui_JobAlreadyRunning" xml:space="preserve">
+    <value>Le ou les travaux sélectionnés sont déjà en cours.</value>
+  </data>
   <data name="Gui_JobError" xml:space="preserve">
     <value>Erreur : {0}</value>
   </data>
@@ -306,6 +309,18 @@ Dossiers exclus : {6}</value>
   <data name="Gui_JobCancelledByUser" xml:space="preserve">
     <value>Le travail a été annulé par l'utilisateur.</value>
   </data>
+  <data name="Gui_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Gui_Resume" xml:space="preserve">
+    <value>Reprendre</value>
+  </data>
+  <data name="Gui_JobPaused" xml:space="preserve">
+    <value>Le travail {0} est en pause.</value>
+  </data>
+  <data name="Gui_JobResumed" xml:space="preserve">
+    <value>Le travail {0} a repris.</value>
+  </data>
   <data name="Gui_ProgressTitle" xml:space="preserve">
     <value>Progression</value>
   </data>
@@ -326,6 +341,30 @@ Dossiers exclus : {6}</value>
   </data>
   <data name="Gui_ProgressSizeLabel" xml:space="preserve">
     <value>Taille :</value>
+  </data>
+  <data name="Gui_ProgressSummaryCompleted" xml:space="preserve">
+    <value>Terminé en {0}.</value>
+  </data>
+  <data name="Gui_ProgressSummaryStopped" xml:space="preserve">
+    <value>Arrêté après {0}.</value>
+  </data>
+  <data name="Gui_ProgressSummaryError" xml:space="preserve">
+    <value>Échec après {0}.</value>
+  </data>
+  <data name="Gui_ProgressStateActive" xml:space="preserve">
+    <value>Actif</value>
+  </data>
+  <data name="Gui_ProgressStatePaused" xml:space="preserve">
+    <value>En pause</value>
+  </data>
+  <data name="Gui_ProgressStateCompleted" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="Gui_ProgressStateError" xml:space="preserve">
+    <value>Erreur</value>
+  </data>
+  <data name="Gui_ProgressStateInactive" xml:space="preserve">
+    <value>Arrêté</value>
   </data>
   <data name="Gui_LabelAudioDescription" xml:space="preserve">
     <value>Activer / Désactiver l'audio description :</value>

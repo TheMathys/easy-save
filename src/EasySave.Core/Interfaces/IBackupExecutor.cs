@@ -26,5 +26,24 @@ namespace EasySave.Core.Interfaces
         /// the process or the application is shutting down).
         /// </param>
         Task ExecuteAsync(IReadOnlyList<int> jobIds, IProgress<BackupProgress>? progress = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Requests that a running backup job enters a paused state. The pause is effective
+        /// after the current file transfer completes so that file integrity is preserved.
+        /// </summary>
+        /// <param name="jobId">Identifier of the backup job to pause.</param>
+        Task PauseJobAsync(int jobId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Requests that a previously paused backup job resumes its work.
+        /// </summary>
+        /// <param name="jobId">Identifier of the backup job to resume.</param>
+        Task ResumeJobAsync(int jobId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Requests that a running backup job stops after the current file transfer.
+        /// </summary>
+        /// <param name="jobId">Identifier of the backup job to stop.</param>
+        Task StopJobAsync(int jobId, CancellationToken cancellationToken = default);
     }
 }
