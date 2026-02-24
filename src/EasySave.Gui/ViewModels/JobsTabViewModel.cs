@@ -262,7 +262,8 @@ public sealed class JobsTabViewModel : ViewModelBase
             LastFullBackupUtcByJobId = newLastFull,
             EncryptExtensions = config.EncryptExtensions,
             EncryptionKeyPath = config.EncryptionKeyPath,
-            BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
+            BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+            LargeFileThresholdKb = config.LargeFileThresholdKb
         };
 
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);

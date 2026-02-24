@@ -68,7 +68,8 @@ namespace EasySave.Infrastructure.Tests
                     LastFullBackupUtcByJobId = new Dictionary<int, DateTime>
                     {
                         [1] = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc)
-                    }
+                    },
+                    LargeFileThresholdKb = 2048
                 };
 
                 await repository.SaveAsync(originalConfig);
@@ -78,6 +79,7 @@ namespace EasySave.Infrastructure.Tests
                 Assert.NotNull(loadedConfig);
                 Assert.Equal(originalConfig.LogAndStateDirectory, loadedConfig!.LogAndStateDirectory);
                 Assert.Equal(originalConfig.LogFileFormat, loadedConfig.LogFileFormat);
+                Assert.Equal(originalConfig.LargeFileThresholdKb, loadedConfig.LargeFileThresholdKb);
 
                 Assert.Equal(originalConfig.Jobs.Count, loadedConfig.Jobs.Count);
                 for (var i = 0; i < originalConfig.Jobs.Count; i++)

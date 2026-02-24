@@ -348,4 +348,7 @@ Excluded directories: {6}</value>
   <data name="Gui_LabelLangueSelection" xml:space="preserve">
     <value>EasySave Language:</value>
   </data>
+  <data name="Gui_LabelLargeFileThreshold" xml:space="preserve">
+    <value>Large file threshold (KB):</value>
+  </data>
 </root>

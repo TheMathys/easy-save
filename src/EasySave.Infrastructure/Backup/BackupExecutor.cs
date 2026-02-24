@@ -31,6 +31,12 @@ namespace EasySave.Infrastructure.Backup
         private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
         private readonly SemaphoreSlim _stateWriteLock = new(1, 1);
 
+        /// <summary>
+        /// Global semaphore used to ensure that at most one large file (above the configured threshold)
+        /// is transferred at any given time across all running jobs in this process.
+        /// </summary>
+        private static readonly SemaphoreSlim LargeFileSemaphore = new(1, 1);
+
         public const string StopReasonBusinessSoftware = "BusinessSoftwareDetected";
 
         public BackupExecutor(
@@ -256,6 +262,12 @@ namespace EasySave.Infrastructure.Backup
                 && !string.IsNullOrWhiteSpace(config.EncryptionKeyPath)
                 && _fileEncryptor != null;
 
+            long? largeFileThresholdBytes = null;
+            if (config.LargeFileThresholdKb.HasValue && config.LargeFileThresholdKb.Value > 0)
+            {
+                largeFileThresholdBytes = config.LargeFileThresholdKb.Value * 1024L;
+            }
+
             IAsyncEnumerable<FileItem> pass2Stream = _fileSystem.EnumerateFilesAsync(job.SourcePath, enumOptions, cancellationToken);
             await foreach (FileItem item in strategy.GetEligibleFilesAsync(job, pass2Stream, differentialSince, cancellationToken))
             {
@@ -271,30 +283,43 @@ namespace EasySave.Infrastructure.Backup
 
                 long transferMs;
                 long encryptionTimeMs;
-                if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
+
+                bool isLargeFile = largeFileThresholdBytes.HasValue && fileSize > largeFileThresholdBytes.Value;
+                if (isLargeFile)
+                    await LargeFileSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                try
                 {
-                    transferMs = await _fileEncryptor!.EncryptFileAsync(
-                        item.FullSourcePath,
-                        destPath,
-                        config.EncryptionKeyPath!.Trim(),
-                        cryptoSoftExePath,
-                        cancellationToken).ConfigureAwait(false);
-                    encryptionTimeMs = transferMs;
-                }
-                else
-                {
-                    Progress<long> fileProgress = new Progress<long>(bytesCopied =>
+                    if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                     {
-                        UpdateProgress(bytesCopied, uncSource, uncDest);
-                        long now = Environment.TickCount64;
-                        if (now - lastReportTicks >= ProgressReportThrottleMs)
+                        transferMs = await _fileEncryptor!.EncryptFileAsync(
+                            item.FullSourcePath,
+                            destPath,
+                            config.EncryptionKeyPath!.Trim(),
+                            cryptoSoftExePath,
+                            cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = transferMs;
+                    }
+                    else
+                    {
+                        Progress<long> fileProgress = new Progress<long>(bytesCopied =>
                         {
-                            lastReportTicks = now;
-                            progress?.Report(progressList[idx]);
-                        }
-                    });
-                    transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
-                    encryptionTimeMs = 0;
+                            UpdateProgress(bytesCopied, uncSource, uncDest);
+                            long now = Environment.TickCount64;
+                            if (now - lastReportTicks >= ProgressReportThrottleMs)
+                            {
+                                lastReportTicks = now;
+                                progress?.Report(progressList[idx]);
+                            }
+                        });
+                        transferMs = await _fileSystem.CopyFileAsync(item.FullSourcePath, destPath, fileProgress, cancellationToken).ConfigureAwait(false);
+                        encryptionTimeMs = 0;
+                    }
+                }
+                finally
+                {
+                    if (isLargeFile)
+                        LargeFileSemaphore.Release();
                 }
 
                 string uncSourceLog = _fileSystem.GetUncPath(item.FullSourcePath);

@@ -14,15 +14,16 @@ using EasySave.Infrastructure.FileSystem;
 
 namespace EasySave.Infrastructure.Tests;
 
-public sealed class BackupExecutorTests : IDisposable
-{
-    private readonly string _tempRoot;
-
-    public BackupExecutorTests()
+    public sealed class BackupExecutorTests : IDisposable
     {
-        _tempRoot = Path.Combine(Path.GetTempPath(), "EasySave.BackupExecutor.Tests", Guid.NewGuid().ToString());
-        Directory.CreateDirectory(_tempRoot);
-    }
+        private readonly string _tempRoot;
+        private const int LargeThresholdKb = 1;
+
+        public BackupExecutorTests()
+        {
+            _tempRoot = Path.Combine(Path.GetTempPath(), "EasySave.BackupExecutor.Tests", Guid.NewGuid().ToString());
+            Directory.CreateDirectory(_tempRoot);
+        }
 
     public void Dispose()
     {
@@ -561,6 +562,42 @@ public sealed class BackupExecutorTests : IDisposable
         Assert.Equal(BackupState.Completed, completed.State);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_NeverTransfersTwoLargeFilesInParallel_WhenThresholdConfigured()
+    {
+        string source1 = Path.Combine(_tempRoot, "source1");
+        string target1 = Path.Combine(_tempRoot, "target1");
+        string source2 = Path.Combine(_tempRoot, "source2");
+        string target2 = Path.Combine(_tempRoot, "target2");
+
+        long smallFileSize = 512;
+        long largeFileSize = 4096;
+
+        InMemoryFileSystemService fileSystem = new InMemoryFileSystemService();
+        fileSystem.AddFile(source1, "small1.txt", smallFileSize);
+        fileSystem.AddFile(source1, "large1.bin", largeFileSize);
+        fileSystem.AddFile(source2, "small2.txt", smallFileSize);
+        fileSystem.AddFile(source2, "large2.bin", largeFileSize);
+
+        BackupJob job1 = new() { Id = 1, Name = "Job1", SourcePath = source1, TargetPath = target1, Type = BackupType.Full };
+        BackupJob job2 = new() { Id = 2, Name = "Job2", SourcePath = source2, TargetPath = target2, Type = BackupType.Full };
+
+        BackupConfiguration config = new()
+        {
+            Jobs = new[] { job1, job2 },
+            LargeFileThresholdKb = LargeThresholdKb
+        };
+
+        FakeConfigRepository configRepo = new(config);
+        FakeStateWriter stateWriter = new();
+        FakeLogWriter logWriter = new();
+        BackupExecutor executor = new(configRepo, new BackupStrategyFactory(), fileSystem, stateWriter, logWriter, null, new BusinessSoftwareDetector());
+
+        await executor.ExecuteAsync(new[] { 1, 2 });
+
+        Assert.Equal(1, fileSystem.MaxConcurrentLargeCopies);
+    }
+
     private BackupExecutor CreateExecutor(
         IConfigurationRepository? configRepository = null,
         IBackupStrategyFactory? strategyFactory = null,
@@ -639,5 +676,89 @@ public sealed class BackupExecutorTests : IDisposable
     {
         public IBackupStrategy GetStrategy(BackupType type) =>
             type == BackupType.Differential ? (IBackupStrategy)new DifferentialBackupStrategy() : new FullBackupStrategy();
+    }
+
+    private sealed class InMemoryFileSystemService : IFileSystemService
+    {
+        private readonly Dictionary<string, List<FileItem>> _filesBySource = new();
+        private readonly Dictionary<string, long> _sizesByFullPath = new(StringComparer.OrdinalIgnoreCase);
+        private int _currentLargeCopies;
+
+        public int MaxConcurrentLargeCopies { get; private set; }
+
+        public void AddFile(string sourceRoot, string relativePath, long sizeBytes)
+        {
+            string fullPath = Path.Combine(sourceRoot, relativePath);
+            if (!_filesBySource.TryGetValue(sourceRoot, out List<FileItem>? list))
+            {
+                list = new List<FileItem>();
+                _filesBySource[sourceRoot] = list;
+            }
+
+            list.Add(new FileItem(relativePath, fullPath, DateTime.UtcNow));
+            _sizesByFullPath[fullPath] = sizeBytes;
+        }
+
+        public IAsyncEnumerable<FileItem> EnumerateFilesAsync(string sourcePath, BackupEnumerationOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            if (!_filesBySource.TryGetValue(sourcePath, out List<FileItem>? list))
+                list = new List<FileItem>();
+
+            return EnumerateAsync(list, cancellationToken);
+        }
+
+        private static async IAsyncEnumerable<FileItem> EnumerateAsync(IEnumerable<FileItem> items, CancellationToken cancellationToken)
+        {
+            foreach (FileItem item in items)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return item;
+                await Task.Yield();
+            }
+        }
+
+        public async Task<long> CopyFileAsync(string sourcePath, string destinationPath, IProgress<long>? progress = null, CancellationToken cancellationToken = default)
+        {
+            long size = GetFileSize(sourcePath);
+            bool isLarge = size > LargeThresholdKb * 1024L;
+
+            if (isLarge)
+            {
+                int current = Interlocked.Increment(ref _currentLargeCopies);
+                int observed = current;
+                if (observed > MaxConcurrentLargeCopies)
+                {
+                    MaxConcurrentLargeCopies = observed;
+                }
+            }
+
+            try
+            {
+                progress?.Report(size);
+                await Task.Delay(50, cancellationToken);
+            }
+            finally
+            {
+                if (isLarge)
+                {
+                    Interlocked.Decrement(ref _currentLargeCopies);
+                }
+            }
+
+            return 50;
+        }
+
+        public string GetUncPath(string path) => path;
+
+        public long GetFileSize(string path)
+        {
+            return _sizesByFullPath.TryGetValue(path, out long size) ? size : 0;
+        }
+
+        public void EnsureDirectoryExists(string directoryPath)
+        {
+        }
+
+        public DateTime GetLastWriteTimeUtc(string path) => DateTime.UtcNow;
     }
 }
