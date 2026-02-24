@@ -62,11 +62,54 @@ namespace EasySave.Gui.Services
             Point position = e.GetPosition(_mainWindow);
             var visual = _mainWindow.InputHitTest(position);
 
-            if (visual is Control control && control != _lastHoveredControl)
+            // Find the actual control by traversing up the visual tree
+            Control? control = FindRelevantControl(visual as Visual);
+
+            if (control != null && control != _lastHoveredControl)
             {
                 _lastHoveredControl = control;
                 ReadControlContent(control);
             }
+        }
+
+        /// <summary>
+        /// Finds a relevant control by traversing up the visual tree.
+        /// This helps detect parent controls like Slider, ToggleSwitch when hovering over their internal parts.
+        /// </summary>
+        private Control? FindRelevantControl(Visual? visual)
+        {
+            var current = visual;
+
+            while (current != null)
+            {
+                if (current is Control control)
+                {
+                    // Check if this is a control type we want to read
+                    if (IsReadableControl(control))
+                    {
+                        return control;
+                    }
+                }
+
+                // Move up the visual tree
+                current = current.GetVisualParent();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Determines if a control is one we want to read aloud.
+        /// </summary>
+        private bool IsReadableControl(Control control)
+        {
+            return control is Slider
+                || control is ToggleSwitch
+                || control is Button
+                || control is TextBlock
+                || control is TextBox
+                || control is ComboBox
+                || control is ListBoxItem;
         }
 
         /// <summary>
@@ -150,6 +193,33 @@ namespace EasySave.Gui.Services
             {
                 SpeakText(textToRead);
             }
+        }
+
+        /// <summary>
+        /// Extracts readable text content from a control's Content property.
+        /// Handles both direct strings and nested controls like TextBlock.
+        /// </summary>
+        private string ExtractTextContent(object? content)
+        {
+            if (content == null)
+                return string.Empty;
+
+            // If it's already a string, return it
+            if (content is string str)
+                return str;
+
+            // If it's a TextBlock, extract its Text property
+            if (content is TextBlock textBlock)
+                return textBlock.Text ?? string.Empty;
+
+            // For other types, use ToString() but filter out type names
+            string result = content.ToString() ?? string.Empty;
+
+            // Avoid reading type names (e.g., "Avalonia.Controls.TextBlock")
+            if (result.Contains("Avalonia.") || result.Contains("EasySave."))
+                return string.Empty;
+
+            return result;
         }
 
         /// <summary>
