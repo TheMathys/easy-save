@@ -37,6 +37,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
     private string _selectedLanguage = "Français";
     private bool _useDarkTheme;
+    private string _largeFileThresholdText = string.Empty;
 
 
     public SettingsViewModel(
@@ -94,6 +95,7 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
         RaisePropertyChanged(nameof(LabelAudioDescription));
         RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
+        RaisePropertyChanged(nameof(LabelLargeFileThreshold));
         RaisePropertyChanged(nameof(LabelLangueSelection));
 
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
@@ -160,6 +162,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
     public string LabelAudioDescription => _localization.GetString("Gui_LabelAudioDescription");
     public string LabelAudioDescriptionVolume => _localization.GetString("Gui_LabelAudioDescriptionVolume");
+    public string LabelLargeFileThreshold => _localization.GetString("Gui_LabelLargeFileThreshold");
     public string LabelLangueSelection => _localization.GetString("Gui_LabelLangueSelection");
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
@@ -182,6 +185,16 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _businessSoftwareProcessName;
         set => SetProperty(ref _businessSoftwareProcessName, value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Gets or sets the large file threshold in kilobytes as text for the GUI.
+    /// Empty or invalid values are interpreted as "no limit" (feature disabled).
+    /// </summary>
+    public string LargeFileThresholdText
+    {
+        get => _largeFileThresholdText;
+        set => SetProperty(ref _largeFileThresholdText, value ?? string.Empty);
     }
 
     /// <summary>List of choices for the business software ComboBox: "(None)" + running process names.</summary>
@@ -264,6 +277,9 @@ public sealed class SettingsViewModel : ViewModelBase
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
         UseDarkTheme = c.UseDarkTheme;
+        LargeFileThresholdText = c.LargeFileThresholdKb.HasValue && c.LargeFileThresholdKb.Value > 0
+            ? c.LargeFileThresholdKb.Value.ToString(CultureInfo.InvariantCulture)
+            : string.Empty;
         RefreshRunningProcessesListAsync();
         ApplySelectedProcessFromConfig();
     }
@@ -331,6 +347,14 @@ public sealed class SettingsViewModel : ViewModelBase
                 extensions.Add(ext);
             }
         }
+        int? largeFileThresholdKb = null;
+        if (!string.IsNullOrWhiteSpace(LargeFileThresholdText)
+            && int.TryParse(LargeFileThresholdText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedThreshold)
+            && parsedThreshold > 0)
+        {
+            largeFileThresholdKb = parsedThreshold;
+        }
+
         BackupConfiguration updated = new BackupConfiguration
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
@@ -343,6 +367,7 @@ public sealed class SettingsViewModel : ViewModelBase
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
             BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
             UseDarkTheme = UseDarkTheme
+            LargeFileThresholdKb = largeFileThresholdKb
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
         StatusText = _localization.GetString("Gui_SettingsSaved", format.ToString());

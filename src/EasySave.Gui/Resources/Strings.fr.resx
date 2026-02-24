@@ -348,4 +348,7 @@ Dossiers exclus : {6}</value>
   <data name="Gui_LabelLangueSelection" xml:space="preserve">
     <value>Langue d'EasySave :</value>
   </data>
+  <data name="Gui_LabelLargeFileThreshold" xml:space="preserve">
+    <value>Seuil de gros fichier (Ko) :</value>
+  </data>
 </root>

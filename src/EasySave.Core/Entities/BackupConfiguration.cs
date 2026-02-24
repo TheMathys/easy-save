@@ -64,5 +64,12 @@ namespace EasySave.Core.Entities
         /// When true the GUI should use a dark theme. Default: false (light theme).
         /// </summary>
         public bool UseDarkTheme { get; init; } = false;
+        /// Threshold, in kilobytes, above which a file is considered a "large file"
+        /// for concurrency throttling. When greater than zero, at most one file whose
+        /// size is strictly greater than this threshold is allowed to be transferred
+        /// at the same time across all running jobs.
+        /// Null or a non-positive value disables the large file concurrency rule.
+        /// </summary>
+        public int? LargeFileThresholdKb { get; init; }
     }
 }

@@ -92,6 +92,12 @@ namespace EasySave.Infrastructure.Persistence
                 logDestination = destParsed;
 
             List<string> encryptExtensions = dto.EncryptExtensions ?? [];
+            int? largeFileThresholdKb = dto.LargeFileThresholdKb;
+            if (largeFileThresholdKb.HasValue && largeFileThresholdKb.Value <= 0)
+            {
+                largeFileThresholdKb = null;
+            }
+
             return new BackupConfiguration
             {
                 LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
@@ -102,7 +108,8 @@ namespace EasySave.Infrastructure.Persistence
                 LastFullBackupUtcByJobId = lastFull,
                 EncryptExtensions = encryptExtensions,
                 EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim(),
-                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim()
+                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim(),
+                LargeFileThresholdKb = largeFileThresholdKb
             };
         }
 
@@ -126,6 +133,7 @@ namespace EasySave.Infrastructure.Persistence
                 EncryptExtensions = backupConfiguration.EncryptExtensions?.ToList() ?? new List<string>(),
                 EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
                 BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = backupConfiguration.LargeFileThresholdKb,
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -177,7 +185,8 @@ namespace EasySave.Infrastructure.Persistence
                     LastFullBackupUtcByJobId = dict,
                     EncryptExtensions = config.EncryptExtensions,
                     EncryptionKeyPath = config.EncryptionKeyPath,
-                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
+                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                    LargeFileThresholdKb = config.LargeFileThresholdKb
                 };
                 await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
             }
@@ -199,6 +208,7 @@ namespace EasySave.Infrastructure.Persistence
             public List<string>? EncryptExtensions { get; set; }
             public string? EncryptionKeyPath { get; set; }
             public string? BusinessSoftwareProcessName { get; set; }
+            public int? LargeFileThresholdKb { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }
