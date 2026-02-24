@@ -55,6 +55,9 @@
       <Setter Property="OffContent" Value="" />
       <Setter Property="OnContent" Value="" />
     </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+		<Setter Property="Background" Value="#ACFFFC" />
+    </Style>
   </Window.Styles>
 
   <Grid RowDefinitions="Auto,*" Margin="0">
