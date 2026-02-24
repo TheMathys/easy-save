@@ -366,7 +366,7 @@ public sealed class SettingsViewModel : ViewModelBase
             EncryptExtensions = extensions,
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
             BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
-            UseDarkTheme = UseDarkTheme
+            UseDarkTheme = UseDarkTheme,
             LargeFileThresholdKb = largeFileThresholdKb
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
