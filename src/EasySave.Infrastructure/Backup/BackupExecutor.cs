@@ -123,6 +123,9 @@ namespace EasySave.Infrastructure.Backup
             {
                 throw;
             }
+
+            // Write final state after all jobs complete to ensure a snapshot with all jobs in their final state exists
+            await WriteStateUnderLockAsync(progressList, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
