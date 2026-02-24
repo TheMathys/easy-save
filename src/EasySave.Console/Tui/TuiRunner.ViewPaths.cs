@@ -68,7 +68,8 @@ namespace EasySave.Console.Tui
                 {
                     LogAndStateDirectory = paths.BaseDirectory,
                     Jobs = Array.Empty<BackupJob>(),
-                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+                    LargeFileThresholdKb = null
                 };
             }
 
@@ -82,7 +83,8 @@ namespace EasySave.Console.Tui
                 LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
                 EncryptExtensions = config.EncryptExtensions,
                 EncryptionKeyPath = config.EncryptionKeyPath,
-                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
 
             await configRepository.SaveAsync(updated, CancellationToken.None).ConfigureAwait(false);

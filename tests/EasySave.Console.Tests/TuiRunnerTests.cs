@@ -61,7 +61,8 @@ public sealed class TuiRunnerTests : IDisposable
         {
             LogAndStateDirectory = string.Empty,
             Jobs = Array.Empty<BackupJob>(),
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            LargeFileThresholdKb = null
         };
 
         (IServiceProvider provider, FakeConfigRepository repo, _) = CreateProvider(initialConfig);
@@ -86,7 +87,8 @@ public sealed class TuiRunnerTests : IDisposable
         {
             LogAndStateDirectory = string.Empty,
             Jobs = Array.Empty<BackupJob>(),
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            LargeFileThresholdKb = null
         };
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
@@ -174,7 +176,8 @@ public sealed class TuiRunnerTests : IDisposable
                 new() { Id = 1, Name = "Job A", SourcePath = "S1", TargetPath = "T1", Type = BackupType.Full },
                 new() { Id = 2, Name = "Job B", SourcePath = "S2", TargetPath = "T2", Type = BackupType.Differential }
             },
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            LargeFileThresholdKb = null
         };
 
         string input = "2" + Environment.NewLine + "0" + Environment.NewLine;
@@ -204,7 +207,8 @@ public sealed class TuiRunnerTests : IDisposable
                 new() { Id = 1, Name = "Job A", SourcePath = "S1", TargetPath = "T1", Type = BackupType.Full },
                 new() { Id = 2, Name = "Job B", SourcePath = "S2", TargetPath = "T2", Type = BackupType.Differential }
             },
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            LargeFileThresholdKb = null
         };
 
         string input =
@@ -242,7 +246,8 @@ public sealed class TuiRunnerTests : IDisposable
         {
             LogAndStateDirectory = string.Empty,
             Jobs = Array.Empty<BackupJob>(),
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            LargeFileThresholdKb = null
         };
 
         (IServiceProvider provider, _, _) = CreateProvider(initialConfig);
@@ -293,7 +298,8 @@ public sealed class TuiRunnerTests : IDisposable
                 {
                     LogAndStateDirectory = string.Empty,
                     Jobs = Array.Empty<BackupJob>(),
-                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+                    LargeFileThresholdKb = null
                 };
             }
 
@@ -306,7 +312,8 @@ public sealed class TuiRunnerTests : IDisposable
             {
                 LogAndStateDirectory = _configuration.LogAndStateDirectory,
                 Jobs = _configuration.Jobs,
-                LastFullBackupUtcByJobId = map
+                LastFullBackupUtcByJobId = map,
+                LargeFileThresholdKb = _configuration.LargeFileThresholdKb
             };
 
             return Task.CompletedTask;

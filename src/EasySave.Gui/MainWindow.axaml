@@ -196,7 +196,7 @@
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
           <ScrollViewer Classes="cardScroll">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
               <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
               <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
               <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
@@ -226,19 +226,21 @@
                 <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
                 <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
               </Grid>
-              
-              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="#374151" />
-              <ToggleSwitch Grid.Row="10" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
-              
-              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
-              <Slider Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
+              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelLargeFileThreshold}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LargeFileThresholdText}" Watermark="e.g. 1024" MinWidth="120" />
 
-              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="#374151" />
-              <ComboBox Grid.Row="12" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
+              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="#374151" />
+              <ToggleSwitch Grid.Row="11" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
+              
+              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
+              <Slider Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
 
-              <Button Grid.Row="13" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+              <TextBlock Grid.Row="13" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="#374151" />
+              <ComboBox Grid.Row="13" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
+
+              <Button Grid.Row="14" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
                       Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-              <TextBlock Grid.Row="14" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
+              <TextBlock Grid.Row="15" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="13" />
             </Grid>
           </ScrollViewer>
         </Border>

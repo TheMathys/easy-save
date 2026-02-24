@@ -66,7 +66,8 @@ namespace EasySave.Console.Tui
                 LastFullBackupUtcByJobId = newLastFull,
                 EncryptExtensions = config.EncryptExtensions,
                 EncryptionKeyPath = config.EncryptionKeyPath,
-                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
             await configRepository.SaveAsync(updated, CancellationToken.None);
 
