@@ -36,6 +36,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private double _volumeValue = 50;
 
     private string _selectedLanguage = "Français";
+    private bool _useDarkTheme;
 
 
     public SettingsViewModel(
@@ -60,6 +61,15 @@ public sealed class SettingsViewModel : ViewModelBase
         SyncFromConfig();
         RefreshRunningProcessesListAsync();
         UpdateLogDestinationChoices();
+    }
+
+    /// <summary>
+    /// Whether the GUI should use the dark theme. Bound to a ToggleSwitch in settings.
+    /// </summary>
+    public bool UseDarkTheme
+    {
+        get => _useDarkTheme;
+        set => SetProperty(ref _useDarkTheme, value);
     }
 
     private void UpdateLogDestinationChoices()
@@ -253,6 +263,7 @@ public sealed class SettingsViewModel : ViewModelBase
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
+        UseDarkTheme = c.UseDarkTheme;
         RefreshRunningProcessesListAsync();
         ApplySelectedProcessFromConfig();
     }
@@ -330,7 +341,8 @@ public sealed class SettingsViewModel : ViewModelBase
             LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
             EncryptExtensions = extensions,
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
-            BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim()
+            BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
+            UseDarkTheme = UseDarkTheme
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
         StatusText = _localization.GetString("Gui_SettingsSaved", format.ToString());

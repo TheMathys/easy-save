@@ -57,7 +57,8 @@ public sealed class ConfigurationHolder : IConfigurationHolder
             LogFileFormat = LogFileFormat.Json,
             LogDestination = LogDestination.Local,
             Jobs = Array.Empty<BackupJob>(),
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            UseDarkTheme = false
         };
     }
 }

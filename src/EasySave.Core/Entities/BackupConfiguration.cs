@@ -59,5 +59,10 @@ namespace EasySave.Core.Entities
         /// Null or empty = feature disabled.
         /// </summary>
         public string? BusinessSoftwareProcessName { get; init; }
+
+        /// <summary>
+        /// When true the GUI should use a dark theme. Default: false (light theme).
+        /// </summary>
+        public bool UseDarkTheme { get; init; } = false;
     }
 }
