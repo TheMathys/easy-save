@@ -24,12 +24,19 @@ public sealed class CentralizedLogClient : ICentralizedLogClient
 
     private const int DefaultPort = 9050;
     private const int ConnectTimeoutMs = 3000;
-    private const int ReadTimeoutMs = 2000;
+    private const int IoTimeoutMs = 2000;
+    private const int FailureBackoffMs = 30000;
+
+    private long _nextAllowedAttemptUtcMs;
 
     /// <inheritdoc />
     public async Task SendAsync(LogEntry entry, string? serverAddress, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(serverAddress))
+            return;
+
+        long nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (nowMs < Volatile.Read(ref _nextAllowedAttemptUtcMs))
             return;
 
         (string host, int port) = ParseAddress(serverAddress.Trim());
@@ -43,10 +50,15 @@ public sealed class CentralizedLogClient : ICentralizedLogClient
         catch (OperationCanceledException)
         {
             // Expected when backup is cancelled; do not log.
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                Volatile.Write(ref _nextAllowedAttemptUtcMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + FailureBackoffMs);
+            }
         }
         catch (Exception)
         {
             // Do not fail the backup: swallow and optionally trace in debug builds.
+            Volatile.Write(ref _nextAllowedAttemptUtcMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + FailureBackoffMs);
 #if DEBUG
             // Trace or log for diagnostics; in release we stay silent.
 #endif
@@ -60,10 +72,13 @@ public sealed class CentralizedLogClient : ICentralizedLogClient
 
         using var client = new TcpClient();
         await client.ConnectAsync(host, port, cts.Token).ConfigureAwait(false);
-        client.SendTimeout = ConnectTimeoutMs;
-        client.ReceiveTimeout = ReadTimeoutMs;
+        client.SendTimeout = IoTimeoutMs;
+        client.ReceiveTimeout = IoTimeoutMs;
 
         using NetworkStream stream = client.GetStream();
+        using var ioCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        ioCts.CancelAfter(IoTimeoutMs);
+        CancellationToken ioToken = ioCts.Token;
         var dto = new CentralizedLogEntryDto
         {
             TimeStamp = entry.TimeStamp,
@@ -77,12 +92,12 @@ public sealed class CentralizedLogClient : ICentralizedLogClient
         };
         string json = JsonSerializer.Serialize(dto, JsonOptions);
         byte[] line = Encoding.UTF8.GetBytes(json + "\n");
-        await stream.WriteAsync(line, cancellationToken).ConfigureAwait(false);
-        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        await stream.WriteAsync(line, ioToken).ConfigureAwait(false);
+        await stream.FlushAsync(ioToken).ConfigureAwait(false);
 
         // Read response line (OK or ERR) so server can complete the request.
         using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: false);
-        await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+        await reader.ReadLineAsync(ioToken).ConfigureAwait(false);
     }
 
     private static (string host, int port) ParseAddress(string address)

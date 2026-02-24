@@ -35,6 +35,8 @@ public sealed class JobsTabViewModel : ViewModelBase
     private string _progressFilesText = string.Empty;
     private string _progressEtaText = string.Empty;
     private string _progressSizeText = string.Empty;
+    private readonly HashSet<int> _runningJobIds = new();
+    private readonly Dictionary<int, Task> _runningTasks = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JobsTabViewModel"/> class.
@@ -86,6 +88,7 @@ public sealed class JobsTabViewModel : ViewModelBase
         else
         {
             UpdateDetails();
+            ReapplyJobStateBadges();
         }
     }
 
@@ -118,6 +121,8 @@ public sealed class JobsTabViewModel : ViewModelBase
 
         UpdateDetails();
         RaisePropertyChanged(nameof(CanRunSelected));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
     }
 
     public JobItemViewModel? SelectedJob
@@ -158,8 +163,8 @@ public sealed class JobsTabViewModel : ViewModelBase
                 RaisePropertyChanged(nameof(CanRunSelected));
                 RaisePropertyChanged(nameof(CanRefresh));
                 RaisePropertyChanged(nameof(IsProgressVisible));
-                if (!value)
-                    ClearProgress();
+                RaisePropertyChanged(nameof(CanPauseSelected));
+                RaisePropertyChanged(nameof(CanResumeSelected));
             }
         }
     }
@@ -211,17 +216,35 @@ public sealed class JobsTabViewModel : ViewModelBase
     public ObservableCollection<JobProgressViewModel> JobProgressItems => _progressAggregator.Items;
 
     /// <summary>True when at least one job is reporting progress.</summary>
-    public bool IsProgressVisible => IsRunning && JobProgressItems.Count > 0;
+    public bool IsProgressVisible => JobProgressItems.Count > 0;
 
     public string JobsListTitle => _localization.GetString("Gui_JobsListTitle");
     public string DetailsTitle => _localization.GetString("Gui_DetailsTitle");
     public string RefreshButtonText => _localization.GetString("Gui_Refresh");
     public string RunSelectedButtonText => _localization.GetString("Gui_RunSelected");
     public string StopButtonText => _localization.GetString("Gui_Stop");
+    public string PauseButtonText => _localization.GetString("Gui_Pause");
+    public string ResumeButtonText => _localization.GetString("Gui_Resume");
     public string DeleteButtonText => _localization.GetString("Gui_DeleteJobLabel");
     public string JobsHintText => _localization.GetString("Gui_JobsHint");
 
     public bool CanDelete => SelectedJob != null && !IsRunning;
+
+    public bool CanPauseSelected
+    {
+        get
+        {
+            return ResolvePauseResumeTargets(forPause: true).Count > 0;
+        }
+    }
+
+    public bool CanResumeSelected
+    {
+        get
+        {
+            return ResolvePauseResumeTargets(forPause: false).Count > 0;
+        }
+    }
 
     public void DeleteSelected(object _)
     {
@@ -291,6 +314,8 @@ public sealed class JobsTabViewModel : ViewModelBase
                 IsRunning = false;
                 RaisePropertyChanged(nameof(CanRefresh));
                 RaisePropertyChanged(nameof(CanRunSelected));
+                RaisePropertyChanged(nameof(CanPauseSelected));
+                RaisePropertyChanged(nameof(CanResumeSelected));
             });
         }
         catch (Exception ex)
@@ -302,53 +327,89 @@ public sealed class JobsTabViewModel : ViewModelBase
                 IsRunning = false;
                 RaisePropertyChanged(nameof(CanRefresh));
                 RaisePropertyChanged(nameof(CanRunSelected));
+                RaisePropertyChanged(nameof(CanPauseSelected));
+                RaisePropertyChanged(nameof(CanResumeSelected));
             });
         }
     }
 
-    public bool CanRunSelected => SelectedJobs != null && SelectedJobs.Count > 0 && !IsRunning;
+    public bool CanRunSelected =>
+        SelectedJobs != null
+        && SelectedJobs.Any(j => !_runningJobIds.Contains(j.Id));
 
-    public async void RunSelected(object _)
+    public void RunSelected(object _)
     {
-        if (IsRunning)
-        {
-            return;
-        }
-
         if (SelectedJobs == null || SelectedJobs.Count == 0)
         {
             StatusText = _localization.GetString("Gui_SelectJobFirst");
             return;
         }
 
-        int[] ids = SelectedJobs.Select(j => j.Id).ToArray();
+        List<int> toStart = SelectedJobs
+            .Select(j => j.Id)
+            .Where(id => !_runningJobIds.Contains(id))
+            .Distinct()
+            .ToList();
 
-        // prepare cancellation
-        _cts?.Dispose();
-        _cts = new CancellationTokenSource();
+        if (toStart.Count == 0)
+        {
+            StatusText = _localization.GetString("Gui_JobAlreadyRunning");
+            return;
+        }
+
+        if (_cts == null || _cts.IsCancellationRequested)
+        {
+            _cts?.Dispose();
+            _cts = new CancellationTokenSource();
+        }
+
+        if (!IsRunning)
+            ClearProgress();
+
+        foreach (int id in toStart)
+        {
+            _runningJobIds.Add(id);
+            JobItemViewModel? job = Jobs.FirstOrDefault(j => j.Id == id);
+            if (job != null)
+                ApplyJobStateBadge(job, BackupState.Active);
+            _runningTasks[id] = StartJobExecutionAsync(id, _cts.Token);
+        }
 
         IsRunning = true;
-        ClearProgress();
-        StatusText = _localization.GetString("Gui_JobRunning", string.Join(", ", ids));
+        StatusText = _localization.GetString("Gui_JobRunning", string.Join(", ", toStart));
+        RaisePropertyChanged(nameof(CanRunSelected));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
+    }
+
+    private async Task StartJobExecutionAsync(int jobId, CancellationToken token)
+    {
         IProgress<BackupProgress> progress = new Progress<BackupProgress>(p =>
         {
             Dispatcher.UIThread.Post(() => UpdateProgress(p));
         });
-        string? successMessage = _localization.GetString("Gui_JobSuccess", string.Join(", ", ids));
-        string cancelMessage = _localization.GetString("Gui_JobCancelledByUser");
+
         try
         {
-            await Task.Run(async () => await _backupExecutor.ExecuteAsync(ids, progress, _cts.Token)).ConfigureAwait(false);
-            string message = _cts?.IsCancellationRequested == true ? cancelMessage : successMessage;
-            Dispatcher.UIThread.Post(() => { StatusText = message; });
+            await Task.Run(async () => await _backupExecutor.ExecuteAsync(new[] { jobId }, progress, token)).ConfigureAwait(false);
+            Dispatcher.UIThread.Post(() =>
+            {
+                StatusText = _localization.GetString("Gui_JobSuccess", jobId);
+            });
         }
         catch (OperationCanceledException)
         {
-            Dispatcher.UIThread.Post(() => { StatusText = cancelMessage; });
+            Dispatcher.UIThread.Post(() =>
+            {
+                StatusText = _localization.GetString("Gui_JobCancelledByUser");
+            });
         }
         catch (BusinessSoftwareDetectedException)
         {
-            StatusText = _localization.GetString("Gui_BusinessSoftwareDetected");
+            Dispatcher.UIThread.Post(() =>
+            {
+                StatusText = _localization.GetString("Gui_BusinessSoftwareDetected");
+            });
         }
         catch (Exception ex)
         {
@@ -359,10 +420,18 @@ public sealed class JobsTabViewModel : ViewModelBase
         {
             Dispatcher.UIThread.Post(() =>
             {
-                IsRunning = false;
-                _cts?.Dispose();
-                _cts = null;
+                _runningTasks.Remove(jobId);
+                _runningJobIds.Remove(jobId);
+                if (_runningJobIds.Count == 0)
+                {
+                    IsRunning = false;
+                    _cts?.Dispose();
+                    _cts = null;
+                }
+                RaisePropertyChanged(nameof(CanRunSelected));
                 RaisePropertyChanged(nameof(CanRefresh));
+                RaisePropertyChanged(nameof(CanPauseSelected));
+                RaisePropertyChanged(nameof(CanResumeSelected));
             });
         }
     }
@@ -382,6 +451,7 @@ public sealed class JobsTabViewModel : ViewModelBase
     private void UpdateProgress(BackupProgress p)
     {
         JobProgressViewModel? item = _progressAggregator.Update(p);
+        SyncJobStateFromProgress(p);
         if (item != null)
         {
             ProgressPercent = item.Percent;
@@ -392,6 +462,8 @@ public sealed class JobsTabViewModel : ViewModelBase
             ProgressEtaText = item.EtaText;
         }
         RaisePropertyChanged(nameof(IsProgressVisible));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
     }
 
     public void Stop(object _)
@@ -403,14 +475,127 @@ public sealed class JobsTabViewModel : ViewModelBase
         }
     }
 
+    public async void StopProgressJob(object? parameter)
+    {
+        int? jobId = ResolveJobId(parameter);
+        if (!jobId.HasValue)
+            return;
+
+        await _backupExecutor.StopJobAsync(jobId.Value, CancellationToken.None).ConfigureAwait(true);
+        StatusText = _localization.GetString("Gui_JobCancelledByUser");
+    }
+
+    public async void PauseProgressJob(object? parameter)
+    {
+        int? jobId = ResolveJobId(parameter);
+        if (!jobId.HasValue)
+            return;
+
+        await _backupExecutor.PauseJobAsync(jobId.Value, CancellationToken.None).ConfigureAwait(true);
+        StatusText = _localization.GetString("Gui_JobPaused", jobId.Value);
+    }
+
+    public async void ResumeProgressJob(object? parameter)
+    {
+        int? jobId = ResolveJobId(parameter);
+        if (!jobId.HasValue)
+            return;
+
+        await _backupExecutor.ResumeJobAsync(jobId.Value, CancellationToken.None).ConfigureAwait(true);
+        StatusText = _localization.GetString("Gui_JobResumed", jobId.Value);
+    }
+
+    public async void PauseSelected(object _)
+    {
+        List<int> targets = ResolvePauseResumeTargets(forPause: true);
+        if (targets.Count == 0)
+        {
+            StatusText = _localization.GetString("Gui_SelectJobFirst");
+            return;
+        }
+
+        foreach (int id in targets)
+            await _backupExecutor.PauseJobAsync(id, CancellationToken.None).ConfigureAwait(true);
+
+        StatusText = targets.Count == 1
+            ? _localization.GetString("Gui_JobPaused", targets[0])
+            : _localization.GetString("Gui_JobPaused", string.Join(", ", targets));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
+    }
+
+    public async void ResumeSelected(object _)
+    {
+        List<int> targets = ResolvePauseResumeTargets(forPause: false);
+        if (targets.Count == 0)
+        {
+            StatusText = _localization.GetString("Gui_SelectJobFirst");
+            return;
+        }
+
+        foreach (int id in targets)
+            await _backupExecutor.ResumeJobAsync(id, CancellationToken.None).ConfigureAwait(true);
+
+        StatusText = targets.Count == 1
+            ? _localization.GetString("Gui_JobResumed", targets[0])
+            : _localization.GetString("Gui_JobResumed", string.Join(", ", targets));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
+    }
+
+    private List<int> ResolvePauseResumeTargets(bool forPause)
+    {
+        if (!IsRunning || _runningJobIds.Count == 0)
+            return new List<int>();
+
+        List<int> selectedRunning = SelectedJobs
+            .Select(j => j.Id)
+            .Where(id => _runningJobIds.Contains(id))
+            .Distinct()
+            .ToList();
+
+        List<int> candidates = selectedRunning.Count > 0
+            ? selectedRunning
+            : _runningJobIds.ToList();
+
+        return candidates
+            .Where(id => forPause ? !IsJobCurrentlyPaused(id) : IsJobCurrentlyPaused(id))
+            .ToList();
+    }
+
+    private bool IsJobCurrentlyPaused(int jobId)
+    {
+        JobProgressViewModel? progress = JobProgressItems.FirstOrDefault(p => p.JobId == jobId);
+        return progress != null && progress.State == BackupState.Paused;
+    }
+
+    private static int? ResolveJobId(object? parameter)
+    {
+        if (parameter is JobProgressViewModel vm)
+            return vm.JobId;
+        if (parameter is JobItemViewModel item)
+            return item.Id;
+        if (parameter is int id)
+            return id;
+        return null;
+    }
+
     internal void RefreshJobsFromConfig()
     {
         BackupConfiguration config = _configHolder.Current;
         List<int> previouslySelectedIds = SelectedJobs.Select(x => x.Id).ToList();
+        Dictionary<int, BackupState> previousStatesByJobId = Jobs.ToDictionary(j => j.Id, j => j.State);
 
         Jobs.Clear();
         foreach (BackupJob j in config.Jobs.OrderBy(x => x.Id))
-            Jobs.Add(new JobItemViewModel(j.Id, j.Name, j.Type));
+        {
+            JobItemViewModel item = new JobItemViewModel(j.Id, j.Name, j.Type);
+            BackupState initialState = previousStatesByJobId.TryGetValue(j.Id, out BackupState previous)
+                ? previous
+                : BackupState.Inactive;
+            ApplyJobStateBadge(item, initialState);
+            Jobs.Add(item);
+        }
 
         // restore selection
         SelectedJobs.Clear();
@@ -437,6 +622,56 @@ public sealed class JobsTabViewModel : ViewModelBase
         else
             UpdateDetails();
         RaisePropertyChanged(nameof(CanRunSelected));
+        RaisePropertyChanged(nameof(CanPauseSelected));
+        RaisePropertyChanged(nameof(CanResumeSelected));
+    }
+
+    private void ReapplyJobStateBadges()
+    {
+        foreach (JobItemViewModel job in Jobs)
+            ApplyJobStateBadge(job, job.State);
+    }
+
+    private void SyncJobStateFromProgress(BackupProgress progress)
+    {
+        JobItemViewModel? job = Jobs.FirstOrDefault(j => j.Id == progress.JobId);
+        if (job == null)
+            return;
+
+        ApplyJobStateBadge(job, progress.State);
+    }
+
+    private void ApplyJobStateBadge(JobItemViewModel job, BackupState state)
+    {
+        job.State = state;
+        switch (state)
+        {
+            case BackupState.Active:
+                job.StateText = _localization.GetString("Gui_ProgressStateActive");
+                job.StateBadgeBackground = "#DBEAFE";
+                job.StateBadgeForeground = "#1D4ED8";
+                break;
+            case BackupState.Paused:
+                job.StateText = _localization.GetString("Gui_ProgressStatePaused");
+                job.StateBadgeBackground = "#FEF3C7";
+                job.StateBadgeForeground = "#92400E";
+                break;
+            case BackupState.Completed:
+                job.StateText = _localization.GetString("Gui_ProgressStateCompleted");
+                job.StateBadgeBackground = "#DCFCE7";
+                job.StateBadgeForeground = "#166534";
+                break;
+            case BackupState.Error:
+                job.StateText = _localization.GetString("Gui_ProgressStateError");
+                job.StateBadgeBackground = "#FEE2E2";
+                job.StateBadgeForeground = "#991B1B";
+                break;
+            default:
+                job.StateText = _localization.GetString("Gui_ProgressStateInactive");
+                job.StateBadgeBackground = "#E5E7EB";
+                job.StateBadgeForeground = "#374151";
+                break;
+        }
     }
 
     private void UpdateDetails()
@@ -475,12 +710,21 @@ public sealed class JobsTabViewModel : ViewModelBase
 /// </summary>
 public sealed class JobProgressViewModel : ViewModelBase
 {
+    private int _jobId;
     private double _percent;
     private string _jobName = string.Empty;
     private string _currentFile = string.Empty;
     private string _filesText = string.Empty;
     private string _etaText = string.Empty;
     private string _sizeText = string.Empty;
+    private BackupState _state;
+    private string _summaryText = string.Empty;
+
+    public int JobId
+    {
+        get => _jobId;
+        set => SetProperty(ref _jobId, value);
+    }
 
     public double Percent
     {
@@ -517,4 +761,51 @@ public sealed class JobProgressViewModel : ViewModelBase
         get => _sizeText;
         set => SetProperty(ref _sizeText, value ?? string.Empty);
     }
+
+    public BackupState State
+    {
+        get => _state;
+        set
+        {
+            if (!SetProperty(ref _state, value))
+                return;
+            RaisePropertyChanged(nameof(CanPause));
+            RaisePropertyChanged(nameof(CanResume));
+            RaisePropertyChanged(nameof(CanStop));
+        }
+    }
+
+    private string _stateText = string.Empty;
+    private string _stateBadgeBackground = "#E5E7EB";
+    private string _stateBadgeForeground = "#374151";
+
+    public string SummaryText
+    {
+        get => _summaryText;
+        set => SetProperty(ref _summaryText, value ?? string.Empty);
+    }
+
+    public string StateText
+    {
+        get => _stateText;
+        set => SetProperty(ref _stateText, value ?? string.Empty);
+    }
+
+    public string StateBadgeBackground
+    {
+        get => _stateBadgeBackground;
+        set => SetProperty(ref _stateBadgeBackground, value ?? "#E5E7EB");
+    }
+
+    public string StateBadgeForeground
+    {
+        get => _stateBadgeForeground;
+        set => SetProperty(ref _stateBadgeForeground, value ?? "#374151");
+    }
+
+    public bool CanPause => State == BackupState.Active;
+
+    public bool CanResume => State == BackupState.Paused;
+
+    public bool CanStop => State == BackupState.Active || State == BackupState.Paused;
 }

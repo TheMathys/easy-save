@@ -156,6 +156,9 @@
   <data name="Gui_JobSuccess" xml:space="preserve">
     <value>Job #{0} completed successfully.</value>
   </data>
+  <data name="Gui_JobAlreadyRunning" xml:space="preserve">
+    <value>The selected job(s) are already running.</value>
+  </data>
   <data name="Gui_JobError" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
@@ -306,6 +309,18 @@ Excluded directories: {6}</value>
   <data name="Gui_JobCancelledByUser" xml:space="preserve">
     <value>The job has been cancelled by the user.</value>
   </data>
+  <data name="Gui_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Gui_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Gui_JobPaused" xml:space="preserve">
+    <value>Job {0} is paused.</value>
+  </data>
+  <data name="Gui_JobResumed" xml:space="preserve">
+    <value>Job {0} resumed.</value>
+  </data>
   <data name="Gui_ProgressTitle" xml:space="preserve">
     <value>Progress</value>
   </data>
@@ -326,6 +341,30 @@ Excluded directories: {6}</value>
   </data>
   <data name="Gui_ProgressSizeLabel" xml:space="preserve">
     <value>Size:</value>
+  </data>
+  <data name="Gui_ProgressSummaryCompleted" xml:space="preserve">
+    <value>Completed in {0}.</value>
+  </data>
+  <data name="Gui_ProgressSummaryStopped" xml:space="preserve">
+    <value>Stopped after {0}.</value>
+  </data>
+  <data name="Gui_ProgressSummaryError" xml:space="preserve">
+    <value>Failed after {0}.</value>
+  </data>
+  <data name="Gui_ProgressStateActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Gui_ProgressStatePaused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Gui_ProgressStateCompleted" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Gui_ProgressStateError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Gui_ProgressStateInactive" xml:space="preserve">
+    <value>Stopped</value>
   </data>
   <data name="Gui_LabelAudioDescription" xml:space="preserve">
     <value>Activate / Desactivate audio description :</value>
