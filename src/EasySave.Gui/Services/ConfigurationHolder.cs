@@ -55,6 +55,7 @@ public sealed class ConfigurationHolder : IConfigurationHolder
         {
             LogAndStateDirectory = baseDirectory,
             LogFileFormat = LogFileFormat.Json,
+            LogDestination = LogDestination.Local,
             Jobs = Array.Empty<BackupJob>(),
             LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
         };

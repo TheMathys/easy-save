@@ -87,11 +87,17 @@ namespace EasySave.Infrastructure.Persistence
                     format = parsed;
             }
 
+            LogDestination logDestination = LogDestination.Local;
+            if (!string.IsNullOrWhiteSpace(dto.LogDestination) && Enum.TryParse<LogDestination>(dto.LogDestination, ignoreCase: true, out var destParsed))
+                logDestination = destParsed;
+
             List<string> encryptExtensions = dto.EncryptExtensions ?? [];
             return new BackupConfiguration
             {
                 LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
                 LogFileFormat = format,
+                LogDestination = logDestination,
+                CentralizedLogServerAddress = string.IsNullOrWhiteSpace(dto.CentralizedLogServerAddress) ? null : dto.CentralizedLogServerAddress.Trim(),
                 Jobs = jobs,
                 LastFullBackupUtcByJobId = lastFull,
                 EncryptExtensions = encryptExtensions,
@@ -115,6 +121,8 @@ namespace EasySave.Infrastructure.Persistence
             {
                 LogAndStateDirectory = backupConfiguration.LogAndStateDirectory,
                 LogFileFormat = backupConfiguration.LogFileFormat.ToString(),
+                LogDestination = backupConfiguration.LogDestination.ToString(),
+                CentralizedLogServerAddress = backupConfiguration.CentralizedLogServerAddress,
                 EncryptExtensions = backupConfiguration.EncryptExtensions?.ToList() ?? new List<string>(),
                 EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
                 BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
@@ -163,6 +171,8 @@ namespace EasySave.Infrastructure.Persistence
                 {
                     LogAndStateDirectory = config.LogAndStateDirectory,
                     LogFileFormat = config.LogFileFormat,
+                    LogDestination = config.LogDestination,
+                    CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                     Jobs = config.Jobs,
                     LastFullBackupUtcByJobId = dict,
                     EncryptExtensions = config.EncryptExtensions,
@@ -184,6 +194,8 @@ namespace EasySave.Infrastructure.Persistence
         {
             public string? LogAndStateDirectory { get; set; }
             public string? LogFileFormat { get; set; }
+            public string? LogDestination { get; set; }
+            public string? CentralizedLogServerAddress { get; set; }
             public List<string>? EncryptExtensions { get; set; }
             public string? EncryptionKeyPath { get; set; }
             public string? BusinessSoftwareProcessName { get; set; }

@@ -237,6 +237,21 @@ Dossiers exclus : {6}</value>
   <data name="Gui_LabelLogFormat" xml:space="preserve">
     <value>Format des logs :</value>
   </data>
+  <data name="Gui_LabelLogDestination" xml:space="preserve">
+    <value>Destination des logs :</value>
+  </data>
+  <data name="Gui_LabelCentralizedLogServer" xml:space="preserve">
+    <value>Serveur de logs centralisé (hôte:port) :</value>
+  </data>
+  <data name="Gui_LogDestination_Local" xml:space="preserve">
+    <value>Local uniquement</value>
+  </data>
+  <data name="Gui_LogDestination_Centralized" xml:space="preserve">
+    <value>Serveur centralisé uniquement</value>
+  </data>
+  <data name="Gui_LogDestination_LocalAndCentralized" xml:space="preserve">
+    <value>Local et centralisé</value>
+  </data>
   <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
     <value>Extensions à chiffrer (séparées par des virgules) :</value>
   </data>

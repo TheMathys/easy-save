@@ -1,0 +1,6 @@
+# Exclude build outputs and caches so Docker does not use host (e.g. Windows) artifacts.
+# Otherwise project.assets.json from a Windows restore can reference C:\...\NuGetPackages and break Linux build.
+**/bin/
+**/obj/
+**/.vs/
+**/packages/

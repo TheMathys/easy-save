@@ -59,8 +59,14 @@ namespace EasySave.Console.Tui
             BackupConfiguration updated = new BackupConfiguration
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
+                LogFileFormat = config.LogFileFormat,
+                LogDestination = config.LogDestination,
+                CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                 Jobs = newJobs,
-                LastFullBackupUtcByJobId = newLastFull
+                LastFullBackupUtcByJobId = newLastFull,
+                EncryptExtensions = config.EncryptExtensions,
+                EncryptionKeyPath = config.EncryptionKeyPath,
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
             };
             await configRepository.SaveAsync(updated, CancellationToken.None);
 

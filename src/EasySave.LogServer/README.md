@@ -26,6 +26,16 @@ Service de centralisation des logs qui reçoit les entrées de log de sauvegarde
 - `transferTimeMs` : durée totale en millisecondes (nombre).
 - `reason` : correspond à un arrêt par exemple lorsqu'un logiciel métier est lancé.
 
+## Côté client EasySave
+
+Dans l’application EasySave (GUI ou config), la **destination des logs** peut être réglée sur :
+
+- **Local uniquement** : les logs restent dans les fichiers journaliers sur la machine (comportement par défaut).
+- **Serveur centralisé uniquement** : les entrées sont envoyées uniquement vers ce service (aucun fichier log local).
+- **Local et centralisé** : écriture locale et envoi au serveur.
+
+L’adresse du serveur (ex. `localhost:9050` ou `serveur.domaine:9050`) se configure dans les paramètres (GUI → Paramètres, ou champ `centralizedLogServerAddress` dans `backup-config.json`).
+
 ## Configuration (variables d’environnement)
 
 | Variable           | Description                                    | Défaut   |
