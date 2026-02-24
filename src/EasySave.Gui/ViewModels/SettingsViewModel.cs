@@ -36,6 +36,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private double _volumeValue = 50;
 
     private string _selectedLanguage = "Français";
+    private bool _useDarkTheme;
     private string _largeFileThresholdText = string.Empty;
 
 
@@ -61,6 +62,15 @@ public sealed class SettingsViewModel : ViewModelBase
         SyncFromConfig();
         RefreshRunningProcessesListAsync();
         UpdateLogDestinationChoices();
+    }
+
+    /// <summary>
+    /// Whether the GUI should use the dark theme. Bound to a ToggleSwitch in settings.
+    /// </summary>
+    public bool UseDarkTheme
+    {
+        get => _useDarkTheme;
+        set => SetProperty(ref _useDarkTheme, value);
     }
 
     private void UpdateLogDestinationChoices()
@@ -266,6 +276,7 @@ public sealed class SettingsViewModel : ViewModelBase
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
+        UseDarkTheme = c.UseDarkTheme;
         LargeFileThresholdText = c.LargeFileThresholdKb.HasValue && c.LargeFileThresholdKb.Value > 0
             ? c.LargeFileThresholdKb.Value.ToString(CultureInfo.InvariantCulture)
             : string.Empty;
@@ -355,6 +366,7 @@ public sealed class SettingsViewModel : ViewModelBase
             EncryptExtensions = extensions,
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
             BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
+            UseDarkTheme = UseDarkTheme,
             LargeFileThresholdKb = largeFileThresholdKb
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);

@@ -7,4 +7,67 @@
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
   </Application.Styles>
+  <Application.Resources>
+    <!-- Light theme resource brushes (default) -->
+    <Color x:Key="WindowBackgroundColor">#FAFAFA</Color>
+    <Color x:Key="HeaderBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="HeaderBorderBrushColor">#E5E7EB</Color>
+    <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="CardBorderBrushColor">#E5E7EB</Color>
+    <Color x:Key="PrimaryColor">#0067C0</Color>
+    <Color x:Key="PrimaryHoverColor">#005A9E</Color>
+    <Color x:Key="PrimaryPressedColor">#004578</Color>
+    <Color x:Key="PrimaryForegroundColor">#FFFFFFFF</Color>
+    <Color x:Key="ForegroundPrimaryColor">#111827</Color>
+    <Color x:Key="ForegroundSecondaryColor">#374151</Color>
+    <Color x:Key="ForegroundTertiaryColor">#4B5563</Color>
+    <Color x:Key="MutedColor">#9CA3AF</Color>
+    <Color x:Key="ProgressBackgroundColor">#E5E7EB</Color>
+
+    <SolidColorBrush x:Key="WindowBackground" Color="{DynamicResource WindowBackgroundColor}" />
+    <SolidColorBrush x:Key="HeaderBackground" Color="{DynamicResource HeaderBackgroundColor}" />
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="{DynamicResource HeaderBorderBrushColor}" />
+    <SolidColorBrush x:Key="CardBackground" Color="{DynamicResource CardBackgroundColor}" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{DynamicResource CardBorderBrushColor}" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource PrimaryColor}" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{DynamicResource PrimaryHoverColor}" />
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{DynamicResource PrimaryPressedColor}" />
+    <SolidColorBrush x:Key="PrimaryForeground" Color="{DynamicResource PrimaryForegroundColor}" />
+    <SolidColorBrush x:Key="ForegroundPrimary" Color="{DynamicResource ForegroundPrimaryColor}" />
+    <SolidColorBrush x:Key="ForegroundSecondary" Color="{DynamicResource ForegroundSecondaryColor}" />
+    <SolidColorBrush x:Key="ForegroundTertiary" Color="{DynamicResource ForegroundTertiaryColor}" />
+    <SolidColorBrush x:Key="MutedBrush" Color="{DynamicResource MutedColor}" />
+    <SolidColorBrush x:Key="ProgressBackground" Color="{DynamicResource ProgressBackgroundColor}" />
+
+    <!-- Dark theme resource brushes -->
+    <Color x:Key="WindowBackgroundColorDark">#121212</Color>
+    <Color x:Key="HeaderBackgroundColorDark">#1E1E1E</Color>
+    <Color x:Key="HeaderBorderBrushColorDark">#333333</Color>
+    <Color x:Key="CardBackgroundColorDark">#1E1E1E</Color>
+    <Color x:Key="CardBorderBrushColorDark">#333333</Color>
+    <Color x:Key="PrimaryColorDark">#0078D4</Color>
+    <Color x:Key="PrimaryHoverColorDark">#106EBE</Color>
+    <Color x:Key="PrimaryPressedColorDark">#005A9E</Color>
+    <Color x:Key="PrimaryForegroundColorDark">#FFFFFFFF</Color>
+    <Color x:Key="ForegroundPrimaryColorDark">#E0E0E0</Color>
+    <Color x:Key="ForegroundSecondaryColorDark">#B0B0B0</Color>
+    <Color x:Key="ForegroundTertiaryColorDark">#808080</Color>
+    <Color x:Key="MutedColorDark">#666666</Color>
+    <Color x:Key="ProgressBackgroundColorDark">#333333</Color>
+
+    <SolidColorBrush x:Key="WindowBackgroundDark" Color="{DynamicResource WindowBackgroundColorDark}" />
+    <SolidColorBrush x:Key="HeaderBackgroundDark" Color="{DynamicResource HeaderBackgroundColorDark}" />
+    <SolidColorBrush x:Key="HeaderBorderBrushDark" Color="{DynamicResource HeaderBorderBrushColorDark}" />
+    <SolidColorBrush x:Key="CardBackgroundDark" Color="{DynamicResource CardBackgroundColorDark}" />
+    <SolidColorBrush x:Key="CardBorderBrushDark" Color="{DynamicResource CardBorderBrushColorDark}" />
+    <SolidColorBrush x:Key="PrimaryBrushDark" Color="{DynamicResource PrimaryColorDark}" />
+    <SolidColorBrush x:Key="PrimaryHoverBrushDark" Color="{DynamicResource PrimaryHoverColorDark}" />
+    <SolidColorBrush x:Key="PrimaryPressedBrushDark" Color="{DynamicResource PrimaryPressedColorDark}" />
+    <SolidColorBrush x:Key="PrimaryForegroundDark" Color="{DynamicResource PrimaryForegroundColorDark}" />
+    <SolidColorBrush x:Key="ForegroundPrimaryDark" Color="{DynamicResource ForegroundPrimaryColorDark}" />
+    <SolidColorBrush x:Key="ForegroundSecondaryDark" Color="{DynamicResource ForegroundSecondaryColorDark}" />
+    <SolidColorBrush x:Key="ForegroundTertiaryDark" Color="{DynamicResource ForegroundTertiaryColorDark}" />
+    <SolidColorBrush x:Key="MutedBrushDark" Color="{DynamicResource MutedColorDark}" />
+    <SolidColorBrush x:Key="ProgressBackgroundDark" Color="{DynamicResource ProgressBackgroundColorDark}" />
+  </Application.Resources>
 </Application>
