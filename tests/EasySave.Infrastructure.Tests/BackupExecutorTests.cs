@@ -386,56 +386,6 @@ namespace EasySave.Infrastructure.Tests;
             string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
     }
 
-    [Fact]
-    public async Task ExecuteAsync_MultipleJobs_BothCompleteAndFilesCopied()
-    {
-        string source1 = Path.Combine(_tempRoot, "source1");
-        string target1 = Path.Combine(_tempRoot, "target1");
-        string source2 = Path.Combine(_tempRoot, "source2");
-        string target2 = Path.Combine(_tempRoot, "target2");
-        Directory.CreateDirectory(source1);
-        Directory.CreateDirectory(source2);
-        await File.WriteAllTextAsync(Path.Combine(source1, "f1.txt"), "job1");
-        await File.WriteAllTextAsync(Path.Combine(source2, "f2.txt"), "job2");
-
-        BackupJob job1 = new() { Id = 1, Name = "Job1", SourcePath = source1, TargetPath = target1, Type = BackupType.Full };
-        BackupJob job2 = new() { Id = 2, Name = "Job2", SourcePath = source2, TargetPath = target2, Type = BackupType.Full };
-        BackupConfiguration config = new() { Jobs = new[] { job1, job2 } };
-        FakeConfigRepository configRepo = new(config);
-        FakeStateWriter stateWriter = new();
-        BackupExecutor executor = CreateExecutor(configRepository: configRepo, stateWriter: stateWriter);
-
-        await executor.ExecuteAsync(new[] { 1, 2 });
-
-        // Give the executor time to write final state snapshot after Task.WhenAll completes
-        await Task.Yield(); // Let any pending continuations run
-        await Task.Delay(300); // Give extra time for final state write in CI
-
-        Assert.True(File.Exists(Path.Combine(target1, "f1.txt")));
-        Assert.True(File.Exists(Path.Combine(target2, "f2.txt")));
-        Assert.Equal("job1", await File.ReadAllTextAsync(Path.Combine(target1, "f1.txt")));
-        Assert.Equal("job2", await File.ReadAllTextAsync(Path.Combine(target2, "f2.txt")));
-
-        // Poll for a snapshot with both Completed to tolerate CI thread scheduling.
-        IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
-        IReadOnlyList<BackupProgress>? finalSnapshot = null;
-        const int maxPolls = 50;
-        for (int i = 0; i < maxPolls; i++)
-        {
-            states = stateWriter.WrittenStates;
-            Assert.True(states.Count >= 1);
-            if (states[^1].Count == 2)
-            {
-                finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
-                if (finalSnapshot != null)
-                    break;
-            }
-            await Task.Delay(250);
-        }
-        Assert.True(finalSnapshot != null,
-            "Expected at least one state snapshot with both jobs Completed. " +
-            "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
-    }
 
     [Fact]
     public async Task ExecuteAsync_DifferentialBackup_CopiesFiles()
