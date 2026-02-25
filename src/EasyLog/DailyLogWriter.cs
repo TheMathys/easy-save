@@ -27,7 +27,7 @@ namespace EasyLog
         /// Writes the specified log entry asynchronously to a daily log file in JSON array format.
         /// The file name is determined from UTC date (format: yyyy-MM-dd.json).
         /// </summary>
-        public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
+        public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
             var logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
             Directory.CreateDirectory(_baseDirectory);
@@ -37,22 +37,8 @@ namespace EasyLog
             await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                string existing = string.Empty;
-                if (File.Exists(logFilePath))
-                {
-                    using var fs = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
-                    using var mem = new MemoryStream();
-                    byte[] buffer = new byte[81920];
-                    int read;
-                    while ((read = await fs.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
-                    {
-                        mem.Write(buffer, 0, read);
-                    }
-
-                    var bytes = mem.ToArray();
-                    existing = Encoding.UTF8.GetString(bytes);
-                }
-
+                var existing = File.Exists(logFilePath) ? await Task.Run(() => File.ReadAllText(logFilePath, Encoding.UTF8), cancellationToken).ConfigureAwait(false) : string.Empty;
+                
                 var trimmed = existing.TrimEnd();
                 var trailing = existing.Length > trimmed.Length ? existing.Substring(trimmed.Length) : string.Empty;
 
@@ -67,9 +53,7 @@ namespace EasyLog
                         : trimmed + "," + json + "]" + trailing;
                 }
 
-                var outBytes = Encoding.UTF8.GetBytes(newContent);
-                using var writeFs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
-                await writeFs.WriteAsync(outBytes, 0, outBytes.Length, cancellationToken).ConfigureAwait(false);
+                await Task.Run(() => File.WriteAllText(logFilePath, newContent, Encoding.UTF8), cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -80,9 +64,9 @@ namespace EasyLog
         /// <summary>
         /// Compatibility overload: write without providing a CancellationToken.
         /// </summary>
-        public Task WriteAsync<T>(T logEntry)
+        public Task WriteAllTextAsync<T>(T logEntry)
         {
-            return WriteAsync<T>(logEntry, CancellationToken.None);
+            return WriteAllTextAsync<T>(logEntry, CancellationToken.None);
         }
 
         /// <summary>

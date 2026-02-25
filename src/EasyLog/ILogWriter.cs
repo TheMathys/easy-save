@@ -16,6 +16,6 @@ namespace EasyLog
         /// <param name="logEntry">The log entry to write.</param>
         /// <param name="cancellationToken">Cancellation token to cancel the operation if required.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken);
+        Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken);
     }
 }

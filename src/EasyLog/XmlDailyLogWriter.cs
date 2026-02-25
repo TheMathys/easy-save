@@ -17,7 +17,7 @@ namespace EasyLog
             _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
         }
 
-        public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
+        public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
             string logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.xml");
             Directory.CreateDirectory(_baseDirectory);
@@ -65,9 +65,9 @@ namespace EasyLog
         /// <summary>
         /// Compatibility overload: write without providing a CancellationToken.
         /// </summary>
-        public Task WriteAsync<T>(T logEntry)
+        public Task WriteAllTextAsync<T>(T logEntry)
         {
-            return WriteAsync<T>(logEntry, CancellationToken.None);
+            return WriteAllTextAsync<T>(logEntry, CancellationToken.None);
         }
 
         private static XElement CreateLogEntryElement<T>(T logEntry)

@@ -649,7 +649,7 @@ namespace EasySave.Infrastructure.Tests;
     {
         public List<LogEntry> LogEntries { get; } = new();
 
-        public Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
+        public Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
             if (logEntry is LogEntry entry)
             {

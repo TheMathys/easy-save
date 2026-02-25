@@ -38,7 +38,7 @@ public sealed class LogEntryHandler : ILogEntryHandler
             dto.EncryptionTimeMs,
             dto.Reason);
 
-        await _logWriter.WriteAsync(entry, cancellationToken).ConfigureAwait(false);
+        await _logWriter.WriteAllTextAsync(entry, cancellationToken).ConfigureAwait(false);
         return true;
     }
 }

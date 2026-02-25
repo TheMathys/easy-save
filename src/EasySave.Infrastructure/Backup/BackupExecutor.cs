@@ -384,7 +384,7 @@ namespace EasySave.Infrastructure.Backup
                 };
                 await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
                 LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonUserRequested);
-                await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                await _logWriter.WriteAllTextAsync(stopEntry, cancellationToken).ConfigureAwait(false);
                 return true;
             }
 
@@ -496,7 +496,9 @@ namespace EasySave.Infrastructure.Backup
                 }
 
                 TimeSpan transferTime = TimeSpan.FromMilliseconds(Math.Abs(transferMs));
-                await _logWriter.WriteAsync(new LogEntry(DateTime.UtcNow, job.Name, uncSource, uncDest, fileSize, transferTime, encryptionTimeMs), cancellationToken).ConfigureAwait(false);
+                await _logWriter.WriteAllTextAsync(
+                    new LogEntry(DateTime.UtcNow, job.Name, uncSource, uncDest, fileSize, transferTime, encryptionTimeMs),
+                    cancellationToken).ConfigureAwait(false);
 
                 bytesCompleted += fileSize;
                 processedCount++;
@@ -551,7 +553,7 @@ namespace EasySave.Infrastructure.Backup
                         };
                         await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
                         LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
-                        await _logWriter.WriteAsync(stopEntry, CancellationToken.None).ConfigureAwait(false);
+                        await _logWriter.WriteAllTextAsync(stopEntry, CancellationToken.None).ConfigureAwait(false);
                         onBusinessSoftwareDetected?.Invoke();
                         return;
                     }
@@ -622,7 +624,7 @@ namespace EasySave.Infrastructure.Backup
                     0,
                     reason: $"StateOrProgressReportFailed ({ex.GetType().Name}): {ex.Message}"
                 );
-                await _logWriter.WriteAsync(errorEntry, CancellationToken.None).ConfigureAwait(false);
+                await _logWriter.WriteAllTextAsync(errorEntry, CancellationToken.None).ConfigureAwait(false);
             }
         }
     }

@@ -32,7 +32,7 @@ public sealed class XmlDailyLogWriterTests : IDisposable
         var writer = new EasyLog.XmlDailyLogWriter(_tempDir);
         var entry = new TestLogEntry(DateTime.UtcNow, "job1", "src", "dest", 123L, TimeSpan.FromMilliseconds(10));
 
-        await writer.WriteAsync(entry, default);
+        await writer.WriteAllTextAsync(entry, default);
 
         string file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.xml");
         Assert.True(File.Exists(file));
@@ -52,8 +52,8 @@ public sealed class XmlDailyLogWriterTests : IDisposable
     {
         var writer = new EasyLog.XmlDailyLogWriter(_tempDir);
 
-        await writer.WriteAsync(new TestLogEntry(DateTime.UtcNow, "job1", "s1", "d1", 1, TimeSpan.FromMilliseconds(1)), default);
-        await writer.WriteAsync(new TestLogEntry(DateTime.UtcNow, "job2", "s2", "d2", 2, TimeSpan.FromMilliseconds(2)), default);
+        await writer.WriteAllTextAsync(new TestLogEntry(DateTime.UtcNow, "job1", "s1", "d1", 1, TimeSpan.FromMilliseconds(1)), default);
+        await writer.WriteAllTextAsync(new TestLogEntry(DateTime.UtcNow, "job2", "s2", "d2", 2, TimeSpan.FromMilliseconds(2)), default);
 
         string file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.xml");
         XDocument doc = XDocument.Load(file);
