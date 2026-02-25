@@ -390,4 +390,7 @@ Excluded directories: {6}</value>
   <data name="Gui_LabelLargeFileThreshold" xml:space="preserve">
     <value>Large file threshold (KB):</value>
   </data>
+  <data name="Gui_LabelTextScale" xml:space="preserve">
+    <value>Text scale:</value>
+  </data>
 </root>

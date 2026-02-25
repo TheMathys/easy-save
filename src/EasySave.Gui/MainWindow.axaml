@@ -59,14 +59,14 @@
       <Setter Property="OnContent" Value="" />
     </Style>
     <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-		<Setter Property="Background" Value="#ACFFFC" />
+      <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
     </Style>
   </Window.Styles>
 
   <Grid RowDefinitions="Auto,*" Margin="0">
     <Border Grid.Row="0" Background="{DynamicResource HeaderBackground}" BorderBrush="{DynamicResource HeaderBorderBrush}" BorderThickness="0,0,0,1" Padding="24,20">
       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
-        <Border Width="48" Height="48" CornerRadius="10" Background="#0067C0" VerticalAlignment="Center">
+        <Border Width="48" Height="48" CornerRadius="10" Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center">
           <TextBlock Text="ES" FontSize="{DynamicResource FontSize_Logo}" FontWeight="Bold" Foreground="White"
                      HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Border>
@@ -155,20 +155,20 @@
                       </Grid>
                       <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="8" />
                       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                        <TextBlock Text="{Binding FilesText}" Foreground="#4B5563" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding FilesText}" Foreground="{DynamicResource ForegroundTertiary}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="1" Text="{Binding EtaText}" Foreground="#6B7280" FontSize="{DynamicResource FontSize_Small}" VerticalAlignment="Center" />
                       </Grid>
                       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <TextBlock
                           Text="{Binding DataContext.JobsTab.ProgressSizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"
                           FontSize="{DynamicResource FontSize_Small}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="{Binding SizeText}" Foreground="#4B5563" FontSize="{DynamicResource FontSize_Body}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding SizeText}" Foreground="{DynamicResource ForegroundTertiary}" FontSize="{DynamicResource FontSize_Body}" VerticalAlignment="Center" />
                       </Grid>
                       <StackPanel>
                         <TextBlock
                           Text="{Binding DataContext.JobsTab.ProgressCurrentFileLabel, RelativeSource={RelativeSource AncestorType=Window}}"
                           FontSize="{DynamicResource FontSize_Small}" Foreground="{DynamicResource MutedBrush}" />
-                        <TextBlock Text="{Binding CurrentFile}" TextTrimming="CharacterEllipsis" Foreground="#4B5563" FontSize="{DynamicResource FontSize_Small}" MaxLines="1" />
+                        <TextBlock Text="{Binding CurrentFile}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource ForegroundTertiary}" FontSize="{DynamicResource FontSize_Small}" MaxLines="1" />
                       </StackPanel>
                       <TextBlock Text="{Binding SummaryText}" Foreground="#6B7280" FontSize="{DynamicResource FontSize_Small}" TextWrapping="Wrap" />
                     </StackPanel>
@@ -186,42 +186,42 @@
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16" Margin="0,8,0,0">
           <Border Classes="card" Padding="16">
             <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="{Binding CreateEditTab.ExistingJobLabel}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Text="{Binding CreateEditTab.ExistingJobLabel}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ComboBox ItemsSource="{Binding CreateEditTab.ExistingJobs}"
                         SelectedItem="{Binding CreateEditTab.SelectedExistingJob}"
                         Width="260" />
               <Button Content="{Binding CreateEditTab.NewJobButtonText}" Command="{Binding CreateEditTab.NewJob}" />
             </StackPanel>
           </Border>
-          <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.EditHintText}" FontSize="{DynamicResource FontSize_Small}" Foreground="#9CA3AF" />
+          <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.EditHintText}" FontSize="{DynamicResource FontSize_Small}" Foreground="{DynamicResource MutedBrush}" />
           <Border Grid.Row="2" Classes="card">
             <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="14">
-              <TextBlock Text="{Binding CreateEditTab.LabelName}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Text="{Binding CreateEditTab.LabelName}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Column="1" Text="{Binding CreateEditTab.Name}" Watermark="My backup" />
-              <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.LabelSource}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="1" Text="{Binding CreateEditTab.LabelSource}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <TextBox Text="{Binding CreateEditTab.SourcePath}" Watermark="C:\Source" />
                 <Button Grid.Column="1" Content="{Binding CreateEditTab.BrowseButtonText}" Command="{Binding CreateEditTab.PickSourceFolder}" MinWidth="90" />
               </Grid>
-              <TextBlock Grid.Row="2" Text="{Binding CreateEditTab.LabelTarget}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="2" Text="{Binding CreateEditTab.LabelTarget}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <TextBox Text="{Binding CreateEditTab.TargetPath}" Watermark="D:\Backup" />
                 <Button Grid.Column="1" Content="{Binding CreateEditTab.BrowseButtonText}" Command="{Binding CreateEditTab.PickTargetFolder}" MinWidth="90" />
               </Grid>
-              <TextBlock Grid.Row="3" Text="{Binding CreateEditTab.LabelType}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="3" Text="{Binding CreateEditTab.LabelType}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ComboBox Grid.Row="3" Grid.Column="1" SelectedIndex="{Binding CreateEditTab.SelectedTypeIndex}" HorizontalAlignment="Left" MinWidth="180">
                 <ComboBoxItem Content="{Binding CreateEditTab.FullBackupLabel}" />
                 <ComboBoxItem Content="{Binding CreateEditTab.DifferentialBackupLabel}" />
               </ComboBox>
-              <TextBlock Grid.Row="4" Text="{Binding CreateEditTab.LabelExcludeExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="4" Text="{Binding CreateEditTab.LabelExcludeExtensions}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CreateEditTab.ExcludeExtensions}" Watermark=".tmp,.log" />
-              <TextBlock Grid.Row="5" Text="{Binding CreateEditTab.LabelExcludeDirs}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="5" Text="{Binding CreateEditTab.LabelExcludeDirs}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CreateEditTab.ExcludeDirectories}" Watermark="node_modules,.git" />
             </Grid>
           </Border>
           <StackPanel Grid.Row="3" Spacing="10">
             <Button Content="{Binding CreateEditTab.SaveButtonText}" Command="{Binding CreateEditTab.SaveJob}" Classes="primary" HorizontalAlignment="Left" />
-            <TextBlock Text="{Binding CreateEditTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="{DynamicResource FontSize_Body}" />
+            <TextBlock Text="{Binding CreateEditTab.StatusText}" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryBrush}" FontSize="{DynamicResource FontSize_Body}" />
           </StackPanel>
         </Grid>
       </TabItem>
@@ -229,59 +229,62 @@
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
           <ScrollViewer Classes="cardScroll">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
-              <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="#374151" />
-              <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="#4B5563" />
-              <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="#374151" />
-              <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="#4B5563" />
-              <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="#374151" />
-              <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatePath}" TextWrapping="Wrap" Foreground="#4B5563" />
-              <TextBlock Grid.Row="3" Text="{Binding SettingsTab.LabelLogDir}" VerticalAlignment="Center" Foreground="#374151" />
-              <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LogDirectory}" TextWrapping="Wrap" Foreground="#4B5563" />
-              <TextBlock Grid.Row="4" Text="{Binding SettingsTab.LabelLogFormat}" VerticalAlignment="Center" Foreground="#374151" />
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+              <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.StatePath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <TextBlock Grid.Row="3" Text="{Binding SettingsTab.LabelLogDir}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LogDirectory}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <TextBlock Grid.Row="4" Text="{Binding SettingsTab.LabelLogFormat}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ComboBox Grid.Row="4" Grid.Column="1" SelectedIndex="{Binding SettingsTab.LogFormatIndex}" Width="160" HorizontalAlignment="Left">
                 <ComboBoxItem Content="Json" />
                 <ComboBoxItem Content="Xml" />
               </ComboBox>
-              <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelLogDestination}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="5" Text="{Binding SettingsTab.LabelLogDestination}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding SettingsTab.LogDestinationChoices}" SelectedIndex="{Binding SettingsTab.LogDestinationIndex}" Width="220" HorizontalAlignment="Left" />
-              <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelCentralizedLogServer}" VerticalAlignment="Center" Foreground="#374151" IsVisible="{Binding SettingsTab.IsCentralizedLogServerAddressVisible}" />
+              <TextBlock Grid.Row="6" Text="{Binding SettingsTab.LabelCentralizedLogServer}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" IsVisible="{Binding SettingsTab.IsCentralizedLogServerAddressVisible}" />
               <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.CentralizedLogServerAddress}" Watermark="localhost:9050" MinWidth="200" IsVisible="{Binding SettingsTab.IsCentralizedLogServerAddressVisible}" />
-              <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" MinWidth="200" />
-              <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <Grid Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" MinWidth="200" />
                 <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
               </Grid>
-              <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <Grid Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
                 <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
               </Grid>
-              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelLargeFileThreshold}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelLargeFileThreshold}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LargeFileThresholdText}" Watermark="e.g. 1024" MinWidth="120" />
 
-              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ToggleSwitch Grid.Row="11" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
               
-              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <Slider Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
 
-              <TextBlock Grid.Row="13" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="#374151" />
+              <TextBlock Grid.Row="13" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <ComboBox Grid.Row="13" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
 
-              <TextBlock Grid.Row="14" Text="{Binding SettingsTab.LabelTextScale}" VerticalAlignment="Center" Foreground="#374151" />
-              <ComboBox Grid.Row="14" Grid.Column="1" SelectedIndex="{Binding SettingsTab.TextScaleIndex}" Width="160" HorizontalAlignment="Left">
+              <TextBlock Grid.Row="14" Text="Mode sombre" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ToggleSwitch Grid.Row="14" Grid.Column="1" IsChecked="{Binding SettingsTab.UseDarkTheme, Mode=TwoWay}" HorizontalAlignment="Left" />
+
+              <TextBlock Grid.Row="15" Text="{Binding SettingsTab.LabelTextScale}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ComboBox Grid.Row="15" Grid.Column="1" SelectedIndex="{Binding SettingsTab.TextScaleIndex}" Width="160" HorizontalAlignment="Left">
                 <ComboBoxItem Content="75%" />
                 <ComboBoxItem Content="100%" />
                 <ComboBoxItem Content="125%" />
                 <ComboBoxItem Content="150%" />
               </ComboBox>
 
-              <Button Grid.Row="15" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+              <Button Grid.Row="16" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
                       Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-              <TextBlock Grid.Row="16" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="#0067C0" FontSize="{DynamicResource FontSize_Body}" />
+              <TextBlock Grid.Row="17" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryBrush}" FontSize="{DynamicResource FontSize_Body}" />
             </Grid>
           </ScrollViewer>
         </Border>

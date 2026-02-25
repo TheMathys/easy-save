@@ -41,7 +41,7 @@ public partial class App : Application
 
             IConfigurationHolder configHolder = ServiceProvider.GetRequiredService<IConfigurationHolder>();
             // When configuration changes (including initial load), update the application theme resources
-            // (light/dark palette + text scale).
+            // (light/dark variant + text scale).
             configHolder.ConfigurationChanged += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 var cfg = configHolder.Current;
@@ -58,30 +58,33 @@ public partial class App : Application
 
     private void ApplyTheme(bool useDark)
     {
-        // Update application-level resource colors to switch between light and dark palettes.
+        RequestedThemeVariant = useDark
+            ? Avalonia.Styling.ThemeVariant.Dark
+            : Avalonia.Styling.ThemeVariant.Light;
+
         var resources = this.Resources;
-        if (resources == null) return;
+        if (resources == null)
+            return;
 
         if (useDark)
         {
-            resources["WindowBackgroundColor"] = Avalonia.Media.Color.Parse("#0B1220");
-            resources["HeaderBackgroundColor"] = Avalonia.Media.Color.Parse("#071122");
-            resources["HeaderBorderBrushColor"] = Avalonia.Media.Color.Parse("#1F2937");
-            resources["CardBackgroundColor"] = Avalonia.Media.Color.Parse("#0E1522");
-            resources["CardBorderBrushColor"] = Avalonia.Media.Color.Parse("#1F2937");
-            resources["PrimaryColor"] = Avalonia.Media.Color.Parse("#1E90FF");
-            resources["PrimaryHoverColor"] = Avalonia.Media.Color.Parse("#187bda");
-            resources["PrimaryPressedColor"] = Avalonia.Media.Color.Parse("#1166b3");
+            resources["WindowBackgroundColor"] = Avalonia.Media.Color.Parse("#020617");
+            resources["HeaderBackgroundColor"] = Avalonia.Media.Color.Parse("#020617");
+            resources["HeaderBorderBrushColor"] = Avalonia.Media.Color.Parse("#1E293B");
+            resources["CardBackgroundColor"] = Avalonia.Media.Color.Parse("#020617");
+            resources["CardBorderBrushColor"] = Avalonia.Media.Color.Parse("#1E293B");
+            resources["PrimaryColor"] = Avalonia.Media.Color.Parse("#3B82F6");
+            resources["PrimaryHoverColor"] = Avalonia.Media.Color.Parse("#2563EB");
+            resources["PrimaryPressedColor"] = Avalonia.Media.Color.Parse("#1D4ED8");
             resources["PrimaryForegroundColor"] = Avalonia.Media.Color.Parse("#FFFFFFFF");
-            resources["ForegroundPrimaryColor"] = Avalonia.Media.Color.Parse("#E6EEF8");
-            resources["ForegroundSecondaryColor"] = Avalonia.Media.Color.Parse("#C7D2E6");
-            resources["ForegroundTertiaryColor"] = Avalonia.Media.Color.Parse("#9AA7B8");
-            resources["MutedColor"] = Avalonia.Media.Color.Parse("#E9EEF7");
-            resources["ProgressBackgroundColor"] = Avalonia.Media.Color.Parse("#1F2937");
+            resources["ForegroundPrimaryColor"] = Avalonia.Media.Color.Parse("#E5E7EB");
+            resources["ForegroundSecondaryColor"] = Avalonia.Media.Color.Parse("#CBD5F5");
+            resources["ForegroundTertiaryColor"] = Avalonia.Media.Color.Parse("#9CA3AF");
+            resources["MutedColor"] = Avalonia.Media.Color.Parse("#6B7280");
+            resources["ProgressBackgroundColor"] = Avalonia.Media.Color.Parse("#1E293B");
         }
         else
         {
-            // Light theme (defaults)
             resources["WindowBackgroundColor"] = Avalonia.Media.Color.Parse("#FAFAFA");
             resources["HeaderBackgroundColor"] = Avalonia.Media.Color.Parse("#FFFFFF");
             resources["HeaderBorderBrushColor"] = Avalonia.Media.Color.Parse("#E5E7EB");
