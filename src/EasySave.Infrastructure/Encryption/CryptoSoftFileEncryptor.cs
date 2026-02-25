@@ -10,12 +10,16 @@ namespace EasySave.Infrastructure.Encryption;
 /// </summary>
 public sealed class CryptoSoftFileEncryptor : IFileEncryptor
 {
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+    private const int MaxRetries = 3;
+    private const int RetryDelayMs = 1000;
+    
     /// <inheritdoc />
     public async Task<long> EncryptFileAsync(
-        string sourcePath,
-        string destinationPath,
-        string keyFilePath,
-        string cryptoSoftExecutablePath,
+        string sourcePath, 
+        string destinationPath, 
+        string keyFilePath, 
+        string cryptoSoftExecutablePath, 
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
@@ -23,6 +27,34 @@ public sealed class CryptoSoftFileEncryptor : IFileEncryptor
         ArgumentException.ThrowIfNullOrWhiteSpace(keyFilePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(cryptoSoftExecutablePath);
 
+        for (int attempt = 0; attempt < MaxRetries; attempt++)
+        {
+            if (await _semaphore.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken))
+            {
+                try
+                {
+                    return await ExecuteCryptoSoft(sourcePath, destinationPath, keyFilePath, cryptoSoftExecutablePath, cancellationToken);
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+            else
+            {
+                await Task.Delay(RetryDelayMs * (attempt + 1), cancellationToken);
+            }
+        }
+        throw new InvalidOperationException("Échec après tous les retries : CryptoSoft inaccessible.");
+    }
+    
+    private async Task<long> ExecuteCryptoSoft(
+        string sourcePath, 
+        string destinationPath, 
+        string keyFilePath, 
+        string cryptoSoftExecutablePath, 
+        CancellationToken cancellationToken = default)
+    {
         string? exeDir = Path.GetDirectoryName(Path.GetFullPath(cryptoSoftExecutablePath));
         var startInfo = new ProcessStartInfo
         {
