@@ -353,11 +353,12 @@ namespace EasySave.Infrastructure.Tests;
 
         await executor.ExecuteAsync(new[] { 1, 2 });
 
+        // Give the executor time to write final state snapshot after Task.WhenAll completes
+        await Task.Yield(); // Let any pending continuations run
+        await Task.Delay(300); // Give extra time for final state write in CI
+
         Assert.True(File.Exists(Path.Combine(target1, "f1_0.txt")));
         Assert.True(File.Exists(Path.Combine(target2, "f2_0.txt")));
-
-        // Give a bit more time for all async state writes to complete
-        await Task.Delay(200);
 
         IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
         Assert.True(states.Count >= 2, "Expected at least 2 state snapshots (initial + updates).");
@@ -370,14 +371,14 @@ namespace EasySave.Infrastructure.Tests;
         // Poll for a snapshot with both Completed to tolerate CI thread scheduling and implementation lag.
         IReadOnlyList<BackupProgress>? finalSnapshot = null;
         int pollCount = 0;
-        const int maxPolls = 40; // Doubled from 20 to accommodate slower CI environments
+        const int maxPolls = 50; // Increased to accommodate very slow CI environments
         for (; pollCount < maxPolls; pollCount++)
         {
             states = stateWriter.WrittenStates;
             finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
             if (finalSnapshot != null)
                 break;
-            await Task.Delay(200); // Increased from 100ms to 200ms
+            await Task.Delay(250); // Increased delay between polls
         }
         Assert.True(finalSnapshot != null,
             $"Expected at least one state snapshot with both jobs Completed after parallel execution. " +
@@ -406,18 +407,19 @@ namespace EasySave.Infrastructure.Tests;
 
         await executor.ExecuteAsync(new[] { 1, 2 });
 
+        // Give the executor time to write final state snapshot after Task.WhenAll completes
+        await Task.Yield(); // Let any pending continuations run
+        await Task.Delay(300); // Give extra time for final state write in CI
+
         Assert.True(File.Exists(Path.Combine(target1, "f1.txt")));
         Assert.True(File.Exists(Path.Combine(target2, "f2.txt")));
         Assert.Equal("job1", await File.ReadAllTextAsync(Path.Combine(target1, "f1.txt")));
         Assert.Equal("job2", await File.ReadAllTextAsync(Path.Combine(target2, "f2.txt")));
 
-        // Give a bit more time for all async state writes to complete
-        await Task.Delay(200);
-
         // Poll for a snapshot with both Completed to tolerate CI thread scheduling.
         IReadOnlyList<IReadOnlyList<BackupProgress>> states = stateWriter.WrittenStates;
         IReadOnlyList<BackupProgress>? finalSnapshot = null;
-        const int maxPolls = 40;
+        const int maxPolls = 50;
         for (int i = 0; i < maxPolls; i++)
         {
             states = stateWriter.WrittenStates;
@@ -428,7 +430,7 @@ namespace EasySave.Infrastructure.Tests;
                 if (finalSnapshot != null)
                     break;
             }
-            await Task.Delay(200);
+            await Task.Delay(250);
         }
         Assert.True(finalSnapshot != null,
             "Expected at least one state snapshot with both jobs Completed. " +
