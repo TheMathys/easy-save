@@ -604,8 +604,19 @@ namespace EasySave.Infrastructure.Backup
             }
             catch (Exception ex)
             {
-                // Log the state write failure but do not fail the whole job since the backup itself completed successfully.
-                LogEntry errorEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: $"StateWriteFailed: {ex.Message}");
+                // Log the failure of writing state and/or reporting progress, but do not fail the whole job
+                // since the backup itself completed successfully. This may include exceptions from the consumer's
+                // progress callback.
+                LogEntry errorEntry = new LogEntry(
+                    DateTime.UtcNow,
+                    job.Name,
+                    "",
+                    "",
+                    0,
+                    TimeSpan.Zero,
+                    0,
+                    reason: $"StateOrProgressReportFailed ({ex.GetType().Name}): {ex.Message}"
+                );
                 await _logWriter.WriteAsync(errorEntry, CancellationToken.None).ConfigureAwait(false);
             }
         }
