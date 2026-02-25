@@ -533,8 +533,25 @@ namespace EasySave.Infrastructure.Backup
 
                     if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
                     {
+                        progressList[idx] = new BackupProgress
+                        {
+                            JobId = job.Id,
+                            BackupName = job.Name,
+                            LastActionTimestamp = DateTime.UtcNow,
+                            State = BackupState.Inactive,
+                            TotalFilesCount = fileCount,
+                            TotalSizeBytes = totalSize,
+                            ProgressPercent = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0,
+                            RemainingFilesCount = fileCount - processedCount,
+                            RemainingSizeBytes = totalSize - bytesCompleted,
+                            CurrentSourcePath = null,
+                            CurrentDestinationPath = null,
+                            EstimatedTimeRemainingSeconds = null,
+                            ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                        };
+                        await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
                         LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
-                        await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                        await _logWriter.WriteAsync(stopEntry, CancellationToken.None).ConfigureAwait(false);
                         onBusinessSoftwareDetected?.Invoke();
                         return;
                     }
