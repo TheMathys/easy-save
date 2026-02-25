@@ -533,8 +533,25 @@ namespace EasySave.Infrastructure.Backup
 
                     if (!string.IsNullOrWhiteSpace(config.BusinessSoftwareProcessName) && _businessSoftwareDetector.IsRunning(config.BusinessSoftwareProcessName))
                     {
+                        progressList[idx] = new BackupProgress
+                        {
+                            JobId = job.Id,
+                            BackupName = job.Name,
+                            LastActionTimestamp = DateTime.UtcNow,
+                            State = BackupState.Inactive,
+                            TotalFilesCount = fileCount,
+                            TotalSizeBytes = totalSize,
+                            ProgressPercent = totalSize > 0 ? Math.Round((double)bytesCompleted / totalSize * 100.0, 2) : 100.0,
+                            RemainingFilesCount = fileCount - processedCount,
+                            RemainingSizeBytes = totalSize - bytesCompleted,
+                            CurrentSourcePath = null,
+                            CurrentDestinationPath = null,
+                            EstimatedTimeRemainingSeconds = null,
+                            ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
+                        };
+                        await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
                         LogEntry stopEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: StopReasonBusinessSoftware);
-                        await _logWriter.WriteAsync(stopEntry, cancellationToken).ConfigureAwait(false);
+                        await _logWriter.WriteAsync(stopEntry, CancellationToken.None).ConfigureAwait(false);
                         onBusinessSoftwareDetected?.Invoke();
                         return;
                     }
@@ -579,10 +596,34 @@ namespace EasySave.Infrastructure.Backup
                 ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
             };
 
-            if (job.Type == BackupType.Full)
-                await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // Use CancellationToken.None to ensure the Completed state is always written,
+                // even if the cancellationToken has been cancelled (e.g., due to business software detection)
+                await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
 
-            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+                // Update LastFullBackup AFTER writing the Completed state to ensure the state is visible before
+                // any potentially slow config update operation
+                if (job.Type == BackupType.Full)
+                    await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log the failure of writing state and/or reporting progress, but do not fail the whole job
+                // since the backup itself completed successfully. This may include exceptions from the consumer's
+                // progress callback.
+                LogEntry errorEntry = new LogEntry(
+                    DateTime.UtcNow,
+                    job.Name,
+                    "",
+                    "",
+                    0,
+                    TimeSpan.Zero,
+                    0,
+                    reason: $"StateOrProgressReportFailed ({ex.GetType().Name}): {ex.Message}"
+                );
+                await _logWriter.WriteAsync(errorEntry, CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 }
