@@ -258,6 +258,9 @@ Excluded directories: {6}</value>
   <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
     <value>Extensions to encrypt (comma-separated):</value>
   </data>
+  <data name="Gui_LabelPriorityExtensions" xml:space="preserve">
+    <value>Priority extensions (comma-separated, when multiple jobs run):</value>
+  </data>
   <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
     <value>Encryption key file path:</value>
   </data>

@@ -284,6 +284,7 @@ public sealed class JobsTabViewModel : ViewModelBase
             Jobs = newJobs,
             LastFullBackupUtcByJobId = newLastFull,
             EncryptExtensions = config.EncryptExtensions,
+            PriorityExtensions = config.PriorityExtensions,
             EncryptionKeyPath = config.EncryptionKeyPath,
             BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
             LargeFileThresholdKb = config.LargeFileThresholdKb

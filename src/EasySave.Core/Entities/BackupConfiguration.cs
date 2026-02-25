@@ -79,5 +79,14 @@ namespace EasySave.Core.Entities
         /// Null or a non-positive value disables the large file concurrency rule.
         /// </summary>
         public int? LargeFileThresholdKb { get; init; }
+
+        /// <summary>
+        /// Priority file extensions (e.g. ".doc", ".pdf"). Used to enforce the global priority rule:
+        /// as long as at least one <em>priority</em> file (extension in this list) is still pending
+        /// on at least one running backup job, no <em>non-priority</em> file may be transferred on
+        /// any job. This applies across all jobs when several run in parallel. Empty or null = no
+        /// priority rule (all files are treated equally). Comparison is case-insensitive.
+        /// </summary>
+        public IReadOnlyList<string> PriorityExtensions { get; init; } = Array.Empty<string>();
     }
 }

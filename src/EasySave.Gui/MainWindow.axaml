@@ -229,7 +229,7 @@
       <TabItem Header="{Binding TabSettings}">
         <Border Classes="card" MaxWidth="720" Margin="0,8,0,0" HorizontalAlignment="Left">
           <ScrollViewer Classes="cardScroll">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
               <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
               <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
@@ -249,42 +249,44 @@
               <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.CentralizedLogServerAddress}" Watermark="localhost:9050" MinWidth="200" IsVisible="{Binding SettingsTab.IsCentralizedLogServerAddressVisible}" />
               <TextBlock Grid.Row="7" Text="{Binding SettingsTab.LabelEncryptExtensions}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.EncryptExtensionsText}" Watermark=".doc, .pdf" MinWidth="200" />
-              <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <Grid Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBlock Grid.Row="8" Text="{Binding SettingsTab.LabelPriorityExtensions}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.PriorityExtensionsText}" Watermark=".doc, .pdf (priority when multiple jobs run)" MinWidth="200" />
+              <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelEncryptionKeyPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <Grid Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <TextBox Grid.Column="0" Text="{Binding SettingsTab.EncryptionKeyPath}" MinWidth="200" />
                 <Button Grid.Column="1" Content="{Binding SettingsTab.BrowseEncryptionKeyButtonText}" Command="{Binding SettingsTab.PickEncryptionKeyFile}" />
               </Grid>
-              <TextBlock Grid.Row="9" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <Grid Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelBusinessSoftware}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <Grid Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <ComboBox Grid.Column="0" ItemsSource="{Binding SettingsTab.RunningProcessChoices}" SelectedItem="{Binding SettingsTab.SelectedProcessChoice}" MinWidth="200" />
                 <Button Grid.Column="1" Content="{Binding SettingsTab.RefreshProcessListButtonText}" Command="{Binding SettingsTab.RefreshRunningProcesses}" />
               </Grid>
-              <TextBlock Grid.Row="10" Text="{Binding SettingsTab.LabelLargeFileThreshold}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <TextBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LargeFileThresholdText}" Watermark="e.g. 1024" MinWidth="120" />
+              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelLargeFileThreshold}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.LargeFileThresholdText}" Watermark="e.g. 1024" MinWidth="120" />
 
-              <TextBlock Grid.Row="11" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <ToggleSwitch Grid.Row="11" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
+              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelAudioDescription}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ToggleSwitch Grid.Row="12" Grid.Column="1" IsChecked="{Binding SettingsTab.AudioDescriptionEnabled, Mode=TwoWay}" HorizontalAlignment="Left"/>
               
-              <TextBlock Grid.Row="12" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <Slider Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
+              <TextBlock Grid.Row="13" Text="{Binding SettingsTab.LabelAudioDescriptionVolume}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <Slider Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" Value="{Binding SettingsTab.VolumeValue, Mode=TwoWay}" Minimum="0" Maximum="100"/>
 
-              <TextBlock Grid.Row="13" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <ComboBox Grid.Row="13" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
+              <TextBlock Grid.Row="14" Text="{Binding SettingsTab.LabelLangueSelection}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ComboBox Grid.Row="14" Grid.Column="1" ItemsSource="{Binding SettingsTab.LanguageChoices}" SelectedItem="{Binding SettingsTab.SelectedLanguage}" Width="160" HorizontalAlignment="Left" />
 
-              <TextBlock Grid.Row="14" Text="Mode sombre" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <ToggleSwitch Grid.Row="14" Grid.Column="1" IsChecked="{Binding SettingsTab.UseDarkTheme, Mode=TwoWay}" HorizontalAlignment="Left" />
+              <TextBlock Grid.Row="15" Text="Mode sombre" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ToggleSwitch Grid.Row="15" Grid.Column="1" IsChecked="{Binding SettingsTab.UseDarkTheme, Mode=TwoWay}" HorizontalAlignment="Left" />
 
-              <TextBlock Grid.Row="15" Text="{Binding SettingsTab.LabelTextScale}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <ComboBox Grid.Row="15" Grid.Column="1" SelectedIndex="{Binding SettingsTab.TextScaleIndex}" Width="160" HorizontalAlignment="Left">
+              <TextBlock Grid.Row="16" Text="{Binding SettingsTab.LabelTextScale}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
+              <ComboBox Grid.Row="16" Grid.Column="1" SelectedIndex="{Binding SettingsTab.TextScaleIndex}" Width="160" HorizontalAlignment="Left">
                 <ComboBoxItem Content="75%" />
                 <ComboBoxItem Content="100%" />
                 <ComboBoxItem Content="125%" />
                 <ComboBoxItem Content="150%" />
               </ComboBox>
 
-              <Button Grid.Row="16" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
+              <Button Grid.Row="17" Grid.Column="1" Content="{Binding SettingsTab.SaveSettingsButtonText}"
                       Command="{Binding SettingsTab.SaveSettings}" Classes="primary" HorizontalAlignment="Left" />
-              <TextBlock Grid.Row="17" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryBrush}" FontSize="{DynamicResource FontSize_Body}" />
+              <TextBlock Grid.Row="18" Grid.ColumnSpan="3" Text="{Binding SettingsTab.StatusText}" TextWrapping="Wrap" Foreground="{DynamicResource PrimaryBrush}" FontSize="{DynamicResource FontSize_Body}" />
             </Grid>
           </ScrollViewer>
         </Border>
