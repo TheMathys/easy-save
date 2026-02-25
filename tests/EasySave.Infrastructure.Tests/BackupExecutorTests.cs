@@ -363,10 +363,20 @@ namespace EasySave.Infrastructure.Tests;
             snapshot.Count(p => p.State == BackupState.Active) >= 2);
         Assert.True(hadBothActive, "Expected at least one state snapshot with two jobs Active (parallel execution).");
 
-        // Both jobs completed successfully (files copied). We do not assert on a final snapshot with both
-        // Completed because in CI the second job's completion write can be observed after the first's, so the
-        // last snapshot may stay [Active, Completed] or [Completed, Active]; the executor still writes
-        // [Completed, Completed] but timing makes it flaky to assert in tests.
+        // With the final state write after Task.WhenAll, we can now verify both jobs completed.
+        // Poll for a snapshot with both Completed to tolerate CI thread scheduling.
+        IReadOnlyList<BackupProgress>? finalSnapshot = null;
+        for (int i = 0; i < 6; i++)
+        {
+            await Task.Delay(50);
+            states = stateWriter.WrittenStates;
+            finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
+            if (finalSnapshot != null)
+                break;
+        }
+        Assert.True(finalSnapshot != null,
+            "Expected at least one state snapshot with both jobs Completed. " +
+            "Last snapshot: " + string.Join("; ", states[^1].Select(p => $"{p.BackupName}={p.State}")) + ".");
     }
 
     [Fact]
