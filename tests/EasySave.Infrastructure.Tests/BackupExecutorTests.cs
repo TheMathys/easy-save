@@ -368,11 +368,12 @@ namespace EasySave.Infrastructure.Tests;
         IReadOnlyList<BackupProgress>? finalSnapshot = null;
         for (int i = 0; i < 6; i++)
         {
-            await Task.Delay(50);
             states = stateWriter.WrittenStates;
             finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
             if (finalSnapshot != null)
                 break;
+            await Task.Delay(50);
+
         }
         Assert.True(finalSnapshot != null,
             "Expected at least one state snapshot with both jobs Completed. " +
