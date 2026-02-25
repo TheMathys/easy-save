@@ -36,12 +36,12 @@ public sealed class DestinationLogWriter : ILogWriter
     }
 
     /// <inheritdoc />
-    public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
+    public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
     {
         LogRouting routing = await GetRoutingAsync(cancellationToken).ConfigureAwait(false);
 
         if (routing.WriteLocal)
-            await _localWriter.WriteAsync(logEntry, cancellationToken).ConfigureAwait(false);
+            await _localWriter.WriteAllTextAsync(logEntry, cancellationToken).ConfigureAwait(false);
 
         if (routing.SendCentral && logEntry is LogEntry entry)
             await _centralizedClient.SendAsync(entry, routing.ServerAddress, cancellationToken).ConfigureAwait(false);

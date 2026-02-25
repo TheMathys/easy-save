@@ -7,10 +7,10 @@ namespace EasyLog
     /// DailyLogWriter is responsible for writing log entries to daily log files in JSON format.
     /// Each daily file contains a single JSON array with one object per log entry.
     /// </summary>
-    public sealed class DailyLogWriter : ILogWriter
+    public sealed class DailyLogWriter : ILogWriter, IDisposable
     {
-        private string _baseDirectory;
-        private JsonSerializerOptions _jsonOptions;
+        private readonly string _baseDirectory;
+        private readonly JsonSerializerOptions _jsonOptions;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
         /// <summary>
@@ -19,7 +19,7 @@ namespace EasyLog
         /// <param name="baseDirectory">Base directory where daily log files will be stored.</param>
         public DailyLogWriter(string baseDirectory)
         {
-            _baseDirectory = baseDirectory;
+            _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true };
         }
 
@@ -27,7 +27,7 @@ namespace EasyLog
         /// Writes the specified log entry asynchronously to a daily log file in JSON array format.
         /// The file name is determined from UTC date (format: yyyy-MM-dd.json).
         /// </summary>
-        public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken = default)
+        public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
             var logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
             Directory.CreateDirectory(_baseDirectory);
@@ -37,9 +37,8 @@ namespace EasyLog
             await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                var existing = File.Exists(logFilePath)
-                    ? await Task.Run(() => File.ReadAllText(logFilePath, Encoding.UTF8), cancellationToken).ConfigureAwait(false)
-                    : string.Empty;
+                var existing = File.Exists(logFilePath) ? await Task.Run(() => File.ReadAllText(logFilePath, Encoding.UTF8), cancellationToken).ConfigureAwait(false) : string.Empty;
+                
                 var trimmed = existing.TrimEnd();
                 var trailing = existing.Length > trimmed.Length ? existing.Substring(trimmed.Length) : string.Empty;
 
@@ -60,6 +59,22 @@ namespace EasyLog
             {
                 _lock.Release();
             }
+        }
+
+        /// <summary>
+        /// Compatibility overload: write without providing a CancellationToken.
+        /// </summary>
+        public Task WriteAllTextAsync<T>(T logEntry)
+        {
+            return WriteAllTextAsync<T>(logEntry, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Disposes resources used by the writer.
+        /// </summary>
+        public void Dispose()
+        {
+            _lock.Dispose();
         }
     }
 }

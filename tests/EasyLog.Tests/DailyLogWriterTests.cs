@@ -31,7 +31,7 @@ public sealed class DailyLogWriterTests : IDisposable
     {
         var writer = new EasyLog.DailyLogWriter(_tempDir);
         var entry = new TestLogEntry(DateTime.UtcNow, "job1", "src", "dest", 123L, TimeSpan.FromMilliseconds(10));
-        await writer.WriteAsync(entry);
+        await writer.WriteAllTextAsync(entry);
 
         var file = Path.Combine(_tempDir, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
         Assert.True(File.Exists(file));
@@ -56,7 +56,7 @@ public sealed class DailyLogWriterTests : IDisposable
 
         var writer = new EasyLog.DailyLogWriter(_tempDir);
         var entry = new TestLogEntry(DateTime.UtcNow, "appended", "src2", "dest2", 456L, TimeSpan.FromMilliseconds(20));
-        await writer.WriteAsync(entry);
+        await writer.WriteAllTextAsync(entry);
 
         var content = File.ReadAllText(file);
         using (var doc = JsonDocument.Parse(content))
@@ -75,7 +75,7 @@ public sealed class DailyLogWriterTests : IDisposable
 
         var writer = new EasyLog.DailyLogWriter(_tempDir);
         var entry = new TestLogEntry(DateTime.UtcNow, "onlyBracket", "s", "d", 2, TimeSpan.Zero);
-        await writer.WriteAsync(entry);
+        await writer.WriteAllTextAsync(entry);
 
         var content = File.ReadAllText(file);
         using (var doc = JsonDocument.Parse(content))
@@ -94,7 +94,7 @@ public sealed class DailyLogWriterTests : IDisposable
         var tasks = Enumerable.Range(0, n).Select(i =>
         {
             var entry = new TestLogEntry(DateTime.UtcNow, "job" + i, "s", "d", i, TimeSpan.FromMilliseconds(i));
-            return writer.WriteAsync(entry);
+            return writer.WriteAllTextAsync(entry);
         }).ToArray();
 
         await Task.WhenAll(tasks);
