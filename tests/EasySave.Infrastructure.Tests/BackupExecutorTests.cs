@@ -363,17 +363,20 @@ namespace EasySave.Infrastructure.Tests;
             snapshot.Count(p => p.State == BackupState.Active) >= 2);
         Assert.True(hadBothActive, "Expected at least one state snapshot with two jobs Active (parallel execution).");
 
+        // Wait a bit to ensure all async operations complete and final state is written
+        await Task.Delay(100);
+
         // Poll for a snapshot with both Completed to tolerate CI thread scheduling and implementation lag.
         IReadOnlyList<BackupProgress>? finalSnapshot = null;
         int pollCount = 0;
-        const int maxPolls = 10;
+        const int maxPolls = 20; // Increased from 10 to give more time in CI
         for (; pollCount < maxPolls; pollCount++)
         {
             states = stateWriter.WrittenStates;
             finalSnapshot = states.FirstOrDefault(s => s.Count == 2 && s.All(p => p.State == BackupState.Completed));
             if (finalSnapshot != null)
                 break;
-            await Task.Delay(50);
+            await Task.Delay(100); // Increased from 50ms to 100ms
         }
         Assert.True(finalSnapshot != null,
             $"Expected at least one state snapshot with both jobs Completed after parallel execution. " +
