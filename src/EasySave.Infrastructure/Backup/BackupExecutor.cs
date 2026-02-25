@@ -598,8 +598,16 @@ namespace EasySave.Infrastructure.Backup
 
             if (job.Type == BackupType.Full)
                 await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
-
-            await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log the state write failure but do not fail the whole job since the backup itself completed successfully.
+                LogEntry errorEntry = new LogEntry(DateTime.UtcNow, job.Name, "", "", 0, TimeSpan.Zero, 0, reason: $"StateWriteFailed: {ex.Message}");
+                await _logWriter.WriteAsync(errorEntry, CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 }
