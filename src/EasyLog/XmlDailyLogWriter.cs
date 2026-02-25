@@ -5,9 +5,9 @@ namespace EasyLog
 {
     /// <summary>
     /// Writes log entries to a daily XML file (yyyy-MM-dd.xml).
-    /// The file contains a <logEntries> root element with one <logEntry> element per write.
+    /// The file contains a <c>logEntries</c> root element with one <c>logEntry</c> element per write.
     /// </summary>
-    public sealed class XmlDailyLogWriter : ILogWriter
+    public sealed class XmlDailyLogWriter : ILogWriter, IDisposable
     {
         private readonly string _baseDirectory;
         private readonly SemaphoreSlim _lock = new(1, 1);
@@ -28,8 +28,17 @@ namespace EasyLog
                 XDocument document;
                 if (File.Exists(logFilePath))
                 {
-                    using FileStream stream = new(logFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    document = XDocument.Load(stream);
+                    using var fs = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+                    using var mem = new MemoryStream();
+                    byte[] buffer = new byte[81920];
+                    int read;
+                    while ((read = await fs.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
+                    {
+                        mem.Write(buffer, 0, read);
+                    }
+
+                    mem.Position = 0;
+                    document = XDocument.Load(mem);
                 }
                 else
                 {
@@ -39,13 +48,26 @@ namespace EasyLog
                 XElement root = document.Root ?? throw new InvalidOperationException("XML log file has no root element.");
                 root.Add(CreateLogEntryElement(logEntry));
 
-                using FileStream writeStream = new(logFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-                document.Save(writeStream);
+                // Save to memory first then write to disk asynchronously to avoid blocking on XML serialization
+                using var outStream = new MemoryStream();
+                document.Save(outStream);
+                var outBytes = outStream.ToArray();
+
+                using var writeFs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+                await writeFs.WriteAsync(outBytes, 0, outBytes.Length, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
                 _lock.Release();
             }
+        }
+
+        /// <summary>
+        /// Compatibility overload: write without providing a CancellationToken.
+        /// </summary>
+        public Task WriteAsync<T>(T logEntry)
+        {
+            return WriteAsync<T>(logEntry, CancellationToken.None);
         }
 
         private static XElement CreateLogEntryElement<T>(T logEntry)
@@ -64,6 +86,10 @@ namespace EasyLog
 
             return element;
         }
+
+        public void Dispose()
+        {
+            _lock.Dispose();
+        }
     }
 }
-
