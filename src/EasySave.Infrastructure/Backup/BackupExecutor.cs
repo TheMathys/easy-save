@@ -596,11 +596,16 @@ namespace EasySave.Infrastructure.Backup
                 ElapsedTimeSeconds = (DateTime.UtcNow - jobStartUtc).TotalSeconds
             };
 
-            if (job.Type == BackupType.Full)
-                await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
             try
             {
-                await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
+                // Use CancellationToken.None to ensure the Completed state is always written,
+                // even if the cancellationToken has been cancelled (e.g., due to business software detection)
+                await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
+
+                // Update LastFullBackup AFTER writing the Completed state to ensure the state is visible before
+                // any potentially slow config update operation
+                if (job.Type == BackupType.Full)
+                    await _configRepository.UpdateLastFullBackupAsync(job.Id, DateTime.UtcNow, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
