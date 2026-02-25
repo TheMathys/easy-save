@@ -64,6 +64,14 @@ namespace EasySave.Core.Entities
         /// When true the GUI should use a dark theme. Default: false (light theme).
         /// </summary>
         public bool UseDarkTheme { get; init; } = false;
+
+        /// <summary>
+        /// UI text scale percentage for the GUI (e.g. 75, 100, 125).
+        /// 100 means "system/default" size.
+        /// </summary>
+        public int TextScalePercent { get; init; } = 100;
+
+        /// <summary>
         /// Threshold, in kilobytes, above which a file is considered a "large file"
         /// for concurrency throttling. When greater than zero, at most one file whose
         /// size is strictly greater than this threshold is allowed to be transferred

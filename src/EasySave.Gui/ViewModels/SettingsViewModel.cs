@@ -39,6 +39,10 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _useDarkTheme;
     private string _largeFileThresholdText = string.Empty;
 
+    // Index of the selected text scale option in the settings ComboBox.
+    // 0 = 75%, 1 = 100%, 2 = 125%, 3 = 150%.
+    private int _textScaleIndex;
+
 
     public SettingsViewModel(
         IConfigurationHolder configHolder,
@@ -97,6 +101,7 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelAudioDescriptionVolume));
         RaisePropertyChanged(nameof(LabelLargeFileThreshold));
         RaisePropertyChanged(nameof(LabelLangueSelection));
+        RaisePropertyChanged(nameof(LabelTextScale));
 
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
@@ -164,6 +169,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelAudioDescriptionVolume => _localization.GetString("Gui_LabelAudioDescriptionVolume");
     public string LabelLargeFileThreshold => _localization.GetString("Gui_LabelLargeFileThreshold");
     public string LabelLangueSelection => _localization.GetString("Gui_LabelLangueSelection");
+    public string LabelTextScale => _localization.GetString("Gui_LabelTextScale");
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
@@ -224,6 +230,15 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Index of the selected text scale option (0=75%, 1=100%, 2=125%, 3=150%).
+    /// </summary>
+    public int TextScaleIndex
+    {
+        get => _textScaleIndex;
+        set => SetProperty(ref _textScaleIndex, value);
+    }
+
     public string SelectedProcessChoice
     {
         get => _selectedProcessChoice;
@@ -277,6 +292,14 @@ public sealed class SettingsViewModel : ViewModelBase
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
         UseDarkTheme = c.UseDarkTheme;
+        TextScaleIndex = c.TextScalePercent switch
+        {
+            <= 75 => 0,
+            <= 100 => 1,
+            <= 125 => 2,
+            <= 150 => 3,
+            _ => 1
+        };
         LargeFileThresholdText = c.LargeFileThresholdKb.HasValue && c.LargeFileThresholdKb.Value > 0
             ? c.LargeFileThresholdKb.Value.ToString(CultureInfo.InvariantCulture)
             : string.Empty;
@@ -355,6 +378,15 @@ public sealed class SettingsViewModel : ViewModelBase
             largeFileThresholdKb = parsedThreshold;
         }
 
+        int textScalePercent = TextScaleIndex switch
+        {
+            0 => 75,
+            1 => 100,
+            2 => 125,
+            3 => 150,
+            _ => 100
+        };
+
         BackupConfiguration updated = new BackupConfiguration
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
@@ -367,6 +399,7 @@ public sealed class SettingsViewModel : ViewModelBase
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
             BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
             UseDarkTheme = UseDarkTheme,
+            TextScalePercent = textScalePercent,
             LargeFileThresholdKb = largeFileThresholdKb
         };
         await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);

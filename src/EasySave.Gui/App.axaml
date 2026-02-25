@@ -6,6 +6,29 @@
     RequestedThemeVariant="Light">
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
+
+    <!-- Global font size styles so text and controls can be scaled. -->
+    <Style Selector="TextBlock">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="ToggleSwitch">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+    </Style>
+    <Style Selector="Slider">
+      <Setter Property="FontSize" Value="{DynamicResource FontSize_Body}" />
+    </Style>
   </Application.Styles>
   <Application.Resources>
     <!-- Light theme resource brushes (default) -->
@@ -38,6 +61,15 @@
     <SolidColorBrush x:Key="ForegroundTertiary" Color="{DynamicResource ForegroundTertiaryColor}" />
     <SolidColorBrush x:Key="MutedBrush" Color="{DynamicResource MutedColor}" />
     <SolidColorBrush x:Key="ProgressBackground" Color="{DynamicResource ProgressBackgroundColor}" />
+
+    <!-- Base font sizes (unscaled). Scaling is applied in App.ApplyTextScale. -->
+    <x:Double x:Key="FontSize_Body">13</x:Double>
+    <x:Double x:Key="FontSize_Small">12</x:Double>
+    <x:Double x:Key="FontSize_SectionTitle">14</x:Double>
+    <x:Double x:Key="FontSize_TabHeader">14</x:Double>
+    <x:Double x:Key="FontSize_HeaderTitle">22</x:Double>
+    <x:Double x:Key="FontSize_Logo">18</x:Double>
+    <x:Double x:Key="FontSize_Badge">11</x:Double>
 
     <!-- Dark theme resource brushes -->
     <Color x:Key="WindowBackgroundColorDark">#121212</Color>
