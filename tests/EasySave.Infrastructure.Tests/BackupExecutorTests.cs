@@ -746,7 +746,7 @@ namespace EasySave.Infrastructure.Tests;
                     {
                         throw new TimeoutException(
                             $"Timed out waiting for {priorityCount} priority transfers (extension '{priorityExtension}'). " +
-                            $"Only {count} were observed. Order so far: {string.Join(\", \", _order)}");
+                            $"Only {count} were observed. Order so far: {string.Join(", ", _order)}");
                     }
 
                     System.Threading.Monitor.Wait(_lock, 5000);
