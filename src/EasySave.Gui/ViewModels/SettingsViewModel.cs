@@ -75,7 +75,12 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool UseDarkTheme
     {
         get => _useDarkTheme;
-        set => SetProperty(ref _useDarkTheme, value);
+        set
+        {
+            if (!SetProperty(ref _useDarkTheme, value))
+                return;
+            _ = SaveUiDisplayPreferencesAsync();
+        }
     }
 
     private void UpdateLogDestinationChoices()
@@ -248,7 +253,12 @@ public sealed class SettingsViewModel : ViewModelBase
     public int TextScaleIndex
     {
         get => _textScaleIndex;
-        set => SetProperty(ref _textScaleIndex, value);
+        set
+        {
+            if (!SetProperty(ref _textScaleIndex, value))
+                return;
+            _ = SaveUiDisplayPreferencesAsync();
+        }
     }
 
     public string SelectedProcessChoice
@@ -318,6 +328,43 @@ public sealed class SettingsViewModel : ViewModelBase
             : string.Empty;
         RefreshRunningProcessesListAsync();
         ApplySelectedProcessFromConfig();
+    }
+
+    /// <summary>
+    /// Saves only the display preferences (dark theme + text scale)
+    /// so that pressing the refresh button does not reset them.
+    /// </summary>
+    private async Task SaveUiDisplayPreferencesAsync()
+    {
+        BackupConfiguration c = _configHolder.Current;
+
+        int textScalePercent = TextScaleIndex switch
+        {
+            0 => 75,
+            1 => 100,
+            2 => 125,
+            3 => 150,
+            _ => 100
+        };
+
+        BackupConfiguration updated = new BackupConfiguration
+        {
+            LogAndStateDirectory = c.LogAndStateDirectory,
+            LogFileFormat = c.LogFileFormat,
+            LogDestination = c.LogDestination,
+            CentralizedLogServerAddress = c.CentralizedLogServerAddress,
+            Jobs = c.Jobs,
+            LastFullBackupUtcByJobId = c.LastFullBackupUtcByJobId,
+            EncryptExtensions = c.EncryptExtensions,
+            PriorityExtensions = c.PriorityExtensions,
+            EncryptionKeyPath = c.EncryptionKeyPath,
+            BusinessSoftwareProcessName = c.BusinessSoftwareProcessName,
+            UseDarkTheme = UseDarkTheme,
+            TextScalePercent = textScalePercent,
+            LargeFileThresholdKb = c.LargeFileThresholdKb
+        };
+
+        await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
     }
 
     private void ApplySelectedProcessFromConfig()

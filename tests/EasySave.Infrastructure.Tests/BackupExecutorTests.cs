@@ -475,7 +475,7 @@ namespace EasySave.Infrastructure.Tests;
         Assert.Contains(2, configRepo.LastUpdatedJobIds);
     }
 
-    [Fact(Skip = "Désactivé en CI (test potentiellement bloquant).")]
+    [Fact(Skip = "Disabled in CI (potentially blocking test).")]
     public async Task ExecuteAsync_WhenTwoJobsInParallelWithPriorityExtensions_StartsPriorityTransfersBeforeNonPriority()
     {
         string source1 = Path.Combine(_tempRoot, "source1");

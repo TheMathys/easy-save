@@ -95,7 +95,7 @@
                     IsEnabled="{Binding JobsTab.CanDelete}" />
           </StackPanel>
 
-          <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
+          <Grid Grid.Row="1" ColumnDefinitions="2*,*" ColumnSpacing="16">
             <Border Grid.Column="0" Classes="card">
               <StackPanel Spacing="12">
                 <TextBlock Text="{Binding JobsTab.JobsListTitle}" FontWeight="SemiBold" FontSize="{DynamicResource FontSize_SectionTitle}" Foreground="{DynamicResource ForegroundSecondary}" />

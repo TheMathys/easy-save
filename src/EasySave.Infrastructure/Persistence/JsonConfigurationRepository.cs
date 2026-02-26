@@ -99,6 +99,9 @@ namespace EasySave.Infrastructure.Persistence
                 largeFileThresholdKb = null;
             }
 
+            bool useDarkTheme = dto.UseDarkTheme ?? false;
+            int textScalePercent = dto.TextScalePercent is >= 75 and <= 150 ? dto.TextScalePercent.Value : 100;
+
             return new BackupConfiguration
             {
                 LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
@@ -111,7 +114,9 @@ namespace EasySave.Infrastructure.Persistence
                 PriorityExtensions = priorityExtensions,
                 EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim(),
                 BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim(),
-                LargeFileThresholdKb = largeFileThresholdKb
+                LargeFileThresholdKb = largeFileThresholdKb,
+                UseDarkTheme = useDarkTheme,
+                TextScalePercent = textScalePercent
             };
         }
 
@@ -137,6 +142,8 @@ namespace EasySave.Infrastructure.Persistence
                 EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
                 BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
                 LargeFileThresholdKb = backupConfiguration.LargeFileThresholdKb,
+                UseDarkTheme = backupConfiguration.UseDarkTheme,
+                TextScalePercent = backupConfiguration.TextScalePercent,
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -190,7 +197,9 @@ namespace EasySave.Infrastructure.Persistence
                     PriorityExtensions = config.PriorityExtensions,
                     EncryptionKeyPath = config.EncryptionKeyPath,
                     BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
-                    LargeFileThresholdKb = config.LargeFileThresholdKb
+                    LargeFileThresholdKb = config.LargeFileThresholdKb,
+                    UseDarkTheme = config.UseDarkTheme,
+                    TextScalePercent = config.TextScalePercent
                 };
                 await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
             }
@@ -214,6 +223,8 @@ namespace EasySave.Infrastructure.Persistence
             public string? EncryptionKeyPath { get; set; }
             public string? BusinessSoftwareProcessName { get; set; }
             public int? LargeFileThresholdKb { get; set; }
+            public bool? UseDarkTheme { get; set; }
+            public int? TextScalePercent { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }

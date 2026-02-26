@@ -287,6 +287,8 @@ public sealed class JobsTabViewModel : ViewModelBase
             PriorityExtensions = config.PriorityExtensions,
             EncryptionKeyPath = config.EncryptionKeyPath,
             BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+            UseDarkTheme = config.UseDarkTheme,
+            TextScalePercent = config.TextScalePercent,
             LargeFileThresholdKb = config.LargeFileThresholdKb
         };
 
