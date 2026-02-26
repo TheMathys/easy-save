@@ -725,9 +725,15 @@ namespace EasySave.Infrastructure.Tests;
             }
         }
 
-        /// <summary>Blocks until at least <paramref name="priorityCount"/> paths ending with .doc have been recorded. Used so non-priority (.txt) transfers are recorded only after all priority transfers have started.</summary>
-        public void WaitUntilPriorityCountReached(int priorityCount, string priorityExtension = ".doc")
+        /// <summary>
+        /// Blocks until at least <paramref name="priorityCount"/> paths ending with <paramref name="priorityExtension"/> have been recorded.
+        /// To éviter un blocage infini en CI, un timeout global est appliqué : si le nombre attendu n'est pas atteint dans le délai,
+        /// une <see cref="TimeoutException"/> est levée et le test échoue rapidement au lieu de faire tourner la pipeline à l'infini.
+        /// </summary>
+        public void WaitUntilPriorityCountReached(int priorityCount, string priorityExtension = ".doc", int timeoutMilliseconds = 10000)
         {
+            DateTime deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
+
             while (true)
             {
                 lock (_lock)
@@ -735,6 +741,14 @@ namespace EasySave.Infrastructure.Tests;
                     int count = _order.Count(p => p.EndsWith(priorityExtension, StringComparison.OrdinalIgnoreCase));
                     if (count >= priorityCount)
                         return;
+
+                    if (DateTime.UtcNow >= deadline)
+                    {
+                        throw new TimeoutException(
+                            $"Timed out waiting for {priorityCount} priority transfers (extension '{priorityExtension}'). " +
+                            $"Only {count} were observed. Order so far: {string.Join(\", \", _order)}");
+                    }
+
                     System.Threading.Monitor.Wait(_lock, 5000);
                 }
             }
