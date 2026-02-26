@@ -284,8 +284,11 @@ public sealed class JobsTabViewModel : ViewModelBase
             Jobs = newJobs,
             LastFullBackupUtcByJobId = newLastFull,
             EncryptExtensions = config.EncryptExtensions,
+            PriorityExtensions = config.PriorityExtensions,
             EncryptionKeyPath = config.EncryptionKeyPath,
             BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+            UseDarkTheme = config.UseDarkTheme,
+            TextScalePercent = config.TextScalePercent,
             LargeFileThresholdKb = config.LargeFileThresholdKb
         };
 

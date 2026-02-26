@@ -96,6 +96,7 @@ namespace EasySave.Console.Tui
                 Jobs = newJobs,
                 LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
                 EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
                 EncryptionKeyPath = config.EncryptionKeyPath,
                 BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
                 LargeFileThresholdKb = config.LargeFileThresholdKb

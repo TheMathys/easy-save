@@ -188,6 +188,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
                 Jobs = jobs,
                 LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
                 EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
                 EncryptionKeyPath = config.EncryptionKeyPath,
                 BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
                 LargeFileThresholdKb = config.LargeFileThresholdKb
@@ -219,6 +220,7 @@ public sealed class CreateEditJobViewModel : ViewModelBase
             Jobs = replaced,
             LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
             EncryptExtensions = config.EncryptExtensions,
+            PriorityExtensions = config.PriorityExtensions,
             EncryptionKeyPath = config.EncryptionKeyPath,
             BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
             LargeFileThresholdKb = config.LargeFileThresholdKb

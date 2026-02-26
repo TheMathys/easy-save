@@ -156,7 +156,7 @@ namespace EasySave.Infrastructure.Backup
                 JobControl control = _jobControls.GetOrAdd(job.Id, _ => new JobControl());
                 try
                 {
-                    await ExecuteSingleJobAsync(job, idx, progressList, config, cancellationToken, progress, onBusinessSoftwareDetected: null, control).ConfigureAwait(false);
+                    await ExecuteSingleJobAsync(job, idx, progressList, config, cancellationToken, progress, onBusinessSoftwareDetected: null, control, priorityGate: null).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -170,6 +170,11 @@ namespace EasySave.Infrastructure.Backup
             using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             Action onBusinessSoftwareDetected = () => linkedCts.Cancel();
 
+            // When priority extensions are configured, use a gate so that no non-priority file is transferred while any priority file is pending globally.
+            IPriorityTransferGate? priorityGate = (config.PriorityExtensions?.Count > 0 == true)
+                ? new PriorityTransferGate()
+                : null;
+
             IReadOnlyList<Task> tasks = toRun.Select(t =>
             {
                 JobControl control = _jobControls.GetOrAdd(t.Job.Id, _ => new JobControl());
@@ -181,7 +186,8 @@ namespace EasySave.Infrastructure.Backup
                     linkedCts.Token,
                     progress,
                     onBusinessSoftwareDetected,
-                    control);
+                    control,
+                    priorityGate);
             }).ToList();
 
             try
@@ -256,7 +262,8 @@ namespace EasySave.Infrastructure.Backup
             CancellationToken cancellationToken,
             IProgress<BackupProgress>? progress,
             Action? onBusinessSoftwareDetected,
-            JobControl? jobControl)
+            JobControl? jobControl,
+            IPriorityTransferGate? priorityGate)
         {
             if (!string.IsNullOrWhiteSpace(job.TargetPath))
                 _fileSystem.EnsureDirectoryExists(job.TargetPath);
@@ -348,6 +355,31 @@ namespace EasySave.Infrastructure.Backup
                     if (normalized.Length > 0)
                         encryptExtensionsSet.Add(normalized);
                 }
+            }
+
+            HashSet<string> priorityExtensionsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (config.PriorityExtensions?.Count > 0 == true)
+            {
+                foreach (string ext in config.PriorityExtensions)
+                {
+                    string normalized = ext.Trim();
+                    if (normalized.Length > 0 && normalized[0] != '.')
+                        normalized = "." + normalized;
+                    if (normalized.Length > 0)
+                        priorityExtensionsSet.Add(normalized);
+                }
+            }
+
+            if (priorityGate != null)
+            {
+                int priorityCount = 0;
+                foreach ((FileItem fileItem, _) in eligibleFiles)
+                {
+                    string ext = Path.GetExtension(fileItem.FullSourcePath);
+                    if (priorityExtensionsSet.Count > 0 && !string.IsNullOrEmpty(ext) && priorityExtensionsSet.Contains(ext))
+                        priorityCount++;
+                }
+                priorityGate.RegisterJob(job.Id, priorityCount);
             }
 
             string cryptoSoftExePath = Path.Combine(AppContext.BaseDirectory, "CryptoSoft", "CryptoSoft.exe");
@@ -446,6 +478,14 @@ namespace EasySave.Infrastructure.Backup
                             await WriteStateAndReportAsync(progressList, idx, progress, cancellationToken).ConfigureAwait(false);
                         }
                     }
+
+                    // Global priority rule: do not transfer a non-priority file while any job has a priority file pending.
+                    bool isPriorityFile = priorityExtensionsSet.Count > 0
+                        && !string.IsNullOrEmpty(Path.GetExtension(item.FullSourcePath))
+                        && priorityExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath));
+                    if (priorityGate != null && !isPriorityFile)
+                        await priorityGate.WaitUntilCanTransferNonPriorityAsync(cancellationToken).ConfigureAwait(false);
+
                     string destPath = Path.Combine(job.TargetPath, item.RelativePath);
                     string? dir = Path.GetDirectoryName(destPath);
                     if (!string.IsNullOrEmpty(dir))
@@ -465,6 +505,8 @@ namespace EasySave.Infrastructure.Backup
                 {
                     if (useEncryption && encryptExtensionsSet.Contains(Path.GetExtension(item.FullSourcePath)))
                     {
+                        if (priorityGate != null && isPriorityFile)
+                            priorityGate.NotifyPriorityFileStarted(job.Id);
                         transferMs = await _fileEncryptor!.EncryptFileAsync(
                             item.FullSourcePath,
                             destPath,
@@ -475,6 +517,8 @@ namespace EasySave.Infrastructure.Backup
                     }
                     else
                     {
+                        if (priorityGate != null && isPriorityFile)
+                            priorityGate.NotifyPriorityFileStarted(job.Id);
                         Progress<long> fileProgress = new Progress<long>(bytesCopied =>
                         {
                             UpdateProgress(bytesCopied, uncSource, uncDest);
@@ -579,6 +623,10 @@ namespace EasySave.Infrastructure.Backup
                 };
                 await WriteStateAndReportAsync(progressList, idx, progress, CancellationToken.None).ConfigureAwait(false);
                 throw;
+            }
+            finally
+            {
+                priorityGate?.UnregisterJob(job.Id);
             }
 
             progressList[idx] = new BackupProgress

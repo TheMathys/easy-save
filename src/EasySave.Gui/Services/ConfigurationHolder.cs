@@ -59,7 +59,8 @@ public sealed class ConfigurationHolder : IConfigurationHolder
             Jobs = Array.Empty<BackupJob>(),
             LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
             UseDarkTheme = false,
-            LargeFileThresholdKb = null
+            LargeFileThresholdKb = null,
+            PriorityExtensions = Array.Empty<string>()
         };
     }
 }

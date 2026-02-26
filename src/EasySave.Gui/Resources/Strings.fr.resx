@@ -258,6 +258,9 @@ Dossiers exclus : {6}</value>
   <data name="Gui_LabelEncryptExtensions" xml:space="preserve">
     <value>Extensions à chiffrer (séparées par des virgules) :</value>
   </data>
+  <data name="Gui_LabelPriorityExtensions" xml:space="preserve">
+    <value>Extensions prioritaires (séparées par des virgules, lorsque plusieurs travaux tournent) :</value>
+  </data>
   <data name="Gui_LabelEncryptionKeyPath" xml:space="preserve">
     <value>Fichier clé de chiffrement :</value>
   </data>

@@ -29,6 +29,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _centralizedLogServerAddress = string.Empty;
     private string _statusText = string.Empty;
     private string _encryptExtensionsText = string.Empty;
+    private string _priorityExtensionsText = string.Empty;
     private string _encryptionKeyPath = string.Empty;
     private string _businessSoftwareProcessName = string.Empty;
     private string _selectedProcessChoice = string.Empty;
@@ -74,7 +75,12 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool UseDarkTheme
     {
         get => _useDarkTheme;
-        set => SetProperty(ref _useDarkTheme, value);
+        set
+        {
+            if (!SetProperty(ref _useDarkTheme, value))
+                return;
+            _ = SaveUiDisplayPreferencesAsync();
+        }
     }
 
     private void UpdateLogDestinationChoices()
@@ -95,6 +101,7 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(LabelLogDestination));
         RaisePropertyChanged(nameof(LabelCentralizedLogServer));
         RaisePropertyChanged(nameof(LabelEncryptExtensions));
+        RaisePropertyChanged(nameof(LabelPriorityExtensions));
         RaisePropertyChanged(nameof(LabelEncryptionKeyPath));
         RaisePropertyChanged(nameof(LabelBusinessSoftware));
         RaisePropertyChanged(nameof(LabelAudioDescription));
@@ -163,6 +170,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public string LabelLogDestination => _localization.GetString("Gui_LabelLogDestination");
     public string LabelCentralizedLogServer => _localization.GetString("Gui_LabelCentralizedLogServer");
     public string LabelEncryptExtensions => _localization.GetString("Gui_LabelEncryptExtensions");
+    public string LabelPriorityExtensions => _localization.GetString("Gui_LabelPriorityExtensions");
     public string LabelEncryptionKeyPath => _localization.GetString("Gui_LabelEncryptionKeyPath");
     public string LabelBusinessSoftware => _localization.GetString("Gui_LabelBusinessSoftware");
     public string LabelAudioDescription => _localization.GetString("Gui_LabelAudioDescription");
@@ -179,6 +187,15 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _encryptExtensionsText;
         set => SetProperty(ref _encryptExtensionsText, value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Comma-separated list of priority file extensions (e.g. ".doc, .pdf"). Used for global priority scheduling when multiple jobs run in parallel.
+    /// </summary>
+    public string PriorityExtensionsText
+    {
+        get => _priorityExtensionsText;
+        set => SetProperty(ref _priorityExtensionsText, value ?? string.Empty);
     }
 
     public string EncryptionKeyPath
@@ -236,7 +253,12 @@ public sealed class SettingsViewModel : ViewModelBase
     public int TextScaleIndex
     {
         get => _textScaleIndex;
-        set => SetProperty(ref _textScaleIndex, value);
+        set
+        {
+            if (!SetProperty(ref _textScaleIndex, value))
+                return;
+            _ = SaveUiDisplayPreferencesAsync();
+        }
     }
 
     public string SelectedProcessChoice
@@ -289,6 +311,7 @@ public sealed class SettingsViewModel : ViewModelBase
         LogDestinationIndex = (int)c.LogDestination;
         CentralizedLogServerAddress = c.CentralizedLogServerAddress ?? string.Empty;
         EncryptExtensionsText = c.EncryptExtensions?.Count > 0 ? string.Join(", ", c.EncryptExtensions) : string.Empty;
+        PriorityExtensionsText = c.PriorityExtensions?.Count > 0 ? string.Join(", ", c.PriorityExtensions) : string.Empty;
         EncryptionKeyPath = c.EncryptionKeyPath ?? string.Empty;
         BusinessSoftwareProcessName = c.BusinessSoftwareProcessName ?? string.Empty;
         UseDarkTheme = c.UseDarkTheme;
@@ -305,6 +328,43 @@ public sealed class SettingsViewModel : ViewModelBase
             : string.Empty;
         RefreshRunningProcessesListAsync();
         ApplySelectedProcessFromConfig();
+    }
+
+    /// <summary>
+    /// Saves only the display preferences (dark theme + text scale)
+    /// so that pressing the refresh button does not reset them.
+    /// </summary>
+    private async Task SaveUiDisplayPreferencesAsync()
+    {
+        BackupConfiguration c = _configHolder.Current;
+
+        int textScalePercent = TextScaleIndex switch
+        {
+            0 => 75,
+            1 => 100,
+            2 => 125,
+            3 => 150,
+            _ => 100
+        };
+
+        BackupConfiguration updated = new BackupConfiguration
+        {
+            LogAndStateDirectory = c.LogAndStateDirectory,
+            LogFileFormat = c.LogFileFormat,
+            LogDestination = c.LogDestination,
+            CentralizedLogServerAddress = c.CentralizedLogServerAddress,
+            Jobs = c.Jobs,
+            LastFullBackupUtcByJobId = c.LastFullBackupUtcByJobId,
+            EncryptExtensions = c.EncryptExtensions,
+            PriorityExtensions = c.PriorityExtensions,
+            EncryptionKeyPath = c.EncryptionKeyPath,
+            BusinessSoftwareProcessName = c.BusinessSoftwareProcessName,
+            UseDarkTheme = UseDarkTheme,
+            TextScalePercent = textScalePercent,
+            LargeFileThresholdKb = c.LargeFileThresholdKb
+        };
+
+        await _configHolder.SaveAsync(updated, CancellationToken.None).ConfigureAwait(true);
     }
 
     private void ApplySelectedProcessFromConfig()
@@ -370,6 +430,16 @@ public sealed class SettingsViewModel : ViewModelBase
                 extensions.Add(ext);
             }
         }
+        List<string> priorityExtensions = new List<string>();
+        foreach (string part in (PriorityExtensionsText ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string ext = part.Trim();
+            if (ext.Length > 0)
+            {
+                if (ext[0] != '.') ext = "." + ext;
+                priorityExtensions.Add(ext);
+            }
+        }
         int? largeFileThresholdKb = null;
         if (!string.IsNullOrWhiteSpace(LargeFileThresholdText)
             && int.TryParse(LargeFileThresholdText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedThreshold)
@@ -396,6 +466,7 @@ public sealed class SettingsViewModel : ViewModelBase
             Jobs = config.Jobs,
             LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
             EncryptExtensions = extensions,
+            PriorityExtensions = priorityExtensions,
             EncryptionKeyPath = string.IsNullOrWhiteSpace(EncryptionKeyPath) ? null : EncryptionKeyPath.Trim(),
             BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName) ? null : BusinessSoftwareProcessName.Trim(),
             UseDarkTheme = UseDarkTheme,
