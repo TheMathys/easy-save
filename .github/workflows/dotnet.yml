@@ -33,8 +33,10 @@ jobs:
     - name: Build
       run: dotnet build EasySave.sln --no-restore --configuration Release
 
-    - name: Test
-      run: dotnet test EasySave.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+    - name: Test (hors projet console)
+      run: |
+        dotnet test tests/EasyLog.Tests/EasyLog.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults/EasyLog.Tests
+        dotnet test tests/EasySave.Infrastructure.Tests/EasySave.Infrastructure.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults/EasySave.Infrastructure.Tests
 
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
