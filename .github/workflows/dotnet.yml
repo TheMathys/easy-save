@@ -35,8 +35,10 @@ jobs:
 
     - name: Test (hors projet console)
       run: |
+        # Couverture uniquement sur les tests de EasyLog (unitaires purs)
         dotnet test tests/EasyLog.Tests/EasyLog.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults/EasyLog.Tests
-        dotnet test tests/EasySave.Infrastructure.Tests/EasySave.Infrastructure.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults/EasySave.Infrastructure.Tests
+        # Tests d'infrastructure sans collecte de couverture pour éviter les lenteurs/bloquages en CI
+        dotnet test tests/EasySave.Infrastructure.Tests/EasySave.Infrastructure.Tests.csproj --no-build --configuration Release --verbosity normal
 
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
