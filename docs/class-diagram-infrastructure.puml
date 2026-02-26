@@ -1,0 +1,204 @@
+@startuml class-diagram-infrastructure
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Diagramme de Classes - EasySave.Infrastructure
+
+' ============================================================
+' INTERFACES CORE (Ports implémentés - affichés en gris)
+' ============================================================
+package "EasySave.Core.Interfaces" <<Rectangle>> #F5F5F5 {
+    interface IBackupExecutor <<port>>
+    interface IBackupStrategy <<port>>
+    interface IBackupStrategyFactory <<port>>
+    interface IConfigurationRepository <<port>>
+    interface IStateWriter <<port>>
+    interface IFileSystemService <<port>>
+    interface IFileEncryptor <<port>>
+    interface IBusinessSoftwareDetector <<port>>
+    interface ICentralizedLogClient <<port>>
+}
+
+package "EasyLog" <<Rectangle>> #F5F5F5 {
+    interface ILogWriter <<externe>>
+}
+
+' ============================================================
+' BACKUP
+' ============================================================
+package "Backup" #FFEEDD {
+
+    class BackupExecutor <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _strategyFactory : IBackupStrategyFactory
+        - _fileSystem : IFileSystemService
+        - _stateWriter : IStateWriter
+        - _logWriter : ILogWriter
+        - _fileEncryptor : IFileEncryptor?
+        - _businessSoftwareDetector : IBusinessSoftwareDetector
+        - _stateWriteLock : SemaphoreSlim
+        - {static} LargeFileSemaphore : SemaphoreSlim
+        - _jobControls : ConcurrentDictionary<int, JobControl>
+        + {static} StopReasonBusinessSoftware : string
+        + {static} StopReasonUserRequested : string
+        --
+        + BackupExecutor(configRepository, strategyFactory,\n  fileSystem, stateWriter, logWriter,\n  fileEncryptor, businessSoftwareDetector)
+        + ExecuteAsync(jobIds, progress?, ct) : Task
+        + PauseJobAsync(jobId, ct) : Task
+        + ResumeJobAsync(jobId, ct) : Task
+        + StopJobAsync(jobId, ct) : Task
+        - WriteStateUnderLockAsync(progressList, ct) : Task
+        - WriteStateAndReportAsync(progressList, idx, progress, ct) : Task
+        - ExecuteSingleJobAsync(job, idx, progressList, config, ct, progress, onBiz, ctrl) : Task
+    }
+
+    class "BackupExecutor.JobControl" as JobControl <<private>> <<sealed>> {
+        + PauseEvent : ManualResetEventSlim
+        + RequestStop() : void
+        + IsStopRequested : bool
+        + Dispose() : void
+    }
+
+    class BackupStrategyFactory <<sealed>> {
+        - _full : FullBackupStrategy
+        - _differential : DifferentialBackupStrategy
+        + GetStrategy(type) : IBackupStrategy
+    }
+
+    class FullBackupStrategy <<sealed>> {
+        + GetEligibleFilesAsync(job, files, since?, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    class DifferentialBackupStrategy <<sealed>> {
+        + GetEligibleFilesAsync(job, files, since?, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    class BusinessSoftwareDetector <<sealed>> {
+        + IsRunning(processName?) : bool
+        + GetRunningProcessNames() : IReadOnlyList<string>
+    }
+}
+
+' ============================================================
+' PERSISTENCE
+' ============================================================
+package "Persistence" #FFEEDD {
+
+    class JsonConfigurationRepository <<sealed>> {
+        - _configDirectory : string
+        - _configFilePath : string
+        - _configUpdateLock : SemaphoreSlim
+        - {static} JsonOptions : JsonSerializerOptions
+        + JsonConfigurationRepository(configDirectory)
+        + LoadAsync(ct) : Task<BackupConfiguration?>
+        + SaveAsync(config, ct) : Task
+        + UpdateLastFullBackupAsync(jobId, utc, ct) : Task
+    }
+
+    class JsonStateWriter {
+        - _stateFilePath : string
+        - _jsonOptions : JsonSerializerOptions
+        + JsonStateWriter(stateFilePath)
+        + WriteStateAsync(progressList, ct) : Task
+    }
+
+    class ConfigurableLogWriter <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _jsonWriter : ILogWriter
+        - _xmlWriter : ILogWriter
+        + ConfigurableLogWriter(configRepository, jsonWriter, xmlWriter)
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+    }
+
+    class DestinationLogWriter <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _localWriter : ConfigurableLogWriter
+        - _centralizedClient : ICentralizedLogClient
+        - _routingCacheLock : SemaphoreSlim
+        - _cachedRouting : LogRouting?
+        + DestinationLogWriter(configRepository, localWriter, centralizedClient)
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+        - GetRoutingAsync(ct) : Task<LogRouting>
+    }
+}
+
+' ============================================================
+' FILESYSTEM
+' ============================================================
+package "FileSystem" #FFEEDD {
+
+    class FileSystemService <<sealed>> {
+        - _uncRootCache : ConcurrentDictionary<string, string>
+        + EnumerateFilesAsync(src, options?, ct) : IAsyncEnumerable<FileItem>
+        + CopyFileAsync(src, dest, progress?, ct) : Task<long>
+        + GetUncPath(path) : string
+        + GetFileSize(path) : long
+        + EnsureDirectoryExists(path) : void
+        + GetLastWriteTimeUtc(path) : DateTime
+    }
+}
+
+' ============================================================
+' ENCRYPTION
+' ============================================================
+package "Encryption" #FFEEDD {
+
+    class CryptoSoftFileEncryptor <<sealed>> {
+        + EncryptFileAsync(src, dest, key, exe, ct) : Task<long>
+    }
+}
+
+' ============================================================
+' LOGGING
+' ============================================================
+package "Logging" #FFEEDD {
+
+    class CentralizedLogClient <<sealed>> {
+        - {static} JsonOptions : JsonSerializerOptions
+        - _nextAllowedAttemptUtcMs : long
+        + SendAsync(entry, serverAddress?, ct) : Task
+        - {static} SendOneAsync(entry, host, port, ct) : Task
+        - {static} ParseAddress(address) : (string, int)
+    }
+}
+
+' ============================================================
+' REALISATIONS (implémentations des ports)
+' ============================================================
+IBackupExecutor <|.. BackupExecutor
+IBackupStrategy <|.. FullBackupStrategy
+IBackupStrategy <|.. DifferentialBackupStrategy
+IBackupStrategyFactory <|.. BackupStrategyFactory
+IConfigurationRepository <|.. JsonConfigurationRepository
+IStateWriter <|.. JsonStateWriter
+IFileSystemService <|.. FileSystemService
+IFileEncryptor <|.. CryptoSoftFileEncryptor
+IBusinessSoftwareDetector <|.. BusinessSoftwareDetector
+ICentralizedLogClient <|.. CentralizedLogClient
+ILogWriter <|.. ConfigurableLogWriter
+ILogWriter <|.. DestinationLogWriter
+
+' ============================================================
+' RELATIONS INTERNES
+' ============================================================
+BackupExecutor +-- JobControl
+BackupExecutor --> IConfigurationRepository
+BackupExecutor --> IBackupStrategyFactory
+BackupExecutor --> IFileSystemService
+BackupExecutor --> IStateWriter
+BackupExecutor --> ILogWriter
+BackupExecutor --> IFileEncryptor
+BackupExecutor --> IBusinessSoftwareDetector
+
+BackupStrategyFactory --> FullBackupStrategy : crée
+BackupStrategyFactory --> DifferentialBackupStrategy : crée
+
+ConfigurableLogWriter --> IConfigurationRepository : format?
+ConfigurableLogWriter --> ILogWriter : JSON
+ConfigurableLogWriter --> ILogWriter : XML
+
+DestinationLogWriter --> IConfigurationRepository : destination?
+DestinationLogWriter --> ConfigurableLogWriter : écriture locale
+DestinationLogWriter --> ICentralizedLogClient : envoi centralisé
+
+@enduml

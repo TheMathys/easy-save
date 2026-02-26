@@ -1,0 +1,198 @@
+@startuml class-diagram-core
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Diagramme de Classes - EasySave.Core
+
+' ============================================================
+' ENUMS
+' ============================================================
+package "Enums" #EEEEFF {
+
+    enum BackupType {
+        Full
+        Differential
+    }
+
+    enum BackupState {
+        Inactive
+        Active
+        Paused
+        Completed
+        Error
+    }
+
+    enum LogFileFormat {
+        Json
+        Xml
+    }
+
+    enum LogDestination {
+        Local
+        Centralized
+        LocalAndCentralized
+    }
+}
+
+' ============================================================
+' ENTITIES
+' ============================================================
+package "Entities" #EEFFEE {
+
+    class BackupConfiguration <<sealed>> {
+        + LogAndStateDirectory : string
+        + LogFileFormat : LogFileFormat
+        + LogDestination : LogDestination
+        + CentralizedLogServerAddress : string?
+        + Jobs : IReadOnlyList<BackupJob>
+        + LastFullBackupUtcByJobId : IReadOnlyDictionary<int, DateTime>
+        + EncryptExtensions : IReadOnlyList<string>
+        + EncryptionKeyPath : string?
+        + BusinessSoftwareProcessName : string?
+        + UseDarkTheme : bool
+        + TextScalePercent : int
+        + LargeFileThresholdKb : int?
+    }
+
+    class BackupJob {
+        + Id : int
+        + Name : string
+        + SourcePath : string
+        + TargetPath : string
+        + Type : BackupType
+        + ExcludeExtensions : IReadOnlyList<string>
+        + ExcludeDirectoryNames : IReadOnlyList<string>
+    }
+
+    class BackupProgress <<sealed>> {
+        + JobId : int
+        + BackupName : string
+        + LastActionTimestamp : DateTime
+        + State : BackupState
+        + TotalFilesCount : int
+        + TotalSizeBytes : long
+        + ProgressPercent : double
+        + RemainingFilesCount : int
+        + RemainingSizeBytes : long
+        + CurrentSourcePath : string?
+        + CurrentDestinationPath : string?
+        + EstimatedTimeRemainingSeconds : double?
+        + ElapsedTimeSeconds : double?
+    }
+}
+
+' ============================================================
+' MODELS
+' ============================================================
+package "Models" #EEFFEE {
+
+    class LogEntry {
+        + TimeStamp : DateTime
+        + BackupName : string
+        + SourcePath : string
+        + DestinationPath : string
+        + FileSizeBytes : long
+        + TransferTimeMs : TimeSpan
+        + EncryptionTimeMs : long
+        + Reason : string?
+        + LogEntry(timeStamp, backupName, sourcePath, destinationPath, fileSizeBytes, transferTimeMs, encryptionTimeMs, reason)
+    }
+
+    class FileItem <<record>> {
+        + RelativePath : string
+        + FullSourcePath : string
+        + LastWriteTimeUtc : DateTime
+    }
+
+    class BackupEnumerationOptions <<sealed>> {
+        + ExcludeExtensions : IReadOnlyList<string>
+        + ExcludeDirectoryNames : IReadOnlyList<string>
+    }
+}
+
+' ============================================================
+' EXCEPTIONS
+' ============================================================
+package "Exceptions" #EEFFEE {
+
+    class BusinessSoftwareDetectedException <<sealed>> {
+        + BusinessSoftwareDetectedException()
+        + BusinessSoftwareDetectedException(message : string)
+    }
+}
+
+' ============================================================
+' INTERFACES (Ports)
+' ============================================================
+package "Interfaces" #FFFFDD {
+
+    interface IBackupExecutor {
+        + ExecuteAsync(jobIds, progress?, ct) : Task
+        + PauseJobAsync(jobId, ct) : Task
+        + ResumeJobAsync(jobId, ct) : Task
+        + StopJobAsync(jobId, ct) : Task
+    }
+
+    interface IBackupStrategy {
+        + GetEligibleFilesAsync(job, files, differentialSinceUtc, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    interface IBackupStrategyFactory {
+        + GetStrategy(type : BackupType) : IBackupStrategy
+    }
+
+    interface IConfigurationRepository {
+        + LoadAsync(ct) : Task<BackupConfiguration?>
+        + SaveAsync(config, ct) : Task
+        + UpdateLastFullBackupAsync(jobId, utc, ct) : Task
+    }
+
+    interface IStateWriter {
+        + WriteStateAsync(progressList, ct) : Task
+    }
+
+    interface IFileSystemService {
+        + EnumerateFilesAsync(sourcePath, options?, ct) : IAsyncEnumerable<FileItem>
+        + CopyFileAsync(src, dest, progress?, ct) : Task<long>
+        + GetUncPath(path) : string
+        + GetFileSize(path) : long
+        + EnsureDirectoryExists(path) : void
+        + GetLastWriteTimeUtc(path) : DateTime
+    }
+
+    interface IFileEncryptor {
+        + EncryptFileAsync(src, dest, key, exe, ct) : Task<long>
+    }
+
+    interface IBusinessSoftwareDetector {
+        + IsRunning(processName?) : bool
+        + GetRunningProcessNames() : IReadOnlyList<string>
+    }
+
+    interface ICentralizedLogClient {
+        + SendAsync(entry, serverAddress?, ct) : Task
+    }
+}
+
+' ============================================================
+' RELATIONS
+' ============================================================
+BackupConfiguration "1" *-right- "*" BackupJob : Jobs
+BackupConfiguration --> LogFileFormat
+BackupConfiguration --> LogDestination
+BackupJob --> BackupType
+BackupProgress --> BackupState
+
+InvalidOperationException <|-- BusinessSoftwareDetectedException
+
+IBackupExecutor ..> BackupProgress : rapporte
+IBackupStrategy ..> FileItem : filtre
+IBackupStrategy ..> BackupJob : utilise
+IBackupStrategyFactory ..> BackupType : selon
+IConfigurationRepository ..> BackupConfiguration : charge/sauve
+IStateWriter ..> BackupProgress : écrit
+IFileSystemService ..> FileItem : énumère
+IFileSystemService ..> BackupEnumerationOptions : options
+ICentralizedLogClient ..> LogEntry : envoie
+
+@enduml

@@ -1,0 +1,224 @@
+@startuml class-diagram-gui-viewmodels
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 4
+
+title Diagramme de Classes - EasySave.Gui (ViewModels)
+
+' ============================================================
+' INTERFACES UTILISEES (dépendances - grisées)
+' ============================================================
+package "Core.Interfaces" <<Rectangle>> #F5F5F5 {
+    interface IBackupExecutor <<port>>
+    interface IBusinessSoftwareDetector <<port>>
+}
+
+package "Gui.Services" <<Rectangle>> #F5F5F5 {
+    interface IConfigurationHolder <<service>>
+    interface ILocalizationProvider <<service>>
+    interface IConfirmationService <<service>>
+    interface IFolderPickerService <<service>>
+    interface IFilePickerService <<service>>
+    interface IBackupProgressAggregator <<service>>
+    interface IAudiodescription <<service>>
+}
+
+package "Gui" <<Rectangle>> #F5F5F5 {
+    class EasySavePaths <<externe>>
+}
+
+' ============================================================
+' VIEWMODELS
+' ============================================================
+package "ViewModels" #E4EEFF {
+
+    abstract class ViewModelBase <<abstract>> {
+        + PropertyChanged : PropertyChangedEventHandler?
+        # RaisePropertyChanged(propertyName? : string) : void
+        # SetProperty<T>(field : T, value : T, propertyName? : string) : bool
+    }
+
+    class MainWindowViewModel <<sealed>> {
+        - _localization : ILocalizationProvider
+        + JobsTab : JobsTabViewModel
+        + CreateEditTab : CreateEditJobViewModel
+        + SettingsTab : SettingsViewModel
+        + WindowTitle : string
+        + HeaderTitle : string
+        + TabJobs : string
+        + TabCreateEdit : string
+        + TabSettings : string
+        --
+        + MainWindowViewModel(localization, jobsTab, createEditTab, settingsTab)
+    }
+
+    class JobsTabViewModel <<sealed>> {
+        - _configHolder : IConfigurationHolder
+        - _backupExecutor : IBackupExecutor
+        - _localization : ILocalizationProvider
+        - _confirmation : IConfirmationService
+        - _progressAggregator : IBackupProgressAggregator
+        - _cts : CancellationTokenSource?
+        - _runningJobIds : HashSet<int>
+        - _runningTasks : Dictionary<int, Task>
+        + Jobs : ObservableCollection<JobItemViewModel>
+        + SelectedJobs : ObservableCollection<JobItemViewModel>
+        + SelectedJob : JobItemViewModel?
+        + JobDetailsText : string
+        + StatusText : string
+        + IsRunning : bool
+        + ProgressPercent : double
+        + ProgressJobName : string
+        + ProgressCurrentFile : string
+        + ProgressFilesText : string
+        + ProgressEtaText : string
+        + ProgressSizeText : string
+        + JobProgressItems : ObservableCollection<JobProgressViewModel>
+        + CanRunSelected : bool
+        + CanStop : bool
+        + CanDelete : bool
+        + CanRefresh : bool
+        + CanPauseSelected : bool
+        + CanResumeSelected : bool
+        --
+        + Refresh(param) : void
+        + RunSelected(param) : void
+        + Stop(param) : void
+        + StopProgressJob(param) : void
+        + PauseProgressJob(param) : void
+        + ResumeProgressJob(param) : void
+        + PauseSelected(param) : void
+        + ResumeSelected(param) : void
+        + DeleteSelected(param) : void
+    }
+
+    class CreateEditJobViewModel <<sealed>> {
+        - _configHolder : IConfigurationHolder
+        - _localization : ILocalizationProvider
+        - _folderPicker : IFolderPickerService
+        + ExistingJobs : ObservableCollection<JobItemViewModel>
+        + SelectedExistingJob : JobItemViewModel?
+        + Name : string
+        + SourcePath : string
+        + TargetPath : string
+        + SelectedTypeIndex : int
+        + ExcludeExtensions : string
+        + ExcludeDirectories : string
+        + StatusText : string
+        + IsEditing : bool
+        --
+        + NewJob(param) : void
+        + SaveJob(param) : void
+        + PickSourceFolder(param) : void
+        + PickTargetFolder(param) : void
+    }
+
+    class SettingsViewModel <<sealed>> {
+        - _configHolder : IConfigurationHolder
+        - _localization : ILocalizationProvider
+        - _audioDescription : IAudiodescription
+        - _paths : EasySavePaths
+        - _filePicker : IFilePickerService
+        - _businessSoftwareDetector : IBusinessSoftwareDetector
+        + LogFormatIndex : int
+        + LogDestinationIndex : int
+        + CentralizedLogServerAddress : string
+        + EncryptExtensionsText : string
+        + EncryptionKeyPath : string
+        + BusinessSoftwareProcessName : string
+        + SelectedProcessChoice : string
+        + AudioDescriptionEnabled : bool
+        + VolumeValue : double
+        + SelectedLanguage : string
+        + UseDarkTheme : bool
+        + TextScaleIndex : int
+        + LargeFileThresholdText : string
+        + RunningProcessChoices : ObservableCollection<string>
+        + LanguageChoices : ObservableCollection<string>
+        + LogDestinationChoices : ObservableCollection<string>
+        --
+        + SaveSettings(param) : void
+        + RefreshRunningProcesses(param) : void
+        + PickEncryptionKeyFile(param) : void
+    }
+
+    class JobItemViewModel <<sealed>> {
+        + Id : int
+        + Name : string
+        + Type : BackupType
+        + DisplayText : string
+        + State : BackupState
+        + StateText : string
+        + StateBadgeBackground : string
+        + StateBadgeForeground : string
+        --
+        + JobItemViewModel(id, name, type)
+        + ToString() : string
+    }
+
+    class JobProgressViewModel <<sealed>> {
+        + JobId : int
+        + Percent : double
+        + JobName : string
+        + CurrentFile : string
+        + FilesText : string
+        + EtaText : string
+        + SizeText : string
+        + State : BackupState
+        + StateText : string
+        + StateBadgeBackground : string
+        + StateBadgeForeground : string
+        + SummaryText : string
+        + CanPause : bool
+        + CanResume : bool
+        + CanStop : bool
+    }
+}
+
+' ============================================================
+' HERITAGE (ViewModelBase)
+' ============================================================
+ViewModelBase <|-- MainWindowViewModel
+ViewModelBase <|-- JobsTabViewModel
+ViewModelBase <|-- CreateEditJobViewModel
+ViewModelBase <|-- SettingsViewModel
+ViewModelBase <|-- JobItemViewModel
+ViewModelBase <|-- JobProgressViewModel
+
+' ============================================================
+' COMPOSITION MainWindowViewModel
+' ============================================================
+MainWindowViewModel *-down-> JobsTabViewModel
+MainWindowViewModel *-down-> CreateEditJobViewModel
+MainWindowViewModel *-down-> SettingsViewModel
+MainWindowViewModel --> ILocalizationProvider
+
+' ============================================================
+' DEPENDANCES JobsTabViewModel
+' ============================================================
+JobsTabViewModel --> IConfigurationHolder
+JobsTabViewModel --> IBackupExecutor
+JobsTabViewModel --> ILocalizationProvider
+JobsTabViewModel --> IConfirmationService
+JobsTabViewModel --> IBackupProgressAggregator
+JobsTabViewModel "1" o-right- "*" JobItemViewModel : Jobs
+JobsTabViewModel "1" o-right- "*" JobProgressViewModel : Progress
+
+' ============================================================
+' DEPENDANCES CreateEditJobViewModel
+' ============================================================
+CreateEditJobViewModel --> IConfigurationHolder
+CreateEditJobViewModel --> ILocalizationProvider
+CreateEditJobViewModel --> IFolderPickerService
+CreateEditJobViewModel "1" o-right- "*" JobItemViewModel : ExistingJobs
+
+' ============================================================
+' DEPENDANCES SettingsViewModel
+' ============================================================
+SettingsViewModel --> IConfigurationHolder
+SettingsViewModel --> ILocalizationProvider
+SettingsViewModel --> IAudiodescription
+SettingsViewModel --> EasySavePaths
+SettingsViewModel --> IFilePickerService
+SettingsViewModel --> IBusinessSoftwareDetector
+
+@enduml

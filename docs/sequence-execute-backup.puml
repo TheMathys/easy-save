@@ -1,0 +1,176 @@
+@startuml sequence-execute-backup
+title Diagramme de Séquence - Exécution d'une Sauvegarde
+
+actor "Utilisateur" as User
+participant "JobsTabViewModel" as JobsVM
+participant "BackupExecutor" as Executor
+participant "IConfigurationRepository" as ConfigRepo
+participant "IBackupStrategyFactory" as StrategyFactory
+participant "IBackupStrategy" as Strategy
+participant "IFileSystemService" as FileSystem
+participant "IBusinessSoftwareDetector" as BizDetector
+participant "IFileEncryptor" as Encryptor
+participant "IStateWriter" as StateWriter
+participant "ILogWriter" as LogWriter
+participant "IBackupProgressAggregator" as ProgressAgg
+
+== Lancement de la sauvegarde ==
+
+User -> JobsVM : RunSelected()
+activate JobsVM
+
+JobsVM -> JobsVM : Vérifier sélection\n(SelectedJobs)
+JobsVM -> JobsVM : Créer CancellationTokenSource
+JobsVM -> JobsVM : Marquer jobs comme "running"
+
+loop pour chaque job sélectionné
+    JobsVM -> Executor : ExecuteAsync(jobIds, progress, ct)
+    activate Executor
+end
+
+== Chargement de la configuration ==
+
+Executor -> ConfigRepo : LoadAsync(ct)
+activate ConfigRepo
+ConfigRepo --> Executor : BackupConfiguration
+deactivate ConfigRepo
+
+== Détection logiciel métier ==
+
+Executor -> BizDetector : IsRunning(processName)
+activate BizDetector
+BizDetector --> Executor : false
+deactivate BizDetector
+
+note right of BizDetector
+    Si true : lève
+    BusinessSoftwareDetectedException
+end note
+
+== Initialisation état ==
+
+Executor -> StateWriter : WriteStateAsync(progressList, ct)
+activate StateWriter
+note right : État initial Inactive\npour tous les jobs
+StateWriter --> Executor
+deactivate StateWriter
+
+== Exécution d'un job ==
+
+Executor -> StrategyFactory : GetStrategy(job.Type)
+activate StrategyFactory
+StrategyFactory --> Executor : IBackupStrategy
+deactivate StrategyFactory
+
+Executor -> FileSystem : EnumerateFilesAsync(sourcePath, options, ct)
+activate FileSystem
+
+loop pour chaque fichier
+    FileSystem --> Executor : FileItem
+end
+deactivate FileSystem
+
+Executor -> Strategy : GetEligibleFilesAsync(job, files, differentialSince, ct)
+activate Strategy
+
+loop pour chaque fichier éligible
+    Strategy --> Executor : FileItem (filtré)
+end
+deactivate Strategy
+
+Executor -> Executor : Calculer taille totale\net nombre de fichiers
+Executor -> StateWriter : WriteStateAsync() [état Active]
+Executor -> JobsVM : Report(BackupProgress)
+JobsVM -> ProgressAgg : Update(progress)
+activate ProgressAgg
+ProgressAgg --> JobsVM : JobProgressViewModel
+deactivate ProgressAgg
+
+== Boucle de copie des fichiers ==
+
+loop pour chaque fichier éligible
+    
+    alt Pause demandée
+        Executor -> Executor : jobControl.PauseEvent.Wait()
+        Executor -> StateWriter : WriteStateAsync() [état Paused]
+        Executor -> JobsVM : Report(BackupProgress) [Paused]
+        note right : Attend le signal Resume
+        Executor -> Executor : PauseEvent signalé (Resume)
+        Executor -> StateWriter : WriteStateAsync() [état Active]
+    end
+
+    alt Arrêt demandé
+        Executor -> StateWriter : WriteStateAsync() [état Inactive]
+        Executor -> LogWriter : WriteAllTextAsync(stopEntry)
+        note right : Raison: StoppedByUser
+    else Fichier à chiffrer
+        Executor -> Encryptor : EncryptFileAsync(source, dest, key, exe, ct)
+        activate Encryptor
+        Encryptor --> Executor : encryptionTimeMs
+        deactivate Encryptor
+    else Copie standard
+        alt Gros fichier (> seuil)
+            Executor -> Executor : LargeFileSemaphore.WaitAsync()
+        end
+        Executor -> FileSystem : CopyFileAsync(source, dest, fileProgress, ct)
+        activate FileSystem
+        
+        loop progression copie
+            FileSystem -> Executor : IProgress<long>.Report(bytesCopied)
+            Executor -> JobsVM : Report(BackupProgress)
+        end
+        
+        FileSystem --> Executor : transferMs
+        deactivate FileSystem
+        
+        alt Gros fichier
+            Executor -> Executor : LargeFileSemaphore.Release()
+        end
+    end
+
+    Executor -> LogWriter : WriteAllTextAsync(LogEntry)
+    activate LogWriter
+    LogWriter --> Executor
+    deactivate LogWriter
+
+    Executor -> Executor : Mettre à jour bytesCompleted
+
+    Executor -> StateWriter : WriteStateAsync(progressList, ct)
+    Executor -> JobsVM : Report(BackupProgress)
+    
+    == Vérification logiciel métier post-fichier ==
+    
+    Executor -> BizDetector : IsRunning(processName)
+    activate BizDetector
+    BizDetector --> Executor : false
+    deactivate BizDetector
+    
+    note right of BizDetector
+        Si true : arrêt du job,
+        log BusinessSoftwareDetected,
+        annulation des jobs parallèles
+    end note
+end
+
+== Finalisation ==
+
+Executor -> Executor : Marquer état Completed
+Executor -> StateWriter : WriteStateAsync() [état Completed]
+Executor -> JobsVM : Report(BackupProgress) [Completed]
+
+alt Job de type Full
+    Executor -> ConfigRepo : UpdateLastFullBackupAsync(jobId, utcNow, ct)
+    activate ConfigRepo
+    ConfigRepo --> Executor
+    deactivate ConfigRepo
+end
+
+Executor --> JobsVM : Task terminée
+deactivate Executor
+
+JobsVM -> JobsVM : Retirer job de _runningJobIds
+JobsVM -> JobsVM : IsRunning = false
+JobsVM -> User : StatusText = "Succès"
+deactivate JobsVM
+
+@enduml

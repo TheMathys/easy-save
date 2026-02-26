@@ -1,0 +1,194 @@
+@startuml class-diagram-overview
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 40
+skinparam ranksep 30
+
+title Diagramme de Classes - Vue d'ensemble inter-projets
+
+' ============================================================
+' COUCHE PRESENTATION
+' ============================================================
+package "EasySave.Gui" #E4EEFF {
+
+    package "ViewModels" {
+        abstract class ViewModelBase
+        class MainWindowViewModel
+        class JobsTabViewModel
+        class CreateEditJobViewModel
+        class SettingsViewModel
+        class JobItemViewModel
+        class JobProgressViewModel
+    }
+
+    package "Services" {
+        interface IConfigurationHolder
+        interface ILocalizationProvider
+        interface IConfirmationService
+        interface IFolderPickerService
+        interface IFilePickerService
+        interface IBackupProgressAggregator
+        interface IAudiodescription
+        class ConfigurationHolder
+        class LocalizationProvider
+        class BackupProgressAggregator
+        class Audiodescription
+    }
+
+    class EasySavePaths
+    class CompositionRoot <<static>>
+}
+
+' ============================================================
+' COUCHE DOMAINE
+' ============================================================
+package "EasySave.Core" #EEFFEE {
+
+    package "Entities" {
+        class BackupConfiguration
+        class BackupJob
+        class BackupProgress
+    }
+
+    package "Interfaces" {
+        interface IBackupExecutor
+        interface IBackupStrategy
+        interface IBackupStrategyFactory
+        interface IConfigurationRepository
+        interface IStateWriter
+        interface IFileSystemService
+        interface IFileEncryptor
+        interface IBusinessSoftwareDetector
+        interface ICentralizedLogClient
+    }
+
+    package "Enums" {
+        enum BackupType
+        enum BackupState
+        enum LogFileFormat
+        enum LogDestination
+    }
+
+    package "Models" {
+        class LogEntry
+        class FileItem
+    }
+}
+
+' ============================================================
+' COUCHE INFRASTRUCTURE
+' ============================================================
+package "EasySave.Infrastructure" #FFEEDD {
+
+    class BackupExecutor
+    class BackupStrategyFactory
+    class FullBackupStrategy
+    class DifferentialBackupStrategy
+    class BusinessSoftwareDetector
+    class JsonConfigurationRepository
+    class JsonStateWriter
+    class ConfigurableLogWriter
+    class DestinationLogWriter
+    class FileSystemService
+    class CryptoSoftFileEncryptor
+    class CentralizedLogClient
+}
+
+' ============================================================
+' BIBLIOTHEQUE EASYLOG
+' ============================================================
+package "EasyLog" #FFE4E4 {
+    interface ILogWriter
+    class DailyLogWriter
+    class XmlDailyLogWriter
+}
+
+' ============================================================
+' SERVEUR DE LOGS
+' ============================================================
+package "EasySave.LogServer" #FFE8F0 {
+    class LogSocketListener
+    class LogEntryHandler
+    class LogEntryDto
+}
+
+' ============================================================
+' HERITAGE ViewModelBase
+' ============================================================
+ViewModelBase <|-- MainWindowViewModel
+ViewModelBase <|-- JobsTabViewModel
+ViewModelBase <|-- CreateEditJobViewModel
+ViewModelBase <|-- SettingsViewModel
+ViewModelBase <|-- JobItemViewModel
+ViewModelBase <|-- JobProgressViewModel
+
+' ============================================================
+' REALISATIONS Infrastructure -> Core.Interfaces
+' ============================================================
+IBackupExecutor <|.. BackupExecutor
+IBackupStrategy <|.. FullBackupStrategy
+IBackupStrategy <|.. DifferentialBackupStrategy
+IBackupStrategyFactory <|.. BackupStrategyFactory
+IConfigurationRepository <|.. JsonConfigurationRepository
+IStateWriter <|.. JsonStateWriter
+IFileSystemService <|.. FileSystemService
+IFileEncryptor <|.. CryptoSoftFileEncryptor
+IBusinessSoftwareDetector <|.. BusinessSoftwareDetector
+ICentralizedLogClient <|.. CentralizedLogClient
+
+' ============================================================
+' REALISATIONS EasyLog
+' ============================================================
+ILogWriter <|.. DailyLogWriter
+ILogWriter <|.. XmlDailyLogWriter
+ILogWriter <|.. ConfigurableLogWriter
+ILogWriter <|.. DestinationLogWriter
+
+' ============================================================
+' REALISATIONS GUI Services
+' ============================================================
+IConfigurationHolder <|.. ConfigurationHolder
+ILocalizationProvider <|.. LocalizationProvider
+IBackupProgressAggregator <|.. BackupProgressAggregator
+IAudiodescription <|.. Audiodescription
+
+' ============================================================
+' COMPOSITION PRINCIPALES
+' ============================================================
+BackupConfiguration "1" *-- "*" BackupJob
+
+MainWindowViewModel *-- JobsTabViewModel
+MainWindowViewModel *-- CreateEditJobViewModel
+MainWindowViewModel *-- SettingsViewModel
+
+' ============================================================
+' DEPENDANCES CLES (ViewModels -> Interfaces)
+' ============================================================
+JobsTabViewModel --> IBackupExecutor
+JobsTabViewModel --> IConfigurationHolder
+CreateEditJobViewModel --> IConfigurationHolder
+SettingsViewModel --> IConfigurationHolder
+SettingsViewModel --> IBusinessSoftwareDetector
+ConfigurationHolder --> IConfigurationRepository
+
+' ============================================================
+' DEPENDANCES CLES (Infrastructure interne)
+' ============================================================
+BackupExecutor --> IConfigurationRepository
+BackupExecutor --> IBackupStrategyFactory
+BackupExecutor --> IFileSystemService
+BackupExecutor --> IStateWriter
+BackupExecutor --> ILogWriter
+BackupExecutor --> IFileEncryptor
+BackupExecutor --> IBusinessSoftwareDetector
+
+DestinationLogWriter --> ConfigurableLogWriter
+DestinationLogWriter --> ICentralizedLogClient
+
+' ============================================================
+' DEPENDANCES LogServer
+' ============================================================
+LogSocketListener --> LogEntryHandler
+LogEntryHandler --> ILogWriter
+
+@enduml
