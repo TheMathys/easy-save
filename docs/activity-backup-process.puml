@@ -1,0 +1,129 @@
+@startuml activity-backup-process
+title Diagramme d'Activité - Processus de Sauvegarde
+
+start
+
+:Utilisateur sélectionne un ou\nplusieurs jobs et clique "Exécuter";
+
+:Charger la configuration\n(IConfigurationRepository.LoadAsync);
+
+if (Configuration valide ?) then (non)
+    :Afficher erreur;
+    stop
+else (oui)
+endif
+
+if (Logiciel métier en cours ?) then (oui)
+    :Lever BusinessSoftwareDetectedException;
+    :Afficher message\n"Logiciel métier détecté";
+    stop
+else (non)
+endif
+
+:Initialiser la liste de progression\n(état Inactive pour tous les jobs);
+
+:Écrire l'état initial (StateWriter);
+
+if (Nombre de jobs > 1 ?) then (oui)
+    :Créer un CancellationToken lié\npour annulation parallèle;
+    
+    fork
+        :Exécuter Job 1;
+    fork again
+        :Exécuter Job 2;
+    fork again
+        :...;
+    end fork
+    
+else (un seul job)
+    :Exécuter le job unique;
+endif
+
+' Détail exécution d'un job
+partition "Exécution d'un Job" {
+    
+    :Obtenir la stratégie\n(Full ou Differential)\nvia BackupStrategyFactory;
+
+    :Énumérer les fichiers source\n(FileSystemService.EnumerateFilesAsync);
+
+    :Filtrer les fichiers éligibles\nvia IBackupStrategy.GetEligibleFilesAsync;
+
+    :Calculer la taille totale\net le nombre de fichiers;
+
+    :Publier état Active\n(StateWriter + Progress);
+
+    while (Fichiers restants ?) is (oui)
+
+        if (Arrêt demandé ?) then (oui)
+            :Publier état Inactive;
+            :Logger raison "StoppedByUser";
+            break
+        else (non)
+        endif
+
+        if (Job en pause ?) then (oui)
+            :Publier état Paused;
+            :Attendre signal Resume\n(ManualResetEventSlim.Wait);
+            
+            if (Arrêt demandé après resume ?) then (oui)
+                :Logger raison "StoppedByUser";
+                break
+            else (non)
+                :Publier état Active;
+            endif
+        else (non)
+        endif
+
+        :Préparer chemin destination;
+        :Créer les répertoires si nécessaire;
+
+        if (Gros fichier > seuil ?) then (oui)
+            :Acquérir LargeFileSemaphore\n(exclusion mutuelle inter-jobs);
+        else (non)
+        endif
+
+        if (Extension à chiffrer ?) then (oui)
+            :Chiffrer via CryptoSoft\n(IFileEncryptor.EncryptFileAsync);
+        else (non)
+            :Copier le fichier\n(FileSystemService.CopyFileAsync);
+            
+            :Reporter la progression\noctets par octets;
+        endif
+
+        if (Gros fichier ?) then (oui)
+            :Libérer LargeFileSemaphore;
+        else (non)
+        endif
+
+        :Écrire l'entrée de log\n(ILogWriter.WriteAllTextAsync);
+
+        :Mettre à jour bytesCompleted\net processedCount;
+
+        :Publier progression mise à jour\n(StateWriter + IProgress);
+
+        if (Logiciel métier détecté ?) then (oui)
+            :Publier état Inactive;
+            :Logger raison\n"BusinessSoftwareDetected";
+            :Annuler les jobs parallèles;
+            break
+        else (non)
+        endif
+
+    endwhile (non)
+
+    :Publier état Completed (100%);
+    :Écrire l'état final (StateWriter);
+
+    if (Type = Full ?) then (oui)
+        :Mettre à jour\nLastFullBackupUtc\n(ConfigurationRepository);
+    else (non)
+    endif
+}
+
+:Nettoyer les ressources\n(JobControl, CancellationToken);
+
+:Afficher le statut final\nà l'utilisateur;
+
+stop
+
+@enduml

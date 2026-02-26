@@ -1,0 +1,227 @@
+@startuml package-diagram
+title Diagramme de Packages - Architecture en couches EasySave
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+' ============================================================
+' Couche Présentation (GUI)
+' ============================================================
+package "<<Présentation>>\nEasySave.Gui" as GUI #E4EEFF {
+
+    package "ViewModels" as GUI_VM {
+        class ViewModelBase <<abstract>>
+        class MainWindowViewModel
+        class JobsTabViewModel
+        class CreateEditJobViewModel
+        class SettingsViewModel
+        class JobItemViewModel
+        class JobProgressViewModel
+    }
+
+    package "Services" as GUI_Services {
+        interface IConfigurationHolder
+        interface ILocalizationProvider
+        interface IConfirmationService
+        interface IFolderPickerService
+        interface IFilePickerService
+        interface IBackupProgressAggregator
+        interface IAudiodescription
+        class ConfigurationHolder
+        class LocalizationProvider
+        class MessageBoxConfirmationService
+        class FolderPickerService
+        class FilePickerService
+        class BackupProgressAggregator
+        class Audiodescription
+    }
+
+    package "Root" as GUI_Root {
+        class EasySavePaths
+        class CompositionRoot <<static>>
+    }
+
+    package "Views (AXAML)" as GUI_Views {
+        class MainWindow
+        class "App" as App
+    }
+}
+
+' ============================================================
+' Couche Domaine (Core)
+' ============================================================
+package "<<Domaine>>\nEasySave.Core" as CORE #EEFFEE {
+
+    package "Entities" as Core_Entities {
+        class BackupConfiguration
+        class BackupJob
+        class BackupProgress
+    }
+
+    package "Models" as Core_Models {
+        class LogEntry
+        class FileItem <<record>>
+        class BackupEnumerationOptions
+    }
+
+    package "Interfaces" as Core_Interfaces {
+        interface IBackupExecutor
+        interface IBackupStrategy
+        interface IBackupStrategyFactory
+        interface IConfigurationRepository
+        interface IStateWriter
+        interface IFileSystemService
+        interface IFileEncryptor
+        interface IBusinessSoftwareDetector
+        interface ICentralizedLogClient
+    }
+
+    package "Enums" as Core_Enums {
+        enum BackupType
+        enum BackupState
+        enum LogFileFormat
+        enum LogDestination
+    }
+
+    package "Exceptions" as Core_Exceptions {
+        class BusinessSoftwareDetectedException
+    }
+}
+
+' ============================================================
+' Couche Infrastructure
+' ============================================================
+package "<<Infrastructure>>\nEasySave.Infrastructure" as INFRA #FFEEDD {
+
+    package "Backup" as Infra_Backup {
+        class BackupExecutor
+        class BackupStrategyFactory
+        class FullBackupStrategy
+        class DifferentialBackupStrategy
+        class BusinessSoftwareDetector
+    }
+
+    package "Persistence" as Infra_Persistence {
+        class JsonConfigurationRepository
+        class JsonStateWriter
+        class ConfigurableLogWriter
+        class DestinationLogWriter
+    }
+
+    package "FileSystem" as Infra_FS {
+        class FileSystemService
+    }
+
+    package "Encryption" as Infra_Encryption {
+        class CryptoSoftFileEncryptor
+    }
+
+    package "Logging" as Infra_Logging {
+        class CentralizedLogClient
+    }
+}
+
+' ============================================================
+' Bibliothèque de Logs
+' ============================================================
+package "<<Bibliothèque>>\nEasyLog" as EASYLOG #FFE4E4 {
+    interface ILogWriter
+    class DailyLogWriter
+    class XmlDailyLogWriter
+}
+
+' ============================================================
+' Serveur de Logs
+' ============================================================
+package "<<Service>>\nEasySave.LogServer" as LOGSERVER #FFE8F0 {
+
+    package "Sockets" as LS_Sockets {
+        class LogSocketListener
+    }
+
+    package "Protocol" as LS_Protocol {
+        interface ILogEntryHandler
+        class LogEntryHandler
+        class LogEntryDto
+    }
+}
+
+' ============================================================
+' Relations entre packages (dépendances)
+' ============================================================
+
+' GUI dépend de Core (interfaces et entités)
+GUI ..> CORE : <<utilise>>
+
+' GUI dépend de Infrastructure (via DI dans CompositionRoot)
+GUI ..> INFRA : <<injection de\ndépendances>>
+
+' GUI dépend de EasyLog (via DI)
+GUI ..> EASYLOG : <<injection de\ndépendances>>
+
+' Infrastructure implémente les interfaces de Core
+INFRA ..> CORE : <<implémente>>
+
+' Infrastructure utilise EasyLog
+INFRA ..> EASYLOG : <<utilise>>
+
+' LogServer utilise EasyLog
+LOGSERVER ..> EASYLOG : <<utilise>>
+
+' LogServer utilise les modèles de Core
+LOGSERVER ..> CORE : <<utilise>>\n(LogEntry)
+
+' Relations internes GUI
+GUI_VM ..> GUI_Services : <<utilise>>
+GUI_Root ..> GUI_VM : <<enregistre>>
+GUI_Root ..> GUI_Services : <<enregistre>>
+GUI_Views ..> GUI_VM : <<DataBinding>>
+
+' Relations internes Core
+Core_Entities ..> Core_Enums : <<utilise>>
+Core_Interfaces ..> Core_Entities : <<référence>>
+Core_Interfaces ..> Core_Models : <<référence>>
+Core_Interfaces ..> Core_Enums : <<référence>>
+
+' Relations internes Infrastructure
+Infra_Backup ..> Core_Interfaces : <<implémente>>
+Infra_Persistence ..> Core_Interfaces : <<implémente>>
+Infra_FS ..> Core_Interfaces : <<implémente>>
+Infra_Encryption ..> Core_Interfaces : <<implémente>>
+Infra_Logging ..> Core_Interfaces : <<implémente>>
+Infra_Persistence ..> EASYLOG : <<délègue>>
+Infra_Logging ..> Core_Interfaces : <<implémente>>
+
+' Relations internes LogServer
+LS_Sockets ..> LS_Protocol : <<utilise>>
+LS_Protocol ..> EASYLOG : <<utilise>>
+
+' ============================================================
+' Note architecture
+' ============================================================
+
+note bottom of CORE
+    **Architecture hexagonale (Ports & Adapters)**
+    Le Core ne dépend d'aucune couche externe.
+    Les interfaces (ports) sont définies ici et
+    implémentées dans Infrastructure (adapters).
+end note
+
+note right of GUI
+    **Pattern MVVM**
+    Views (AXAML) liées aux ViewModels
+    par DataBinding Avalonia.
+    Les Services GUI abstraient les
+    interactions UI (Pickers, Dialogs).
+end note
+
+note right of INFRA
+    **Adapters**
+    Implémente les ports définis
+    dans Core. Utilise le système
+    de fichiers, JSON, processus
+    externes (CryptoSoft), et
+    le réseau (TCP).
+end note
+
+@enduml

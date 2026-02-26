@@ -1,0 +1,196 @@
+@startuml class-diagram-gui-services
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Diagramme de Classes - EasySave.Gui (Services)
+
+' ============================================================
+' DEPENDANCES EXTERNES (grisées)
+' ============================================================
+package "Core.Interfaces" <<Rectangle>> #F5F5F5 {
+    interface IConfigurationRepository <<port>>
+}
+
+package "Core.Entities" <<Rectangle>> #F5F5F5 {
+    class BackupConfiguration <<externe>>
+    class BackupProgress <<externe>>
+}
+
+package "Gui.ViewModels" <<Rectangle>> #F5F5F5 {
+    class JobProgressViewModel <<externe>>
+}
+
+' ============================================================
+' GUI ROOT
+' ============================================================
+package "EasySave.Gui" #E4EEFF {
+
+    class EasySavePaths <<sealed>> {
+        + BaseDirectory : string
+        + ConfigFilePath : string
+        + StateFilePath : string
+        + LogDirectory : string
+        --
+        + EasySavePaths(baseDirectory : string)
+    }
+
+    class CompositionRoot <<static>> {
+        + {static} Build(basePath : string) : IServiceProvider
+    }
+}
+
+' ============================================================
+' INTERFACES
+' ============================================================
+package "Services - Interfaces" #DDEEFF {
+
+    interface IConfigurationHolder {
+        + Current : BackupConfiguration
+        + ConfigurationChanged : EventHandler?
+        + ReloadAsync(ct : CancellationToken) : Task
+        + SaveAsync(config : BackupConfiguration, ct : CancellationToken) : Task
+    }
+
+    interface ILocalizationProvider {
+        + GetString(key : string) : string
+        + GetString(key : string, args : object[]) : string
+        + CultureChanged : EventHandler?
+        + SetCulture(cultureCode : string) : void
+        + GetLanguages() : Array
+    }
+
+    interface IConfirmationService {
+        + ConfirmAsync(title : string, message : string) : Task<bool>
+    }
+
+    interface IFolderPickerService {
+        + SetOwner(window : Window?) : void
+        + PickFolderAsync(title : string?) : Task<string?>
+    }
+
+    interface IFilePickerService {
+        + SetOwner(window : Window?) : void
+        + PickFileAsync(title : string?) : Task<string?>
+    }
+
+    interface IBackupProgressAggregator {
+        + Items : ObservableCollection<JobProgressViewModel>
+        + Update(progress : BackupProgress) : JobProgressViewModel?
+        + Clear() : void
+    }
+
+    interface IAudiodescription {
+        + SetVolume(volume : int) : void
+        + ServiceStatement(onOff : bool) : void
+        + Start() : void
+        + Stop() : void
+        + GetVolume() : int
+    }
+}
+
+' ============================================================
+' IMPLEMENTATIONS
+' ============================================================
+package "Services - Implémentations" #E4EEFF {
+
+    class ConfigurationHolder <<sealed>> {
+        - _repository : IConfigurationRepository
+        - _baseDirectory : string
+        - _current : BackupConfiguration
+        + Current : BackupConfiguration
+        + ConfigurationChanged : EventHandler?
+        --
+        + ConfigurationHolder(repository, paths)
+        + ReloadAsync(ct) : Task
+        + SaveAsync(config, ct) : Task
+        - {static} BuildDefault(baseDirectory) : BackupConfiguration
+    }
+
+    class LocalizationProvider <<sealed>> {
+        - _resourceManager : ResourceManager
+        - _currentCulture : CultureInfo
+        + CultureChanged : EventHandler?
+        --
+        + LocalizationProvider()
+        + GetString(key) : string
+        + GetString(key, args) : string
+        + SetCulture(cultureCode) : void
+        + GetLanguages() : Array
+    }
+
+    class MessageBoxConfirmationService <<sealed>> {
+        + ConfirmAsync(title, message) : Task<bool>
+    }
+
+    class FolderPickerService <<sealed>> {
+        - _owner : Window?
+        + SetOwner(window) : void
+        + PickFolderAsync(title?) : Task<string?>
+    }
+
+    class FilePickerService <<sealed>> {
+        - _owner : Window?
+        + SetOwner(window) : void
+        + PickFileAsync(title?) : Task<string?>
+    }
+
+    class BackupProgressAggregator <<sealed>> {
+        - _localization : ILocalizationProvider
+        - _byJobName : Dictionary<string, JobProgressViewModel>
+        + Items : ObservableCollection<JobProgressViewModel>
+        --
+        + BackupProgressAggregator(localization)
+        + Update(progress) : JobProgressViewModel?
+        + Clear() : void
+        - {static} FormatBytes(bytes) : string
+        - ApplyStateBadge(viewModel, state) : void
+        - BuildSummary(progress) : string
+        - {static} FormatDuration(seconds) : string
+    }
+
+    class Audiodescription {
+        - Volume : int
+        - _synthesizer : SpeechSynthesizer
+        - _enabled : bool
+        - _mainWindow : Window?
+        - _lastHoveredControl : Control?
+        --
+        + Start() : void
+        + Stop() : void
+        + ServiceStatement(onOff) : void
+        + SpeakText(text) : void
+        + SetVolume(volume) : void
+        + GetVolume() : int
+        - AttachToMainWindow() : void
+        - DetachFromMainWindow() : void
+        - OnPointerMoved(sender, e) : void
+        - FindRelevantControl(visual) : Control?
+        - IsReadableControl(control) : bool
+        - ReadControlContent(control) : void
+    }
+}
+
+' ============================================================
+' REALISATIONS
+' ============================================================
+IConfigurationHolder <|.. ConfigurationHolder
+ILocalizationProvider <|.. LocalizationProvider
+IConfirmationService <|.. MessageBoxConfirmationService
+IFolderPickerService <|.. FolderPickerService
+IFilePickerService <|.. FilePickerService
+IBackupProgressAggregator <|.. BackupProgressAggregator
+IAudiodescription <|.. Audiodescription
+
+' ============================================================
+' DEPENDANCES
+' ============================================================
+ConfigurationHolder --> IConfigurationRepository : délègue persistence
+ConfigurationHolder --> EasySavePaths : chemins
+
+BackupProgressAggregator --> ILocalizationProvider : traductions
+BackupProgressAggregator "1" o-- "*" JobProgressViewModel : Items
+
+IConfigurationHolder ..> BackupConfiguration : expose Current
+IBackupProgressAggregator ..> BackupProgress : agrège
+
+@enduml
