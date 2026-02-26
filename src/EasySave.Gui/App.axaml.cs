@@ -1,10 +1,11 @@
+using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using EasySave.Gui.Services;
 using EasySave.Gui.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace EasySave.Gui;
 
@@ -19,6 +20,12 @@ public partial class App : Application
     /// Set once in <see cref="Program.Main"/>.
     /// </summary>
     public static IServiceProvider? ServiceProvider { get; set; }
+
+    /// <summary>
+    /// When set by <see cref="Program.Main"/> (CLI launch with job IDs), these jobs are started automatically
+    /// once the main window is ready. Same format as Console: e.g. EasySave.Gui.exe 1 2 3
+    /// </summary>
+    public static IReadOnlyList<int>? PendingJobIdsToRun { get; set; }
 
     /// <inheritdoc />
     public override void Initialize()
@@ -51,6 +58,15 @@ public partial class App : Application
             // Trigger initial configuration load without blocking the UI thread. The ConfigurationChanged handler
             // will be invoked when ReloadAsync completes and will apply the theme and text scale.
             _ = configHolder.ReloadAsync();
+
+            // CLI: if launched with job IDs (e.g. EasySave.Gui.exe 1 2 3), start those jobs once the UI is ready
+            IReadOnlyList<int>? pendingIds = PendingJobIdsToRun;
+            if (pendingIds != null && pendingIds.Count > 0)
+            {
+                PendingJobIdsToRun = null;
+                JobsTabViewModel jobsTab = mainVm.JobsTab;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => jobsTab.RunJobIds(pendingIds));
+            }
         }
 
         base.OnFrameworkInitializationCompleted();

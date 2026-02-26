@@ -10,7 +10,7 @@ namespace EasySave.Infrastructure.Tests
         [Fact]
         public void Constructor_Throws_When_ConfigDirectory_Is_Null()
         {
-            var exception = Assert.Throws<ArgumentNullException>(() => new JsonConfigurationRepository(null!));
+            var exception = Assert.Throws<ArgumentNullException>(() => new JsonConfigurationRepository((string)null!));
             Assert.Equal("configDirectory", exception.ParamName);
         }
 

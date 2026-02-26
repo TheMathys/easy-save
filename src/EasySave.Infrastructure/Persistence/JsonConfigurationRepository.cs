@@ -11,8 +11,6 @@ namespace EasySave.Infrastructure.Persistence
     /// </summary>
     public sealed class JsonConfigurationRepository : IConfigurationRepository
     {
-        private readonly string _configDirectory;
-        private readonly string _configFilePath;
         private readonly SemaphoreSlim _configUpdateLock = new(1, 1);
 
         /// <summary>
@@ -24,6 +22,8 @@ namespace EasySave.Infrastructure.Persistence
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        private readonly Func<string> _getConfigDirectory;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonConfigurationRepository"/> class.
         /// </summary>
@@ -31,9 +31,20 @@ namespace EasySave.Infrastructure.Persistence
         /// Directory where the configuration file is stored.
         /// </param>
         public JsonConfigurationRepository(string configDirectory)
+            : this(() => configDirectory!)
         {
-            _configDirectory = configDirectory ?? throw new ArgumentNullException(nameof(configDirectory));
-            _configFilePath = Path.Combine(_configDirectory, "backup-config.json");
+            if (configDirectory == null)
+                throw new ArgumentNullException(nameof(configDirectory));
+        }
+
+        /// <summary>
+        /// Initializes a new instance with a delegate to resolve the config directory at runtime.
+        /// Used when the path can change (e.g. GUI changing base path without losing data).
+        /// </summary>
+        /// <param name="getConfigDirectory">Delegate returning the current config directory.</param>
+        public JsonConfigurationRepository(Func<string> getConfigDirectory)
+        {
+            _getConfigDirectory = getConfigDirectory ?? throw new ArgumentNullException(nameof(getConfigDirectory));
         }
 
         /// <summary>
@@ -48,13 +59,15 @@ namespace EasySave.Infrastructure.Persistence
         /// </returns>
         public async Task<BackupConfiguration?> LoadAsync(CancellationToken cancellationToken = default)
         {
-            if (!File.Exists(_configFilePath))
+            string configDirectory = _getConfigDirectory();
+            string configFilePath = Path.Combine(configDirectory, "backup-config.json");
+            if (!File.Exists(configFilePath))
                 return null;
 
             ConfigDto? dto;
             try
             {
-                var json = await File.ReadAllTextAsync(_configFilePath, cancellationToken).ConfigureAwait(false);
+                var json = await File.ReadAllTextAsync(configFilePath, cancellationToken).ConfigureAwait(false);
                 dto = JsonSerializer.Deserialize<ConfigDto>(json, JsonOptions);
             }
             catch (JsonException)
@@ -104,7 +117,7 @@ namespace EasySave.Infrastructure.Persistence
 
             return new BackupConfiguration
             {
-                LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
+                LogAndStateDirectory = dto.LogAndStateDirectory ?? configDirectory,
                 LogFileFormat = format,
                 LogDestination = logDestination,
                 CentralizedLogServerAddress = string.IsNullOrWhiteSpace(dto.CentralizedLogServerAddress) ? null : dto.CentralizedLogServerAddress.Trim(),
@@ -129,7 +142,9 @@ namespace EasySave.Infrastructure.Persistence
         /// </param>
         public async Task SaveAsync(BackupConfiguration backupConfiguration, CancellationToken cancellationToken = default)
         {
-            Directory.CreateDirectory(_configDirectory);
+            string configDirectory = _getConfigDirectory();
+            Directory.CreateDirectory(configDirectory);
+            string configFilePath = Path.Combine(configDirectory, "backup-config.json");
 
             var dto = new ConfigDto
             {
@@ -161,7 +176,7 @@ namespace EasySave.Infrastructure.Persistence
             };
 
             var json = JsonSerializer.Serialize(dto, JsonOptions);
-            await File.WriteAllTextAsync(_configFilePath, json, cancellationToken).ConfigureAwait(false);
+            await File.WriteAllTextAsync(configFilePath, json, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

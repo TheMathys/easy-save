@@ -285,6 +285,21 @@ Dossiers exclus : {6}</value>
   <data name="Gui_SaveSettings" xml:space="preserve">
     <value>Enregistrer les paramètres</value>
   </data>
+  <data name="Gui_ChangeBasePath" xml:space="preserve">
+    <value>Changer le dossier…</value>
+  </data>
+  <data name="Gui_ChangeBasePathDialogTitle" xml:space="preserve">
+    <value>Choisir le dossier pour la configuration, l'état et les journaux</value>
+  </data>
+  <data name="Gui_BasePathChanged" xml:space="preserve">
+    <value>Dossier modifié. La configuration, l'état et les journaux sont maintenant dans le nouvel emplacement.</value>
+  </data>
+  <data name="Gui_BasePathChangeError" xml:space="preserve">
+    <value>Impossible de changer le dossier : {0}</value>
+  </data>
+  <data name="Gui_ConfirmDeleteJob" xml:space="preserve">
+    <value>Êtes-vous sûr de vouloir supprimer : {0} ?</value>
+  </data>
   <data name="Gui_SettingsSaved" xml:space="preserve">
     <value>Paramètres enregistrés. Format actif : {0}.</value>
   </data>

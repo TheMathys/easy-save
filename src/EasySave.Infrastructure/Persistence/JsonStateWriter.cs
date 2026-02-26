@@ -9,7 +9,7 @@ namespace EasySave.Infrastructure.Persistence
     /// </summary>
     public class JsonStateWriter : IStateWriter
     {
-        private readonly string _stateFilePath;
+        private readonly Func<string> _getStateFilePath;
         private readonly JsonSerializerOptions _jsonOptions;
 
         /// <summary>
@@ -18,13 +18,20 @@ namespace EasySave.Infrastructure.Persistence
         /// <param name="stateFilePath">The full path to the state.json file.</param>
         /// <exception cref="ArgumentNullException">Thrown if stateFilePath is null or empty.</exception>
         public JsonStateWriter(string stateFilePath)
+            : this(() => stateFilePath ?? throw new ArgumentNullException(nameof(stateFilePath)))
         {
             if (string.IsNullOrWhiteSpace(stateFilePath))
-            {
                 throw new ArgumentNullException(nameof(stateFilePath), "The state file path cannot be null or empty.");
-            }
+        }
 
-            _stateFilePath = stateFilePath;
+        /// <summary>
+        /// Initializes a new instance with a delegate to resolve the state file path at runtime.
+        /// Used when the path can change (e.g. GUI changing base path without losing data).
+        /// </summary>
+        /// <param name="getStateFilePath">Delegate returning the current state file path.</param>
+        public JsonStateWriter(Func<string> getStateFilePath)
+        {
+            _getStateFilePath = getStateFilePath ?? throw new ArgumentNullException(nameof(getStateFilePath));
 
             // Initialize JSON options once for performance
             _jsonOptions = new JsonSerializerOptions
@@ -42,7 +49,10 @@ namespace EasySave.Infrastructure.Persistence
         /// </summary>
         public async Task WriteStateAsync(IReadOnlyList<BackupProgress> progressList, CancellationToken cancellationToken = default)
         {
-            var directory = Path.GetDirectoryName(_stateFilePath);
+            string stateFilePath = _getStateFilePath();
+            if (string.IsNullOrWhiteSpace(stateFilePath))
+                throw new InvalidOperationException("The state file path cannot be null or empty.");
+            var directory = Path.GetDirectoryName(stateFilePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
@@ -65,7 +75,7 @@ namespace EasySave.Infrastructure.Persistence
                 }).ToList()
             };
             string json = JsonSerializer.Serialize(dto, _jsonOptions) + Environment.NewLine;
-            await File.WriteAllTextAsync(_stateFilePath, json, cancellationToken).ConfigureAwait(false);
+            await File.WriteAllTextAsync(stateFilePath, json, cancellationToken).ConfigureAwait(false);
         }
 
         private sealed class StateDto

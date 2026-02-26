@@ -9,18 +9,27 @@ namespace EasyLog
     /// </summary>
     public sealed class XmlDailyLogWriter : ILogWriter, IDisposable
     {
-        private readonly string _baseDirectory;
+        private readonly Func<string> _getBaseDirectory;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
         public XmlDailyLogWriter(string baseDirectory)
+            : this(() => baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory)))
         {
-            _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
+        }
+
+        /// <summary>
+        /// Initializes a new instance with a delegate to resolve the log directory at runtime.
+        /// </summary>
+        public XmlDailyLogWriter(Func<string> getBaseDirectory)
+        {
+            _getBaseDirectory = getBaseDirectory ?? throw new ArgumentNullException(nameof(getBaseDirectory));
         }
 
         public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
-            string logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.xml");
-            Directory.CreateDirectory(_baseDirectory);
+            string baseDirectory = _getBaseDirectory();
+            string logFilePath = Path.Combine(baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.xml");
+            Directory.CreateDirectory(baseDirectory);
 
             await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try

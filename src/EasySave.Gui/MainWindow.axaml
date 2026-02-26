@@ -233,7 +233,8 @@
           <ScrollViewer Classes="cardScroll">
               <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="280,*,Auto" RowSpacing="14" ColumnSpacing="16">
               <TextBlock Text="{Binding SettingsTab.LabelBasePath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
-              <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <TextBlock Grid.Column="1" Text="{Binding SettingsTab.BasePath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
+              <Button Grid.Column="2" Content="{Binding SettingsTab.ChangeBasePathButtonText}" Command="{Binding SettingsTab.ChangeBasePath}" HorizontalAlignment="Right" />
               <TextBlock Grid.Row="1" Text="{Binding SettingsTab.LabelConfigPath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />
               <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SettingsTab.ConfigPath}" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundTertiary}" />
               <TextBlock Grid.Row="2" Text="{Binding SettingsTab.LabelStatePath}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundSecondary}" />

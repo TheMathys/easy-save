@@ -45,7 +45,7 @@ public sealed class CryptoSoftFileEncryptor : IFileEncryptor
                 await Task.Delay(RetryDelayMs * (attempt + 1), cancellationToken);
             }
         }
-        throw new InvalidOperationException("Échec après tous les retries : CryptoSoft inaccessible.");
+        throw new InvalidOperationException("CryptoSoft is not reachable after all retries.");
     }
     
     private async Task<long> ExecuteCryptoSoft(

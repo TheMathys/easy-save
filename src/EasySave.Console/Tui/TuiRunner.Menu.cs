@@ -7,7 +7,7 @@ namespace EasySave.Console.Tui
     public static partial class TuiRunner
     {
         /// <summary>
-        /// Affiche le menu et récupère le choix (0=Create, 1=List, 2=Run, 3=Delete, 4=Edit, 5=ViewPaths, 6=Help, 7=Quit).
+        /// Displays the menu and returns the user choice (0=Create, 1=List, 2=Run, 3=Delete, 4=Edit, 5=ViewPaths, 6=Help, 7=Quit).
         /// </summary>
         private static int ShowMenuAndReadChoice()
         {
