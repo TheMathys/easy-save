@@ -10,7 +10,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option "Modifier un travail" : saisie ID, champs pré-remplis, sauvegarde.</summary>
+    /// <summary>
+    /// Handles the \"Edit job\" menu option: prompts for ID, shows prefilled fields, then saves changes.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static async Task EditJobAsync(IConfigurationRepository configRepository)

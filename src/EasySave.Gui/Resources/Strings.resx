@@ -285,6 +285,21 @@ Excluded directories: {6}</value>
   <data name="Gui_SaveSettings" xml:space="preserve">
     <value>Save settings</value>
   </data>
+  <data name="Gui_ChangeBasePath" xml:space="preserve">
+    <value>Change folder…</value>
+  </data>
+  <data name="Gui_ChangeBasePathDialogTitle" xml:space="preserve">
+    <value>Select folder for configuration, state and logs</value>
+  </data>
+  <data name="Gui_BasePathChanged" xml:space="preserve">
+    <value>Folder changed. Configuration, state and logs are now stored in the new location.</value>
+  </data>
+  <data name="Gui_BasePathChangeError" xml:space="preserve">
+    <value>Failed to change folder: {0}</value>
+  </data>
+  <data name="Gui_ConfirmDeleteJob" xml:space="preserve">
+    <value>Are you sure you want to delete: {0}?</value>
+  </data>
   <data name="Gui_SettingsSaved" xml:space="preserve">
     <value>Settings saved. Active format: {0}.</value>
   </data>

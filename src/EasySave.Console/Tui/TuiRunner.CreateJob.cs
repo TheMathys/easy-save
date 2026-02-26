@@ -10,7 +10,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option Créer un travail (option 1) et helpers pour le type de sauvegarde.</summary>
+    /// <summary>
+    /// Handles the \"Create job\" menu option (1) and helper methods for backup type selection.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static BackupType ReadBackupType()

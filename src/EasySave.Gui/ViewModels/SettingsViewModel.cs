@@ -9,6 +9,7 @@ using EasySave.Core.Entities;
 using EasySave.Core.Enums;
 using EasySave.Core.Interfaces;
 using EasySave.Gui.Services;
+using EasySave.Gui;
 
 namespace EasySave.Gui.ViewModels;
 
@@ -21,8 +22,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly IConfigurationHolder _configHolder;
     private readonly ILocalizationProvider _localization;
     private readonly IAudiodescription _audioDescription;
-    private readonly EasySavePaths _paths;
+    private readonly MutableEasySavePaths _paths;
     private readonly IFilePickerService _filePicker;
+    private readonly IFolderPickerService _folderPicker;
     private readonly IBusinessSoftwareDetector _businessSoftwareDetector;
     private int _logFormatIndex;
     private int _logDestinationIndex;
@@ -36,7 +38,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _audioDescriptionEnabled;
     private double _volumeValue = 50;
 
-    private string _selectedLanguage = "Français";
+    private string _selectedLanguage = string.Empty;
     private bool _useDarkTheme;
     private string _largeFileThresholdText = string.Empty;
 
@@ -49,8 +51,9 @@ public sealed class SettingsViewModel : ViewModelBase
         IConfigurationHolder configHolder,
         ILocalizationProvider localization,
         IAudiodescription audioDescription,
-        EasySavePaths paths,
+        MutableEasySavePaths paths,
         IFilePickerService filePicker,
+        IFolderPickerService folderPicker,
         IBusinessSoftwareDetector businessSoftwareDetector)
     {
         _configHolder = configHolder;
@@ -58,15 +61,30 @@ public sealed class SettingsViewModel : ViewModelBase
         _audioDescription = audioDescription;
         _paths = paths;
         _filePicker = filePicker;
+        _folderPicker = folderPicker;
         _businessSoftwareDetector = businessSoftwareDetector;
         RunningProcessChoices = new ObservableCollection<string>();
-        LanguageChoices = new ObservableCollection<string> { "Français", "English" };
+        LanguageChoices = new ObservableCollection<string>
+        {
+            _localization.GetString("Gui_LabelLangFrench"),
+            _localization.GetString("Gui_LabelLangEnglish")
+        };
         LogDestinationChoices = new ObservableCollection<string>();
         _configHolder.ConfigurationChanged += (_, _) => Dispatcher.UIThread.Post(SyncFromConfig);
+        _paths.PathsChanged += (_, _) => Dispatcher.UIThread.Post(RaisePathPropertiesChanged);
         _localization.CultureChanged += (_, _) => RaiseLocalizedProperties();
         SyncFromConfig();
         RefreshRunningProcessesListAsync();
         UpdateLogDestinationChoices();
+    }
+
+    private void RaisePathPropertiesChanged()
+    {
+        RaisePropertyChanged(nameof(BasePath));
+        RaisePropertyChanged(nameof(ConfigPath));
+        RaisePropertyChanged(nameof(StatePath));
+        RaisePropertyChanged(nameof(LogDirectory));
+        RaisePropertyChanged(nameof(ChangeBasePathButtonText));
     }
 
     /// <summary>
@@ -113,6 +131,7 @@ public sealed class SettingsViewModel : ViewModelBase
         RaisePropertyChanged(nameof(RefreshProcessListButtonText));
         RaisePropertyChanged(nameof(BrowseEncryptionKeyButtonText));
         RaisePropertyChanged(nameof(SaveSettingsButtonText));
+        RaisePropertyChanged(nameof(ChangeBasePathButtonText));
         UpdateLogDestinationChoices();
     }
 
@@ -181,6 +200,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public string RefreshProcessListButtonText => _localization.GetString("Gui_RefreshProcessList");
     public string BrowseEncryptionKeyButtonText => _localization.GetString("Gui_BrowseEncryptionKey");
     public string SaveSettingsButtonText => _localization.GetString("Gui_SaveSettings");
+    public string ChangeBasePathButtonText => _localization.GetString("Gui_ChangeBasePath");
     public string DeleteJobLabel => _localization.GetString("Gui_DeleteJobLabel");
 
     public string EncryptExtensionsText
@@ -231,15 +251,18 @@ public sealed class SettingsViewModel : ViewModelBase
         get => _selectedLanguage;
         set
         {
-            if (!SetProperty(ref _selectedLanguage, value ?? "Français"))
+            string newValue = value ?? _localization.GetString("Gui_LabelLangFrench");
+            if (!SetProperty(ref _selectedLanguage, newValue))
                 return;
 
             // Change the culture based on the selected language
-            string cultureCode = value switch
+            string french = _localization.GetString("Gui_LabelLangFrench");
+            string english = _localization.GetString("Gui_LabelLangEnglish");
+            string cultureCode = newValue switch
             {
-                "Deutch" => "de",
-                "English" => "en",
-                "Français" => "fr",
+                // Future extension point for other languages
+                _ when newValue == english => "en",
+                _ when newValue == french => "fr",
                 _ => "fr"
             };
 
@@ -330,13 +353,22 @@ public sealed class SettingsViewModel : ViewModelBase
         ApplySelectedProcessFromConfig();
     }
 
-    /// <summary>
-    /// Saves only the display preferences (dark theme + text scale)
-    /// so that pressing the refresh button does not reset them.
-    /// </summary>
     private async Task SaveUiDisplayPreferencesAsync()
     {
         BackupConfiguration c = _configHolder.Current;
+
+        try
+        {
+            if ((c.Jobs == null || c.Jobs.Count == 0)
+                && File.Exists(_paths.ConfigFilePath)
+                && new FileInfo(_paths.ConfigFilePath).Length > 0)
+            {
+                return;
+            }
+        }
+        catch
+        {
+        }
 
         int textScalePercent = TextScaleIndex switch
         {
@@ -487,4 +519,36 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public bool CanPickEncryptionKeyFile(object _) => true;
+
+    /// <summary>
+    /// Opens a folder picker to choose a new base directory for config, state and logs.
+    /// Copies existing files to the new location so no data is lost, then reloads configuration.
+    /// </summary>
+    public async void ChangeBasePath(object _)
+    {
+        string? newPath = await _folderPicker.PickFolderAsync(_localization.GetString("Gui_ChangeBasePathDialogTitle")).ConfigureAwait(true);
+        if (string.IsNullOrWhiteSpace(newPath))
+            return;
+        try
+        {
+            bool changed = await _paths.SetBaseDirectoryAsync(newPath, CancellationToken.None).ConfigureAwait(true);
+            if (changed)
+            {
+                GuiBasePathStorage.SaveBasePath(newPath);
+                await _configHolder.ReloadAsync(CancellationToken.None).ConfigureAwait(true);
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    RaisePathPropertiesChanged();
+                    StatusText = _localization.GetString("Gui_BasePathChanged");
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                StatusText = _localization.GetString("Gui_BasePathChangeError", ex.Message));
+        }
+    }
+
+    public bool CanChangeBasePath(object _) => true;
 }

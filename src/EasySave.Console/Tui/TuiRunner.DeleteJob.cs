@@ -9,7 +9,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option "Supprimer un travail" : saisie ID, confirmation, mise à jour config et LastFullBackupUtcByJobId.</summary>
+    /// <summary>
+    /// Handles the \"Delete job\" menu option: asks for job ID, confirms, then updates configuration and LastFullBackupUtcByJobId.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static async Task DeleteJobAsync(IConfigurationRepository configRepository)

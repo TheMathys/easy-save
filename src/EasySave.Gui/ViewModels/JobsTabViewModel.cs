@@ -261,7 +261,7 @@ public sealed class JobsTabViewModel : ViewModelBase
 
         bool confirmed = await _confirmation.ConfirmAsync(
             _localization.GetString("TuiConfirmDelete") ?? "Confirm deletion",
-            $"Êtes-vous sur de vouloir supprimer : {SelectedJob.Name}");
+            _localization.GetString("Gui_ConfirmDeleteJob", SelectedJob.Name));
 
         if (!confirmed)
         {
@@ -360,6 +360,33 @@ public sealed class JobsTabViewModel : ViewModelBase
             return;
         }
 
+        StartJobIds(toStart);
+    }
+
+    /// <summary>
+    /// Starts the given job IDs (e.g. from CLI: EasySave.Gui.exe 1 2 3).
+    /// Only jobs that exist in the current configuration and are not already running are started.
+    /// </summary>
+    /// <param name="jobIds">Job IDs to run (1-based).</param>
+    public void RunJobIds(IReadOnlyList<int> jobIds)
+    {
+        if (jobIds == null || jobIds.Count == 0)
+            return;
+
+        IReadOnlyList<int> existingIds = _configHolder.Current.Jobs.Select(j => j.Id).ToList();
+        List<int> toStart = jobIds
+            .Where(id => id >= 1 && existingIds.Contains(id) && !_runningJobIds.Contains(id))
+            .Distinct()
+            .ToList();
+
+        if (toStart.Count == 0)
+            return;
+
+        StartJobIds(toStart);
+    }
+
+    private void StartJobIds(List<int> toStart)
+    {
         if (_cts == null || _cts.IsCancellationRequested)
         {
             _cts?.Dispose();

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -133,7 +133,7 @@ namespace EasySave.Gui.Services
                     // Only read the text content, not the control itself
                     if (toggleSwitch.Content is string content && !string.IsNullOrWhiteSpace(content))
                     {
-                        string toggleState = toggleSwitch.IsChecked == true ? "activé" : "désactivé";
+                        string toggleState = toggleSwitch.IsChecked == true ? "on" : "off";
                         textToRead = $"{content}: {toggleState}";
                     }
                     break;
@@ -167,7 +167,7 @@ namespace EasySave.Gui.Services
                     // Only read if there's a selection
                     if (comboBox.SelectedItem != null)
                     {
-                        string comboName = !string.IsNullOrWhiteSpace(comboBox.Name) ? comboBox.Name : "Liste déroulante";
+                        string comboName = !string.IsNullOrWhiteSpace(comboBox.Name) ? comboBox.Name : "Drop-down list";
                         textToRead = $"{comboName}: {comboBox.SelectedItem.ToString()}";
                     }
                     break;

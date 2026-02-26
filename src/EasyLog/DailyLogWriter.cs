@@ -9,7 +9,7 @@ namespace EasyLog
     /// </summary>
     public sealed class DailyLogWriter : ILogWriter, IDisposable
     {
-        private readonly string _baseDirectory;
+        private readonly Func<string> _getBaseDirectory;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
@@ -18,8 +18,18 @@ namespace EasyLog
         /// </summary>
         /// <param name="baseDirectory">Base directory where daily log files will be stored.</param>
         public DailyLogWriter(string baseDirectory)
+            : this(() => baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory)))
         {
-            _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
+        }
+
+        /// <summary>
+        /// Initializes a new instance with a delegate to resolve the log directory at runtime.
+        /// Used when the path can change (e.g. GUI changing base path without losing data).
+        /// </summary>
+        /// <param name="getBaseDirectory">Delegate returning the current log directory.</param>
+        public DailyLogWriter(Func<string> getBaseDirectory)
+        {
+            _getBaseDirectory = getBaseDirectory ?? throw new ArgumentNullException(nameof(getBaseDirectory));
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true };
         }
 
@@ -29,8 +39,9 @@ namespace EasyLog
         /// </summary>
         public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
-            var logFilePath = Path.Combine(_baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
-            Directory.CreateDirectory(_baseDirectory);
+            string baseDirectory = _getBaseDirectory();
+            var logFilePath = Path.Combine(baseDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.json");
+            Directory.CreateDirectory(baseDirectory);
 
             var json = JsonSerializer.Serialize(logEntry, _jsonOptions);
 
