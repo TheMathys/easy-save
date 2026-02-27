@@ -1,0 +1,10 @@
+var searchData=
+[
+  ['elapsedtimeseconds_0',['ElapsedTimeSeconds',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#aa033d318a7cebab95c90a8d7bc7f1d2b',1,'EasySave::Core::Entities::BackupProgress']]],
+  ['encryptextensions_1',['EncryptExtensions',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#acd204559e1b6e7f90b84df5652fe1170',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['encryptionkeypath_2',['EncryptionKeyPath',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a527d72784696e5f4602910e94646a357',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['encryptiontimems_3',['EncryptionTimeMs',['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html#ac8beba42034b76ee5746a48f896d57bc',1,'EasySave.Core.Models.LogEntry.EncryptionTimeMs'],['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_dto.html#af9e0909d1b9aaedaf5494741eb84878c',1,'EasySave.LogServer.Protocol.LogEntryDto.EncryptionTimeMs']]],
+  ['estimatedtimeremainingseconds_4',['EstimatedTimeRemainingSeconds',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#a6a516eaa98ab64f5d7b71037992186d2',1,'EasySave::Core::Entities::BackupProgress']]],
+  ['excludedirectorynames_5',['ExcludeDirectoryNames',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_job.html#af9a7dd09f11d60e39c1a802809ce9d7e',1,'EasySave.Core.Entities.BackupJob.ExcludeDirectoryNames'],['../class_easy_save_1_1_core_1_1_models_1_1_backup_enumeration_options.html#a0c2834060ead9678e0cffa003d96c201',1,'EasySave.Core.Models.BackupEnumerationOptions.ExcludeDirectoryNames']]],
+  ['excludeextensions_6',['ExcludeExtensions',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_job.html#abfc47d9150f663f3f19928ca4adc992d',1,'EasySave.Core.Entities.BackupJob.ExcludeExtensions'],['../class_easy_save_1_1_core_1_1_models_1_1_backup_enumeration_options.html#a3f4cbf8f47121724a1a09311c237adb3',1,'EasySave.Core.Models.BackupEnumerationOptions.ExcludeExtensions']]]
+];

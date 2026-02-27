@@ -1,0 +1,10 @@
+digraph "EasySave.Gui.Services.FolderPickerService"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  Node1 [id="Node000001",label="EasySave.Gui.Services.Folder\lPickerService",height=0.2,width=0.4,color="gray40", fillcolor="grey60", style="filled", fontcolor="black",tooltip="Default implementation of IFolderPickerService using Avalonia's IStorageProvider to display a native ..."];
+  Node2 -> Node1 [id="edge1_Node000001_Node000002",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 [id="Node000002",label="EasySave.Gui.Services.IFolder\lPickerService",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$interface_easy_save_1_1_gui_1_1_services_1_1_i_folder_picker_service.html",tooltip="Service abstraction that opens a folder picker dialog (MVVM-friendly and testable)."];
+}

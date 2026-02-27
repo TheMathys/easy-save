@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['backupname_0',['BackupName',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#ae5d9b186535340cc1dc0ce1901a30124',1,'EasySave.Core.Entities.BackupProgress.BackupName'],['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html#aefa77f57b4b6328e0a8658da63a88403',1,'EasySave.Core.Models.LogEntry.BackupName'],['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_dto.html#ace0c881f6559b43e4f1f46aa28dfeba6',1,'EasySave.LogServer.Protocol.LogEntryDto.BackupName']]],
+  ['basedirectory_1',['BaseDirectory',['../class_easy_save_1_1_console_1_1_easy_save_paths.html#a4da84e06c0bfc1838cf0bc5cdd419ab7',1,'EasySave.Console.EasySavePaths.BaseDirectory'],['../class_easy_save_1_1_gui_1_1_easy_save_paths.html#a8f685687c15f2ebbd081d4de4002028b',1,'EasySave.Gui.EasySavePaths.BaseDirectory'],['../class_easy_save_1_1_gui_1_1_mutable_easy_save_paths.html#acd3fc4df28fa366042aab7ba4e5ad986',1,'EasySave.Gui.MutableEasySavePaths.BaseDirectory']]],
+  ['businesssoftwareprocessname_2',['BusinessSoftwareProcessName',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a342eb2b57b3732b1f43df3c991567265',1,'EasySave::Core::Entities::BackupConfiguration']]]
+];
