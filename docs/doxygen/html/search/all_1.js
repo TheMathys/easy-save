@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['backupconfiguration_0',['BackupConfiguration',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html',1,'EasySave::Core::Entities']]],
+  ['backupenumerationoptions_1',['BackupEnumerationOptions',['../class_easy_save_1_1_core_1_1_models_1_1_backup_enumeration_options.html',1,'EasySave::Core::Models']]],
+  ['backupexecutor_2',['BackupExecutor',['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_backup_executor.html',1,'EasySave::Infrastructure::Backup']]],
+  ['backupjob_3',['BackupJob',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_job.html',1,'EasySave::Core::Entities']]],
+  ['backupname_4',['BackupName',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#ae5d9b186535340cc1dc0ce1901a30124',1,'EasySave.Core.Entities.BackupProgress.BackupName'],['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html#aefa77f57b4b6328e0a8658da63a88403',1,'EasySave.Core.Models.LogEntry.BackupName'],['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_dto.html#ace0c881f6559b43e4f1f46aa28dfeba6',1,'EasySave.LogServer.Protocol.LogEntryDto.BackupName']]],
+  ['backupprogress_5',['BackupProgress',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html',1,'EasySave::Core::Entities']]],
+  ['backupprogressaggregator_6',['BackupProgressAggregator',['../class_easy_save_1_1_gui_1_1_services_1_1_backup_progress_aggregator.html',1,'EasySave::Gui::Services']]],
+  ['backupstate_7',['BackupState',['../namespace_easy_save_1_1_core_1_1_enums.html#a2850f4f545ee87bc8b6dac8f1bef404b',1,'EasySave::Core::Enums']]],
+  ['backupstrategyfactory_8',['BackupStrategyFactory',['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_backup_strategy_factory.html',1,'EasySave::Infrastructure::Backup']]],
+  ['backuptype_9',['BackupType',['../namespace_easy_save_1_1_core_1_1_enums.html#a4c73652dc291f6701b2337aec90db05b',1,'EasySave::Core::Enums']]],
+  ['basedirectory_10',['BaseDirectory',['../class_easy_save_1_1_console_1_1_easy_save_paths.html#a4da84e06c0bfc1838cf0bc5cdd419ab7',1,'EasySave.Console.EasySavePaths.BaseDirectory'],['../class_easy_save_1_1_gui_1_1_easy_save_paths.html#a8f685687c15f2ebbd081d4de4002028b',1,'EasySave.Gui.EasySavePaths.BaseDirectory'],['../class_easy_save_1_1_gui_1_1_mutable_easy_save_paths.html#acd3fc4df28fa366042aab7ba4e5ad986',1,'EasySave.Gui.MutableEasySavePaths.BaseDirectory']]],
+  ['build_20et_20exécution_20avec_20docker_11',['Build et exécution avec Docker',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md7',1,'']]],
+  ['build_20et_20exécution_20avec_20docker_20compose_12',['Build et exécution avec Docker Compose',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md8',1,'']]],
+  ['businesssoftwaredetectedexception_13',['BusinessSoftwareDetectedException',['../class_easy_save_1_1_core_1_1_exceptions_1_1_business_software_detected_exception.html',1,'EasySave.Core.Exceptions.BusinessSoftwareDetectedException'],['../class_easy_save_1_1_core_1_1_exceptions_1_1_business_software_detected_exception.html#ad2d77756db138b1dfe86084517384e92',1,'EasySave.Core.Exceptions.BusinessSoftwareDetectedException.BusinessSoftwareDetectedException()'],['../class_easy_save_1_1_core_1_1_exceptions_1_1_business_software_detected_exception.html#a488410d4cd25bbc55d8c1dc73e5d1a26',1,'EasySave.Core.Exceptions.BusinessSoftwareDetectedException.BusinessSoftwareDetectedException(string message)']]],
+  ['businesssoftwaredetector_14',['BusinessSoftwareDetector',['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_business_software_detector.html',1,'EasySave::Infrastructure::Backup']]],
+  ['businesssoftwareprocessname_15',['BusinessSoftwareProcessName',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a342eb2b57b3732b1f43df3c991567265',1,'EasySave::Core::Entities::BackupConfiguration']]]
+];

@@ -1,0 +1,11 @@
+digraph "Graphical Class Hierarchy"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  rankdir="LR";
+  Node0 [id="Node000000",label="EasySave.Core.Interfaces.\lIFileEncryptor",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$interface_easy_save_1_1_core_1_1_interfaces_1_1_i_file_encryptor.html",tooltip="Encrypts a file using an external process (e.g. CryptoSoft). Follows Strategy pattern: the backup exe..."];
+  Node0 -> Node1 [id="edge9_Node000000_Node000001",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node1 [id="Node000001",label="EasySave.Infrastructure.\lEncryption.CryptoSoftFileEncryptor",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_easy_save_1_1_infrastructure_1_1_encryption_1_1_crypto_soft_file_encryptor.html",tooltip="Adapter for the external CryptoSoft executable: encrypts a file by launching a process with arguments..."];
+}

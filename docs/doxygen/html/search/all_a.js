@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['langhelper_0',['LangHelper',['../class_easy_save_1_1_console_1_1_resources_1_1_lang_helper.html',1,'EasySave::Console::Resources']]],
+  ['languagechoices_1',['LanguageChoices',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a696d5565444765c988860b073e282521',1,'EasySave::Gui::ViewModels::SettingsViewModel']]],
+  ['largefilethresholdkb_2',['LargeFileThresholdKb',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a7856080cd9c9c2ca0bde16a6ab030fe0',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['largefilethresholdtext_3',['LargeFileThresholdText',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a3dc985d4328baf841490469f52a07f99',1,'EasySave::Gui::ViewModels::SettingsViewModel']]],
+  ['lastactiontimestamp_4',['LastActionTimestamp',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#ad5e4e20b5848d037fe40c7db378153dc',1,'EasySave::Core::Entities::BackupProgress']]],
+  ['lastfullbackuputcbyjobid_5',['LastFullBackupUtcByJobId',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a62353e8137d19f8fbfbfa8269f523705',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['loadasync_6',['LoadAsync',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_configuration_repository.html#a64dbfd25d1af9dc27ba7b4ab25bca462',1,'EasySave.Core.Interfaces.IConfigurationRepository.LoadAsync()'],['../class_easy_save_1_1_infrastructure_1_1_persistence_1_1_json_configuration_repository.html#a4a834c375d0b6d88467813510ac0676d',1,'EasySave.Infrastructure.Persistence.JsonConfigurationRepository.LoadAsync()']]],
+  ['local_7',['Local',['../namespace_easy_save_1_1_core_1_1_enums.html#ad39aa1f80f8257539d56ac50b4e023d4a509820290d57f333403f490dde7316f4',1,'EasySave::Core::Enums']]],
+  ['local_8',['Compilation et exécution (en local)',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md5',1,'']]],
+  ['localandcentralized_9',['LocalAndCentralized',['../namespace_easy_save_1_1_core_1_1_enums.html#ad39aa1f80f8257539d56ac50b4e023d4ad6fe417e9c0c5c157abcb279f790f209',1,'EasySave::Core::Enums']]],
+  ['localizationprovider_10',['LocalizationProvider',['../class_easy_save_1_1_gui_1_1_services_1_1_localization_provider.html',1,'EasySave.Gui.Services.LocalizationProvider'],['../class_easy_save_1_1_gui_1_1_services_1_1_localization_provider.html#ab82ff71c2f66d9369b8ba8d10f6fd1b7',1,'EasySave.Gui.Services.LocalizationProvider.LocalizationProvider()']]],
+  ['log_11',['Structure JSON d’une entrée de log',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md2',1,'']]],
+  ['log_20server_12',['EasySave Log Server',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md0',1,'']]],
+  ['logandstatedirectory_13',['LogAndStateDirectory',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a9d1d3730bee34c11a08b4581401df34a',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['logdestination_14',['LogDestination',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a45d71888c4d4955faabe7ea73f8e1dc9',1,'EasySave.Core.Entities.BackupConfiguration.LogDestination'],['../namespace_easy_save_1_1_core_1_1_enums.html#ad39aa1f80f8257539d56ac50b4e023d4',1,'EasySave.Core.Enums.LogDestination']]],
+  ['logdestinationchoices_15',['LogDestinationChoices',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a3b90207f8acac8c8d04d43e189062be9',1,'EasySave::Gui::ViewModels::SettingsViewModel']]],
+  ['logdestinationindex_16',['LogDestinationIndex',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a1a37b2d28e83d06536c9ccbc6c97879d',1,'EasySave::Gui::ViewModels::SettingsViewModel']]],
+  ['logdirectory_17',['LogDirectory',['../class_easy_save_1_1_console_1_1_easy_save_paths.html#a3ce6addbbd1fdbce0ab36896c5be2004',1,'EasySave.Console.EasySavePaths.LogDirectory'],['../class_easy_save_1_1_gui_1_1_easy_save_paths.html#a4f2ee9f797f5c446d77025e34eba5d90',1,'EasySave.Gui.EasySavePaths.LogDirectory'],['../class_easy_save_1_1_gui_1_1_mutable_easy_save_paths.html#a628c2ca65c302315a7f03e0e694c53d5',1,'EasySave.Gui.MutableEasySavePaths.LogDirectory']]],
+  ['logentry_18',['LogEntry',['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html',1,'EasySave.Core.Models.LogEntry'],['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html#aa14d0826c4df52cdc78cc7a44ef48a4d',1,'EasySave.Core.Models.LogEntry.LogEntry()']]],
+  ['logentrydto_19',['LogEntryDto',['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_dto.html',1,'EasySave::LogServer::Protocol']]],
+  ['logentryhandler_20',['LogEntryHandler',['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_handler.html',1,'EasySave::LogServer::Protocol']]],
+  ['logfileformat_21',['LogFileFormat',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#acb4de8d53ac20660031b6da59d1a5ca6',1,'EasySave.Core.Entities.BackupConfiguration.LogFileFormat'],['../namespace_easy_save_1_1_core_1_1_enums.html#a69fbb065ad73e040ffa2ffd63295c0b4',1,'EasySave.Core.Enums.LogFileFormat']]],
+  ['logsocketlistener_22',['LogSocketListener',['../class_easy_save_1_1_log_server_1_1_sockets_1_1_log_socket_listener.html',1,'EasySave::LogServer::Sockets']]]
+];

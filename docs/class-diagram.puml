@@ -1,0 +1,695 @@
+@startuml class-diagram
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Diagramme de Classes Complet - EasySave (GUI)
+
+' ============================================================
+' ENUMS
+' ============================================================
+package "EasySave.Core.Enums" #EEEEFF {
+
+    enum BackupType {
+        Full
+        Differential
+    }
+
+    enum BackupState {
+        Inactive
+        Active
+        Paused
+        Completed
+        Error
+    }
+
+    enum LogFileFormat {
+        Json
+        Xml
+    }
+
+    enum LogDestination {
+        Local
+        Centralized
+        LocalAndCentralized
+    }
+}
+
+' ============================================================
+' CORE - ENTITIES
+' ============================================================
+package "EasySave.Core.Entities" #EEFFEE {
+
+    class BackupConfiguration <<sealed>> {
+        + LogAndStateDirectory : string
+        + LogFileFormat : LogFileFormat
+        + LogDestination : LogDestination
+        + CentralizedLogServerAddress : string?
+        + Jobs : IReadOnlyList<BackupJob>
+        + LastFullBackupUtcByJobId : IReadOnlyDictionary<int, DateTime>
+        + EncryptExtensions : IReadOnlyList<string>
+        + EncryptionKeyPath : string?
+        + BusinessSoftwareProcessName : string?
+        + UseDarkTheme : bool
+        + TextScalePercent : int
+        + LargeFileThresholdKb : int?
+    }
+
+    class BackupJob {
+        + Id : int
+        + Name : string
+        + SourcePath : string
+        + TargetPath : string
+        + Type : BackupType
+        + ExcludeExtensions : IReadOnlyList<string>
+        + ExcludeDirectoryNames : IReadOnlyList<string>
+    }
+
+    class BackupProgress <<sealed>> {
+        + JobId : int
+        + BackupName : string
+        + LastActionTimestamp : DateTime
+        + State : BackupState
+        + TotalFilesCount : int
+        + TotalSizeBytes : long
+        + ProgressPercent : double
+        + RemainingFilesCount : int
+        + RemainingSizeBytes : long
+        + CurrentSourcePath : string?
+        + CurrentDestinationPath : string?
+        + EstimatedTimeRemainingSeconds : double?
+        + ElapsedTimeSeconds : double?
+    }
+}
+
+' ============================================================
+' CORE - MODELS
+' ============================================================
+package "EasySave.Core.Models" #EEFFEE {
+
+    class LogEntry {
+        + TimeStamp : DateTime
+        + BackupName : string
+        + SourcePath : string
+        + DestinationPath : string
+        + FileSizeBytes : long
+        + TransferTimeMs : TimeSpan
+        + EncryptionTimeMs : long
+        + Reason : string?
+        + LogEntry(timeStamp, backupName, sourcePath, destinationPath, fileSizeBytes, transferTimeMs, encryptionTimeMs, reason)
+    }
+
+    class FileItem <<record>> {
+        + RelativePath : string
+        + FullSourcePath : string
+        + LastWriteTimeUtc : DateTime
+    }
+
+    class BackupEnumerationOptions <<sealed>> {
+        + ExcludeExtensions : IReadOnlyList<string>
+        + ExcludeDirectoryNames : IReadOnlyList<string>
+    }
+}
+
+' ============================================================
+' CORE - EXCEPTIONS
+' ============================================================
+package "EasySave.Core.Exceptions" #EEFFEE {
+
+    class BusinessSoftwareDetectedException <<sealed>> {
+        + BusinessSoftwareDetectedException()
+        + BusinessSoftwareDetectedException(message : string)
+    }
+}
+
+' ============================================================
+' CORE - INTERFACES
+' ============================================================
+package "EasySave.Core.Interfaces" #FFFFDD {
+
+    interface IBackupExecutor {
+        + ExecuteAsync(jobIds, progress?, ct) : Task
+        + PauseJobAsync(jobId, ct) : Task
+        + ResumeJobAsync(jobId, ct) : Task
+        + StopJobAsync(jobId, ct) : Task
+    }
+
+    interface IBackupStrategy {
+        + GetEligibleFilesAsync(job, files, differentialSinceUtc, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    interface IBackupStrategyFactory {
+        + GetStrategy(type : BackupType) : IBackupStrategy
+    }
+
+    interface IConfigurationRepository {
+        + LoadAsync(ct) : Task<BackupConfiguration?>
+        + SaveAsync(config, ct) : Task
+        + UpdateLastFullBackupAsync(jobId, utc, ct) : Task
+    }
+
+    interface IStateWriter {
+        + WriteStateAsync(progressList, ct) : Task
+    }
+
+    interface IFileSystemService {
+        + EnumerateFilesAsync(sourcePath, options?, ct) : IAsyncEnumerable<FileItem>
+        + CopyFileAsync(src, dest, progress?, ct) : Task<long>
+        + GetUncPath(path) : string
+        + GetFileSize(path) : long
+        + EnsureDirectoryExists(path) : void
+        + GetLastWriteTimeUtc(path) : DateTime
+    }
+
+    interface IFileEncryptor {
+        + EncryptFileAsync(src, dest, key, exe, ct) : Task<long>
+    }
+
+    interface IBusinessSoftwareDetector {
+        + IsRunning(processName?) : bool
+        + GetRunningProcessNames() : IReadOnlyList<string>
+    }
+
+    interface ICentralizedLogClient {
+        + SendAsync(entry, serverAddress?, ct) : Task
+    }
+}
+
+' ============================================================
+' EASYLOG
+' ============================================================
+package "EasyLog" #FFE4E4 {
+
+    interface ILogWriter {
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+    }
+
+    class DailyLogWriter <<sealed>> {
+        - _baseDirectory : string
+        - _lock : SemaphoreSlim
+        + DailyLogWriter(baseDirectory)
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+        + Dispose() : void
+    }
+
+    class XmlDailyLogWriter <<sealed>> {
+        - _baseDirectory : string
+        - _lock : SemaphoreSlim
+        + XmlDailyLogWriter(baseDirectory)
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+        + Dispose() : void
+    }
+}
+
+' ============================================================
+' INFRASTRUCTURE - BACKUP
+' ============================================================
+package "EasySave.Infrastructure.Backup" #FFEEDD {
+
+    class BackupExecutor <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _strategyFactory : IBackupStrategyFactory
+        - _fileSystem : IFileSystemService
+        - _stateWriter : IStateWriter
+        - _logWriter : ILogWriter
+        - _fileEncryptor : IFileEncryptor?
+        - _businessSoftwareDetector : IBusinessSoftwareDetector
+        - _stateWriteLock : SemaphoreSlim
+        - {static} LargeFileSemaphore : SemaphoreSlim
+        - _jobControls : ConcurrentDictionary<int, JobControl>
+        + ExecuteAsync(jobIds, progress?, ct) : Task
+        + PauseJobAsync(jobId, ct) : Task
+        + ResumeJobAsync(jobId, ct) : Task
+        + StopJobAsync(jobId, ct) : Task
+    }
+
+    class "BackupExecutor.JobControl" as JobControl <<private>> <<sealed>> {
+        + PauseEvent : ManualResetEventSlim
+        + RequestStop() : void
+        + IsStopRequested : bool
+        + Dispose() : void
+    }
+
+    class BackupStrategyFactory <<sealed>> {
+        - _full : FullBackupStrategy
+        - _differential : DifferentialBackupStrategy
+        + GetStrategy(type) : IBackupStrategy
+    }
+
+    class FullBackupStrategy <<sealed>> {
+        + GetEligibleFilesAsync(job, files, since?, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    class DifferentialBackupStrategy <<sealed>> {
+        + GetEligibleFilesAsync(job, files, since?, ct) : IAsyncEnumerable<FileItem>
+    }
+
+    class BusinessSoftwareDetector <<sealed>> {
+        + IsRunning(processName?) : bool
+        + GetRunningProcessNames() : IReadOnlyList<string>
+    }
+}
+
+' ============================================================
+' INFRASTRUCTURE - PERSISTENCE
+' ============================================================
+package "EasySave.Infrastructure.Persistence" #FFEEDD {
+
+    class JsonConfigurationRepository <<sealed>> {
+        - _configDirectory : string
+        - _configFilePath : string
+        - _configUpdateLock : SemaphoreSlim
+        + LoadAsync(ct) : Task<BackupConfiguration?>
+        + SaveAsync(config, ct) : Task
+        + UpdateLastFullBackupAsync(jobId, utc, ct) : Task
+    }
+
+    class JsonStateWriter {
+        - _stateFilePath : string
+        + WriteStateAsync(progressList, ct) : Task
+    }
+
+    class ConfigurableLogWriter <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _jsonWriter : ILogWriter
+        - _xmlWriter : ILogWriter
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+    }
+
+    class DestinationLogWriter <<sealed>> {
+        - _configRepository : IConfigurationRepository
+        - _localWriter : ConfigurableLogWriter
+        - _centralizedClient : ICentralizedLogClient
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+    }
+}
+
+' ============================================================
+' INFRASTRUCTURE - FILESYSTEM + ENCRYPTION + LOGGING
+' ============================================================
+package "EasySave.Infrastructure.FileSystem" #FFEEDD {
+    class FileSystemService <<sealed>> {
+        + EnumerateFilesAsync(src, options?, ct) : IAsyncEnumerable<FileItem>
+        + CopyFileAsync(src, dest, progress?, ct) : Task<long>
+        + GetUncPath(path) : string
+        + GetFileSize(path) : long
+        + EnsureDirectoryExists(path) : void
+        + GetLastWriteTimeUtc(path) : DateTime
+    }
+}
+
+package "EasySave.Infrastructure.Encryption" #FFEEDD {
+    class CryptoSoftFileEncryptor <<sealed>> {
+        + EncryptFileAsync(src, dest, key, exe, ct) : Task<long>
+    }
+}
+
+package "EasySave.Infrastructure.Logging" #FFEEDD {
+    class CentralizedLogClient <<sealed>> {
+        - _nextAllowedAttemptUtcMs : long
+        + SendAsync(entry, serverAddress?, ct) : Task
+    }
+}
+
+' ============================================================
+' GUI - SERVICES
+' ============================================================
+package "EasySave.Gui.Services" #E4EEFF {
+
+    interface IConfigurationHolder {
+        + Current : BackupConfiguration
+        + ConfigurationChanged : EventHandler?
+        + ReloadAsync(ct) : Task
+        + SaveAsync(config, ct) : Task
+    }
+
+    interface ILocalizationProvider {
+        + GetString(key) : string
+        + GetString(key, args) : string
+        + CultureChanged : EventHandler?
+        + SetCulture(cultureCode) : void
+        + GetLanguages() : Array
+    }
+
+    interface IConfirmationService {
+        + ConfirmAsync(title, message) : Task<bool>
+    }
+
+    interface IFolderPickerService {
+        + SetOwner(window?) : void
+        + PickFolderAsync(title?) : Task<string?>
+    }
+
+    interface IFilePickerService {
+        + SetOwner(window?) : void
+        + PickFileAsync(title?) : Task<string?>
+    }
+
+    interface IBackupProgressAggregator {
+        + Items : ObservableCollection<JobProgressViewModel>
+        + Update(progress) : JobProgressViewModel?
+        + Clear() : void
+    }
+
+    interface IAudiodescription {
+        + SetVolume(volume) : void
+        + ServiceStatement(onOff) : void
+        + Start() : void
+        + Stop() : void
+        + GetVolume() : int
+    }
+
+    class ConfigurationHolder <<sealed>> {
+        - _repository : IConfigurationRepository
+        - _current : BackupConfiguration
+        + Current : BackupConfiguration
+        + ConfigurationChanged : EventHandler?
+        + ReloadAsync(ct) : Task
+        + SaveAsync(config, ct) : Task
+    }
+
+    class LocalizationProvider <<sealed>> {
+        - _resourceManager : ResourceManager
+        - _currentCulture : CultureInfo
+        + GetString(key) : string
+        + SetCulture(cultureCode) : void
+        + GetLanguages() : Array
+    }
+
+    class MessageBoxConfirmationService <<sealed>> {
+        + ConfirmAsync(title, message) : Task<bool>
+    }
+
+    class FolderPickerService <<sealed>> {
+        - _owner : Window?
+        + PickFolderAsync(title?) : Task<string?>
+    }
+
+    class FilePickerService <<sealed>> {
+        - _owner : Window?
+        + PickFileAsync(title?) : Task<string?>
+    }
+
+    class BackupProgressAggregator <<sealed>> {
+        - _localization : ILocalizationProvider
+        - _byJobName : Dictionary<string, JobProgressViewModel>
+        + Items : ObservableCollection<JobProgressViewModel>
+        + Update(progress) : JobProgressViewModel?
+        + Clear() : void
+    }
+
+    class Audiodescription {
+        - _synthesizer : SpeechSynthesizer
+        - _enabled : bool
+        + Start() : void
+        + Stop() : void
+        + SpeakText(text) : void
+        + SetVolume(volume) : void
+        + GetVolume() : int
+    }
+}
+
+' ============================================================
+' GUI - VIEWMODELS
+' ============================================================
+package "EasySave.Gui.ViewModels" #E4EEFF {
+
+    abstract class ViewModelBase <<abstract>> {
+        + PropertyChanged : PropertyChangedEventHandler?
+        # RaisePropertyChanged(propertyName?) : void
+        # SetProperty<T>(field, value, propertyName?) : bool
+    }
+
+    class MainWindowViewModel <<sealed>> {
+        + JobsTab : JobsTabViewModel
+        + CreateEditTab : CreateEditJobViewModel
+        + SettingsTab : SettingsViewModel
+        + WindowTitle : string
+        + HeaderTitle : string
+    }
+
+    class JobsTabViewModel <<sealed>> {
+        + Jobs : ObservableCollection<JobItemViewModel>
+        + SelectedJobs : ObservableCollection<JobItemViewModel>
+        + SelectedJob : JobItemViewModel?
+        + JobDetailsText : string
+        + StatusText : string
+        + IsRunning : bool
+        + ProgressPercent : double
+        + ProgressJobName : string
+        + JobProgressItems : ObservableCollection<JobProgressViewModel>
+        + Refresh(param) : void
+        + RunSelected(param) : void
+        + Stop(param) : void
+        + PauseSelected(param) : void
+        + ResumeSelected(param) : void
+        + DeleteSelected(param) : void
+    }
+
+    class CreateEditJobViewModel <<sealed>> {
+        + ExistingJobs : ObservableCollection<JobItemViewModel>
+        + SelectedExistingJob : JobItemViewModel?
+        + Name : string
+        + SourcePath : string
+        + TargetPath : string
+        + SelectedTypeIndex : int
+        + ExcludeExtensions : string
+        + ExcludeDirectories : string
+        + IsEditing : bool
+        + NewJob(param) : void
+        + SaveJob(param) : void
+        + PickSourceFolder(param) : void
+        + PickTargetFolder(param) : void
+    }
+
+    class SettingsViewModel <<sealed>> {
+        + LogFormatIndex : int
+        + LogDestinationIndex : int
+        + CentralizedLogServerAddress : string
+        + EncryptExtensionsText : string
+        + EncryptionKeyPath : string
+        + BusinessSoftwareProcessName : string
+        + AudioDescriptionEnabled : bool
+        + VolumeValue : double
+        + SelectedLanguage : string
+        + UseDarkTheme : bool
+        + TextScaleIndex : int
+        + LargeFileThresholdText : string
+        + RunningProcessChoices : ObservableCollection<string>
+        + LanguageChoices : ObservableCollection<string>
+        + SaveSettings(param) : void
+        + PickEncryptionKeyFile(param) : void
+    }
+
+    class JobItemViewModel <<sealed>> {
+        + Id : int
+        + Name : string
+        + Type : BackupType
+        + DisplayText : string
+        + State : BackupState
+        + StateText : string
+    }
+
+    class JobProgressViewModel <<sealed>> {
+        + JobId : int
+        + Percent : double
+        + JobName : string
+        + CurrentFile : string
+        + FilesText : string
+        + EtaText : string
+        + SizeText : string
+        + State : BackupState
+        + SummaryText : string
+        + CanPause : bool
+        + CanResume : bool
+        + CanStop : bool
+    }
+}
+
+' ============================================================
+' GUI - ROOT
+' ============================================================
+package "EasySave.Gui" #E4EEFF {
+
+    class EasySavePaths <<sealed>> {
+        + BaseDirectory : string
+        + ConfigFilePath : string
+        + StateFilePath : string
+        + LogDirectory : string
+    }
+
+    class CompositionRoot <<static>> {
+        + {static} Build(basePath) : IServiceProvider
+    }
+}
+
+' ============================================================
+' LOG SERVER
+' ============================================================
+package "EasySave.LogServer" #FFE8F0 {
+
+    package "Protocol" {
+        interface ILogEntryHandler {
+            + HandleAsync(dto, ct) : Task<bool>
+        }
+
+        class LogEntryDto <<sealed>> {
+            + TimeStamp : DateTime
+            + BackupName : string
+            + SourcePath : string
+            + DestinationPath : string
+            + FileSizeBytes : long
+            + TransferTimeMs : long
+            + EncryptionTimeMs : long
+            + Reason : string?
+        }
+
+        class LogEntryHandler <<sealed>> {
+            - _logWriter : ILogWriter
+            + HandleAsync(dto, ct) : Task<bool>
+        }
+    }
+
+    package "Sockets" {
+        class LogSocketListener <<sealed>> {
+            - _handler : ILogEntryHandler
+            - _port : int
+            + RunAsync(ct) : Task
+        }
+    }
+}
+
+' ============================================================
+' HERITAGE ViewModelBase
+' ============================================================
+ViewModelBase <|-- MainWindowViewModel
+ViewModelBase <|-- JobsTabViewModel
+ViewModelBase <|-- CreateEditJobViewModel
+ViewModelBase <|-- SettingsViewModel
+ViewModelBase <|-- JobItemViewModel
+ViewModelBase <|-- JobProgressViewModel
+
+' ============================================================
+' REALISATION - Infrastructure -> Core.Interfaces
+' ============================================================
+IBackupExecutor <|.. BackupExecutor
+IBackupStrategy <|.. FullBackupStrategy
+IBackupStrategy <|.. DifferentialBackupStrategy
+IBackupStrategyFactory <|.. BackupStrategyFactory
+IConfigurationRepository <|.. JsonConfigurationRepository
+IStateWriter <|.. JsonStateWriter
+IFileSystemService <|.. FileSystemService
+IFileEncryptor <|.. CryptoSoftFileEncryptor
+IBusinessSoftwareDetector <|.. BusinessSoftwareDetector
+ICentralizedLogClient <|.. CentralizedLogClient
+
+' ============================================================
+' REALISATION - EasyLog
+' ============================================================
+ILogWriter <|.. DailyLogWriter
+ILogWriter <|.. XmlDailyLogWriter
+ILogWriter <|.. ConfigurableLogWriter
+ILogWriter <|.. DestinationLogWriter
+
+' ============================================================
+' REALISATION - GUI Services
+' ============================================================
+IConfigurationHolder <|.. ConfigurationHolder
+ILocalizationProvider <|.. LocalizationProvider
+IConfirmationService <|.. MessageBoxConfirmationService
+IFolderPickerService <|.. FolderPickerService
+IFilePickerService <|.. FilePickerService
+IBackupProgressAggregator <|.. BackupProgressAggregator
+IAudiodescription <|.. Audiodescription
+ILogEntryHandler <|.. LogEntryHandler
+
+' ============================================================
+' EXCEPTION
+' ============================================================
+InvalidOperationException <|-- BusinessSoftwareDetectedException
+
+' ============================================================
+' COMPOSITION / ASSOCIATION - Entités
+' ============================================================
+BackupConfiguration "1" *-down- "*" BackupJob : contient
+BackupJob -right-> BackupType
+BackupProgress -right-> BackupState
+
+' ============================================================
+' COMPOSITION - BackupExecutor
+' ============================================================
+BackupExecutor -up-> IConfigurationRepository
+BackupExecutor -up-> IBackupStrategyFactory
+BackupExecutor -up-> IFileSystemService
+BackupExecutor -up-> IStateWriter
+BackupExecutor -up-> ILogWriter
+BackupExecutor -up-> IFileEncryptor
+BackupExecutor -up-> IBusinessSoftwareDetector
+BackupExecutor +-- JobControl
+
+' ============================================================
+' COMPOSITION - Stratégies
+' ============================================================
+BackupStrategyFactory -right-> FullBackupStrategy : crée
+BackupStrategyFactory -right-> DifferentialBackupStrategy : crée
+
+' ============================================================
+' COMPOSITION - Logging chain
+' ============================================================
+ConfigurableLogWriter --> IConfigurationRepository
+ConfigurableLogWriter -right-> DailyLogWriter : JSON
+ConfigurableLogWriter -right-> XmlDailyLogWriter : XML
+DestinationLogWriter --> ConfigurableLogWriter : local
+DestinationLogWriter --> ICentralizedLogClient : centralisé
+DestinationLogWriter --> IConfigurationRepository
+
+' ============================================================
+' COMPOSITION - GUI Services
+' ============================================================
+ConfigurationHolder --> IConfigurationRepository
+ConfigurationHolder --> EasySavePaths
+BackupProgressAggregator --> ILocalizationProvider
+
+' ============================================================
+' DEPENDANCES - MainWindowViewModel -> sous-VMs
+' ============================================================
+MainWindowViewModel *-down-> JobsTabViewModel
+MainWindowViewModel *-down-> CreateEditJobViewModel
+MainWindowViewModel *-down-> SettingsViewModel
+MainWindowViewModel --> ILocalizationProvider
+
+' ============================================================
+' DEPENDANCES - JobsTabViewModel
+' ============================================================
+JobsTabViewModel --> IConfigurationHolder
+JobsTabViewModel --> IBackupExecutor
+JobsTabViewModel --> ILocalizationProvider
+JobsTabViewModel --> IConfirmationService
+JobsTabViewModel --> IBackupProgressAggregator
+JobsTabViewModel "1" o-- "*" JobItemViewModel : Jobs
+JobsTabViewModel "1" o-- "*" JobProgressViewModel : Progress
+
+' ============================================================
+' DEPENDANCES - CreateEditJobViewModel
+' ============================================================
+CreateEditJobViewModel --> IConfigurationHolder
+CreateEditJobViewModel --> ILocalizationProvider
+CreateEditJobViewModel --> IFolderPickerService
+CreateEditJobViewModel "1" o-- "*" JobItemViewModel : ExistingJobs
+
+' ============================================================
+' DEPENDANCES - SettingsViewModel
+' ============================================================
+SettingsViewModel --> IConfigurationHolder
+SettingsViewModel --> ILocalizationProvider
+SettingsViewModel --> IAudiodescription
+SettingsViewModel --> EasySavePaths
+SettingsViewModel --> IFilePickerService
+SettingsViewModel --> IBusinessSoftwareDetector
+
+' ============================================================
+' DEPENDANCES - LogServer
+' ============================================================
+LogSocketListener --> ILogEntryHandler
+LogEntryHandler --> ILogWriter
+
+@enduml

@@ -1,0 +1,12 @@
+digraph "EasySave.LogServer/obj/Debug/net10.0"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_726551cfba666b402d764dec199579f1 {
+    graph [ bgcolor="#edf0f7", pencolor="grey50", label="Debug", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_726551cfba666b402d764dec199579f1.html",tooltip=""]
+  dir_283b5df05c7764714c4baeb3e6de3a98 [label="net10.0", fillcolor="#edf0f7", color="grey25", style="filled,bold", URL="dir_283b5df05c7764714c4baeb3e6de3a98.html",tooltip=""];
+  }
+}
