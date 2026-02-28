@@ -29,7 +29,8 @@ namespace EasySave.Console
             string? etaFormat = LangHelper.GetString("ETAFormat");
             string etaLine = string.Format(etaFormat ?? "ETA: {0}", etaStr);
 
-            string line = $"{bar} {percent:F1}% {sizeStr} {etaLine}";
+            string namePrefix = string.IsNullOrWhiteSpace(p.BackupName) ? string.Empty : p.BackupName + " ";
+            string line = namePrefix + $"{bar} {percent:F1}% {sizeStr} {etaLine}";
             if (line.Length < width)
                 line = line + new string(' ', width - line.Length);
             else if (line.Length > width)

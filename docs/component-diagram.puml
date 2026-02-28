@@ -1,0 +1,146 @@
+@startuml component-diagram
+title Diagramme de Composants - Architecture EasySave
+
+skinparam component {
+    BackgroundColor<<gui>> #E4EEFF
+    BackgroundColor<<core>> #EEFFEE
+    BackgroundColor<<infra>> #FFEEDD
+    BackgroundColor<<log>> #FFE4E4
+    BackgroundColor<<server>> #FFE8F0
+    BackgroundColor<<external>> #F0F0F0
+}
+
+' ============================================================
+' Composants principaux
+' ============================================================
+
+package "Application GUI (EasySave.Gui)" <<gui>> {
+    component [MainWindow\n(Avalonia XAML)] as MainWindow
+    component [ViewModels\n(MVVM)] as ViewModels
+    component [Services GUI\n(Configuration, Localisation,\nPicker, Audio)] as GuiServices
+    component [CompositionRoot\n(DI Container)] as DI
+
+    MainWindow --> ViewModels : DataBinding
+    ViewModels --> GuiServices : utilise
+    DI ..> ViewModels : enregistre
+    DI ..> GuiServices : enregistre
+}
+
+package "Domaine (EasySave.Core)" <<core>> {
+    component [Entities\n(BackupConfiguration,\nBackupJob, BackupProgress)] as Entities
+    component [Interfaces\n(IBackupExecutor,\nIBackupStrategy, ...)] as Interfaces
+    component [Enums\n(BackupType, BackupState,\nLogFileFormat, LogDestination)] as Enums
+    component [Models\n(LogEntry, FileItem,\nBackupEnumerationOptions)] as Models
+    component [Exceptions\n(BusinessSoftware\nDetectedException)] as Exceptions
+}
+
+package "Infrastructure (EasySave.Infrastructure)" <<infra>> {
+    component [BackupExecutor\n(exécution parallèle,\npause/resume/stop)] as BackupExec
+    component [Stratégies de backup\n(Full, Differential,\nFactory)] as Strategies
+    component [FileSystemService\n(énumération, copie,\nUNC)] as FSService
+    component [JsonConfigurationRepository\n(persistence JSON)] as ConfigRepo
+    component [JsonStateWriter\n(état temps réel)] as StateWriter
+    component [Logging\n(ConfigurableLogWriter,\nDestinationLogWriter)] as Logging
+    component [CryptoSoftFileEncryptor\n(chiffrement externe)] as Encryptor
+    component [BusinessSoftwareDetector\n(détection processus)] as BizDetector
+    component [CentralizedLogClient\n(envoi TCP)] as CentralLogClient
+}
+
+package "Bibliothèque de Logs (EasyLog)" <<log>> {
+    component [DailyLogWriter\n(JSON quotidien)] as JsonLog
+    component [XmlDailyLogWriter\n(XML quotidien)] as XmlLog
+    component [ILogWriter\n(interface publique)] as ILogWriterComp
+}
+
+package "Serveur de Logs (EasySave.LogServer)" <<server>> {
+    component [LogSocketListener\n(TCP listener)] as SocketListener
+    component [LogEntryHandler\n(validation + persistence)] as EntryHandler
+    component [LogEntryDto\n(DTO réseau)] as LogDto
+}
+
+' ============================================================
+' Composants externes
+' ============================================================
+
+node "Système de fichiers" <<external>> as FileSystem
+node "CryptoSoft.exe\n(chiffrement XOR)" <<external>> as CryptoSoft
+database "backup-config.json" as ConfigFile
+database "state.json" as StateFile
+database "yyyy-MM-dd.json\nyyyy-MM-dd.xml" as LogFiles
+
+' ============================================================
+' Interfaces fournies et requises
+' ============================================================
+
+interface "IBackupExecutor" as IExec
+interface "IConfigurationRepository" as IConfig
+interface "IStateWriter" as IState
+interface "IFileSystemService" as IFS
+interface "IBackupStrategy" as IStrat
+interface "IBackupStrategyFactory" as IStratFactory
+interface "IFileEncryptor" as IEncrypt
+interface "IBusinessSoftwareDetector" as IBiz
+interface "ICentralizedLogClient" as ICentral
+interface "ILogWriter" as ILog
+
+' Infrastructure implémente les interfaces Core
+BackupExec -up- IExec
+ConfigRepo -up- IConfig
+StateWriter -up- IState
+FSService -up- IFS
+Strategies -up- IStrat
+Strategies -up- IStratFactory
+Encryptor -up- IEncrypt
+BizDetector -up- IBiz
+CentralLogClient -up- ICentral
+Logging -up- ILog
+
+' GUI utilise les interfaces
+ViewModels --> IExec : exécution
+GuiServices --> IConfig : persistence
+ViewModels ..> IBiz : détection processus
+
+' BackupExecutor dépend de tout
+BackupExec --> IConfig
+BackupExec --> IStratFactory
+BackupExec --> IFS
+BackupExec --> IState
+BackupExec --> ILog
+BackupExec --> IEncrypt
+BackupExec --> IBiz
+
+' Logging chain
+Logging --> IConfig : format ?
+Logging --> JsonLog : JSON
+Logging --> XmlLog : XML
+Logging --> ICentral : centralisé
+
+' Log library
+JsonLog ..|> ILogWriterComp
+XmlLog ..|> ILogWriterComp
+
+' Infrastructure vers ressources externes
+FSService --> FileSystem : lecture/écriture
+Encryptor --> CryptoSoft : Process.Start
+ConfigRepo --> ConfigFile : JSON read/write
+StateWriter --> StateFile : JSON write
+JsonLog --> LogFiles : JSON append
+XmlLog --> LogFiles : XML append
+
+' LogServer
+SocketListener --> EntryHandler : HandleAsync
+EntryHandler --> JsonLog : WriteAllTextAsync
+CentralLogClient ..> SocketListener : TCP (port 9050)
+
+' DI enregistre infrastructure
+DI ..> BackupExec : enregistre
+DI ..> Strategies : enregistre
+DI ..> FSService : enregistre
+DI ..> ConfigRepo : enregistre
+DI ..> StateWriter : enregistre
+DI ..> Logging : enregistre
+DI ..> Encryptor : enregistre
+DI ..> BizDetector : enregistre
+DI ..> CentralLogClient : enregistre
+
+@enduml

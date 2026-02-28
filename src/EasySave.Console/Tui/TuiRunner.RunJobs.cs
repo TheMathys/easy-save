@@ -11,7 +11,7 @@ using ProgressDisplay = EasySave.Console.ProgressDisplay;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option Lancer les sauvegardes (option 3).</summary>
+    /// <summary>Option "Run backups" (menu option 3): list jobs, prompt for IDs, run selected jobs (in parallel when multiple selected).</summary>
     public static partial class TuiRunner
     {
         private static async Task RunJobsAsync(IConfigurationRepository configRepository, IBackupExecutor backupExecutor)
@@ -67,7 +67,7 @@ namespace EasySave.Console.Tui
             }
 
             // Filter job IDs to those actually present in configuration
-            var existingIds = new HashSet<int>(config.Jobs.Select(j => j.Id));
+            HashSet<int> existingIds = new HashSet<int>(config.Jobs.Select(j => j.Id));
             jobIds = jobIds.Where(id => existingIds.Contains(id)).ToList();
 
             if (jobIds.Count == 0)
@@ -87,15 +87,75 @@ namespace EasySave.Console.Tui
             string? backupStartMsg = LangHelper.GetString("BackupStart");
             System.Console.WriteLine(backupStartMsg ?? "Starting backup...");
 
+            // Multi-job progress: allocate one console line per selected job when possible.
+            Dictionary<string, int> jobLineIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            int baseTop = 0;
+            bool multiLineProgressEnabled = false;
+            try
+            {
+                baseTop = System.Console.CursorTop;
+                List<BackupJob> selectedJobs = new List<BackupJob>();
+                foreach (BackupJob job in config.Jobs)
+                {
+                    if (jobIds.Contains(job.Id))
+                    {
+                        selectedJobs.Add(job);
+                    }
+                }
+
+                int lineOffset = 0;
+                foreach (BackupJob job in selectedJobs)
+                {
+                    jobLineIndex[job.Name] = lineOffset;
+                    System.Console.WriteLine();
+                    lineOffset++;
+                }
+
+                multiLineProgressEnabled = selectedJobs.Count > 1;
+            }
+            catch (System.IO.IOException)
+            {
+                multiLineProgressEnabled = false;
+            }
+
             long lastProgressTicks = 0;
             const int ProgressThrottleMs = 120;
-            var progress = new Progress<BackupProgress>(p =>
+            IProgress<BackupProgress> progress = new Progress<BackupProgress>(p =>
             {
-                if (p?.State != BackupState.Active) return;
-                long now = Environment.TickCount64;
-                if (now - lastProgressTicks >= ProgressThrottleMs)
+                if (p == null || p.State != BackupState.Active)
                 {
-                    lastProgressTicks = now;
+                    return;
+                }
+
+                long now = Environment.TickCount64;
+                if (now - lastProgressTicks < ProgressThrottleMs)
+                {
+                    return;
+                }
+
+                lastProgressTicks = now;
+
+                if (multiLineProgressEnabled && jobLineIndex.TryGetValue(p.BackupName, out int lineIndex))
+                {
+                    try
+                    {
+                        int targetTop = baseTop + lineIndex;
+                        int currentLeft = System.Console.CursorLeft;
+                        int currentTop = System.Console.CursorTop;
+
+                        System.Console.SetCursorPosition(0, targetTop);
+                        ProgressDisplay.WriteProgressLine(p);
+                        System.Console.SetCursorPosition(currentLeft, currentTop);
+                    }
+                    catch (System.IO.IOException)
+                    {
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                    }
+                }
+                else
+                {
                     ProgressDisplay.WriteProgressLine(p);
                 }
             });

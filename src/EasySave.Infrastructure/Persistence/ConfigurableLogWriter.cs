@@ -28,7 +28,7 @@ namespace EasySave.Infrastructure.Persistence
             _xmlWriter = xmlWriter ?? throw new ArgumentNullException(nameof(xmlWriter));
         }
 
-        public async Task WriteAsync<T>(T logEntry, CancellationToken cancellationToken)
+        public async Task WriteAllTextAsync<T>(T logEntry, CancellationToken cancellationToken)
         {
             BackupConfiguration? config = await _configRepository.LoadAsync(cancellationToken).ConfigureAwait(false);
             LogFileFormat format = config?.LogFileFormat ?? LogFileFormat.Json;
@@ -36,11 +36,11 @@ namespace EasySave.Infrastructure.Persistence
             switch (format)
             {
                 case LogFileFormat.Xml:
-                    await _xmlWriter.WriteAsync(logEntry, cancellationToken).ConfigureAwait(false);
+                    await _xmlWriter.WriteAllTextAsync(logEntry, cancellationToken).ConfigureAwait(false);
                     break;
                 case LogFileFormat.Json:
                 default:
-                    await _jsonWriter.WriteAsync(logEntry, cancellationToken).ConfigureAwait(false);
+                    await _jsonWriter.WriteAllTextAsync(logEntry, cancellationToken).ConfigureAwait(false);
                     break;
             }
         }

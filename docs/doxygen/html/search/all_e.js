@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['pathschanged_0',['PathsChanged',['../class_easy_save_1_1_gui_1_1_mutable_easy_save_paths.html#abbe8ff4789528f6bf2e0b4f36015118a',1,'EasySave::Gui::MutableEasySavePaths']]],
+  ['paused_1',['Paused',['../namespace_easy_save_1_1_core_1_1_enums.html#a2850f4f545ee87bc8b6dac8f1bef404bae99180abf47a8b3a856e0bcb2656990a',1,'EasySave::Core::Enums']]],
+  ['pausejobasync_2',['PauseJobAsync',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_backup_executor.html#a508a60a49cd3c6cf4640ec6ebba1c292',1,'EasySave.Core.Interfaces.IBackupExecutor.PauseJobAsync()'],['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_backup_executor.html#a3eb983a3346710b2b8bc228ba49f4d6a',1,'EasySave.Infrastructure.Backup.BackupExecutor.PauseJobAsync()']]],
+  ['pendingjobidstorun_3',['PendingJobIdsToRun',['../class_easy_save_1_1_gui_1_1_app.html#a01c62ae45e126df5bcbaf4537a8ff374',1,'EasySave::Gui::App']]],
+  ['persistance_4',['Persistance',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md9',1,'']]],
+  ['pickfileasync_5',['PickFileAsync',['../class_easy_save_1_1_gui_1_1_services_1_1_file_picker_service.html#a319c6e88110f19ce6b6bdcf3849211bd',1,'EasySave.Gui.Services.FilePickerService.PickFileAsync()'],['../interface_easy_save_1_1_gui_1_1_services_1_1_i_file_picker_service.html#aa3772b714f34071ee4e47b6360ee7b3f',1,'EasySave.Gui.Services.IFilePickerService.PickFileAsync()']]],
+  ['pickfolderasync_6',['PickFolderAsync',['../class_easy_save_1_1_gui_1_1_services_1_1_folder_picker_service.html#a72ba6a53e55e0e527297037beb004867',1,'EasySave.Gui.Services.FolderPickerService.PickFolderAsync()'],['../interface_easy_save_1_1_gui_1_1_services_1_1_i_folder_picker_service.html#af72e91bf3974baf2d2b52d48b5ea2f25',1,'EasySave.Gui.Services.IFolderPickerService.PickFolderAsync()']]],
+  ['priorityextensions_7',['PriorityExtensions',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_configuration.html#a97bde6419a627e2645e95fedb828bf1a',1,'EasySave::Core::Entities::BackupConfiguration']]],
+  ['priorityextensionstext_8',['PriorityExtensionsText',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a7c111b0d97eb6298f94c79dc2d978248',1,'EasySave::Gui::ViewModels::SettingsViewModel']]],
+  ['prioritytransfergate_9',['PriorityTransferGate',['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_priority_transfer_gate.html',1,'EasySave::Infrastructure::Backup']]],
+  ['program_10',['Program',['../class_program.html',1,'']]],
+  ['progresscurrentfile_11',['ProgressCurrentFile',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#a6492013bac21ca377d59ed24935871d3',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['progressetatext_12',['ProgressEtaText',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#a9541fc7031cb7ab7924a9b6f4c75e538',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['progressfilestext_13',['ProgressFilesText',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#ae01e6f964ee0cb5e38698dd62541789b',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['progressjobname_14',['ProgressJobName',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#af7a14ec33f362147d766fb61f5360cc6',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['progresspercent_15',['ProgressPercent',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#ae17c7a976c22c02e1fe961f0db509c60',1,'EasySave.Core.Entities.BackupProgress.ProgressPercent'],['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#a38904d83c64e09a7ecc7d6f00493c16c',1,'EasySave.Gui.ViewModels.JobsTabViewModel.ProgressPercent']]],
+  ['progresssizetext_16',['ProgressSizeText',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#a85ddefab998bd4a7d8953b796e1b5975',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['propertychanged_17',['PropertyChanged',['../class_easy_save_1_1_gui_1_1_view_models_1_1_view_model_base.html#a622562f221e23ec5350aeff67d794c6b',1,'EasySave::Gui::ViewModels::ViewModelBase']]],
+  ['protocole_18',['Protocole',['../dir_40270631ec457489c251c3157ccda665.html#autotoc_md1',1,'']]]
+];

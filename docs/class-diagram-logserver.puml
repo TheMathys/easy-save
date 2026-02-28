@@ -1,0 +1,114 @@
+@startuml class-diagram-logserver
+skinparam classAttributeIconSize 0
+
+title Diagramme de Classes - EasySave.LogServer
+
+' ============================================================
+' DEPENDANCES EXTERNES (grisées)
+' ============================================================
+package "EasyLog" <<Rectangle>> #F5F5F5 {
+    interface ILogWriter <<externe>> {
+        + WriteAllTextAsync<T>(logEntry, ct) : Task
+    }
+
+    class DailyLogWriter <<externe>> <<sealed>>
+}
+
+package "EasySave.Core.Models" <<Rectangle>> #F5F5F5 {
+    class LogEntry <<externe>>
+}
+
+' ============================================================
+' PROTOCOL
+' ============================================================
+package "Protocol" #FFE8F0 {
+
+    interface ILogEntryHandler {
+        + HandleAsync(dto : LogEntryDto, cancellationToken : CancellationToken) : Task<bool>
+    }
+
+    class LogEntryDto <<sealed>> {
+        + TimeStamp : DateTime
+        + BackupName : string
+        + SourcePath : string
+        + DestinationPath : string
+        + FileSizeBytes : long
+        + TransferTimeMs : long
+        + EncryptionTimeMs : long
+        + Reason : string?
+    }
+
+    class LogEntryHandler <<sealed>> {
+        - _logWriter : ILogWriter
+        --
+        + LogEntryHandler(logWriter : ILogWriter)
+        + HandleAsync(dto : LogEntryDto, cancellationToken : CancellationToken) : Task<bool>
+    }
+}
+
+' ============================================================
+' SOCKETS
+' ============================================================
+package "Sockets" #FFE8F0 {
+
+    class LogSocketListener <<sealed>> {
+        - _handler : ILogEntryHandler
+        - _jsonOptions : JsonSerializerOptions
+        - _port : int
+        --
+        + LogSocketListener(handler : ILogEntryHandler, port : int)
+        + RunAsync(cancellationToken : CancellationToken) : Task
+        - HandleClientAsync(client : TcpClient, cancellationToken : CancellationToken) : Task
+        - ProcessLineAsync(line : string, cancellationToken : CancellationToken) : Task<bool>
+    }
+}
+
+' ============================================================
+' POINT D'ENTREE
+' ============================================================
+package "EasySave.LogServer" #FFE8F0 {
+
+    class Program <<static>> <<internal>> {
+        + {static} Main(args : string[]) : Task<int>
+        - {static} GetIntFromEnv(name, defaultValue) : int
+    }
+}
+
+' ============================================================
+' REALISATIONS
+' ============================================================
+ILogEntryHandler <|.. LogEntryHandler
+
+' ============================================================
+' RELATIONS
+' ============================================================
+LogSocketListener --> ILogEntryHandler : traite chaque ligne
+LogSocketListener ..> LogEntryDto : désérialise JSON
+
+LogEntryHandler --> ILogWriter : persiste les logs
+LogEntryHandler ..> LogEntryDto : convertit
+LogEntryHandler ..> LogEntry : crée
+
+Program ..> LogSocketListener : instancie
+Program ..> LogEntryHandler : instancie
+Program ..> DailyLogWriter : instancie
+
+' ============================================================
+' NOTES
+' ============================================================
+note right of LogSocketListener
+    Écoute sur TCP (port configurable,
+    défaut 9050). Chaque client envoie
+    du JSON délimité par des retours
+    à la ligne. Réponse : "OK" ou "ERR"
+    par ligne.
+end note
+
+note bottom of LogEntryHandler
+    **Pattern Adapter** : convertit
+    LogEntryDto (DTO réseau) en
+    LogEntry (modèle Core) avant
+    de le persister via ILogWriter.
+end note
+
+@enduml

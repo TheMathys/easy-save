@@ -183,8 +183,15 @@ public sealed class CreateEditJobViewModel : ViewModelBase
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
                 LogFileFormat = config.LogFileFormat,
+                LogDestination = config.LogDestination,
+                CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                 Jobs = jobs,
-                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId
+                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
+                EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
+                EncryptionKeyPath = config.EncryptionKeyPath,
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
             await _configHolder.SaveAsync(newConfig, CancellationToken.None).ConfigureAwait(true);
             StatusText = _localization.GetString("JobCreated", newId);
@@ -208,8 +215,15 @@ public sealed class CreateEditJobViewModel : ViewModelBase
         {
             LogAndStateDirectory = config.LogAndStateDirectory,
             LogFileFormat = config.LogFileFormat,
+            LogDestination = config.LogDestination,
+            CentralizedLogServerAddress = config.CentralizedLogServerAddress,
             Jobs = replaced,
-            LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId
+            LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
+            EncryptExtensions = config.EncryptExtensions,
+            PriorityExtensions = config.PriorityExtensions,
+            EncryptionKeyPath = config.EncryptionKeyPath,
+            BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+            LargeFileThresholdKb = config.LargeFileThresholdKb
         };
         await _configHolder.SaveAsync(updatedConfig, CancellationToken.None).ConfigureAwait(true);
         StatusText = _localization.GetString("TuiJobUpdated", editId);

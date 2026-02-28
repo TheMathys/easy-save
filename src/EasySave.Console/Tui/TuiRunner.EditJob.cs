@@ -10,7 +10,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option "Modifier un travail" : saisie ID, champs pré-remplis, sauvegarde.</summary>
+    /// <summary>
+    /// Handles the \"Edit job\" menu option: prompts for ID, shows prefilled fields, then saves changes.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static async Task EditJobAsync(IConfigurationRepository configRepository)
@@ -90,8 +92,16 @@ namespace EasySave.Console.Tui
             BackupConfiguration updatedConfig = new BackupConfiguration
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
+                LogFileFormat = config.LogFileFormat,
+                LogDestination = config.LogDestination,
+                CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                 Jobs = newJobs,
-                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId
+                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
+                EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
+                EncryptionKeyPath = config.EncryptionKeyPath,
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
             await configRepository.SaveAsync(updatedConfig, CancellationToken.None);
 

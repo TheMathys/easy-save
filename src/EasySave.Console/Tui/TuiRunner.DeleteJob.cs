@@ -9,7 +9,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option "Supprimer un travail" : saisie ID, confirmation, mise à jour config et LastFullBackupUtcByJobId.</summary>
+    /// <summary>
+    /// Handles the \"Delete job\" menu option: asks for job ID, confirms, then updates configuration and LastFullBackupUtcByJobId.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static async Task DeleteJobAsync(IConfigurationRepository configRepository)
@@ -59,8 +61,16 @@ namespace EasySave.Console.Tui
             BackupConfiguration updated = new BackupConfiguration
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
+                LogFileFormat = config.LogFileFormat,
+                LogDestination = config.LogDestination,
+                CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                 Jobs = newJobs,
-                LastFullBackupUtcByJobId = newLastFull
+                LastFullBackupUtcByJobId = newLastFull,
+                EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
+                EncryptionKeyPath = config.EncryptionKeyPath,
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
             await configRepository.SaveAsync(updated, CancellationToken.None);
 

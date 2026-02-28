@@ -1,0 +1,16 @@
+digraph "EasySave.Console/obj/Debug/net10.0"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_dcf822c05a93a06141d46f9284b31909 {
+    graph [ bgcolor="#edf0f7", pencolor="grey50", label="Debug", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_dcf822c05a93a06141d46f9284b31909.html",tooltip=""]
+  subgraph clusterdir_4f4d09354d4f7129ba34b3b5e8f1ea8b {
+    graph [ bgcolor="#edf0f7", pencolor="grey25", label="", fontname=Helvetica,fontsize=10 style="filled,bold", URL="dir_4f4d09354d4f7129ba34b3b5e8f1ea8b.html",tooltip=""]
+    dir_4f4d09354d4f7129ba34b3b5e8f1ea8b [shape=plaintext, label="net10.0"];
+  dir_7c77891793f09dea35e482faa4568027 [label="fr", fillcolor="#a2b4d6", color="grey25", style="filled", URL="dir_7c77891793f09dea35e482faa4568027.html",tooltip=""];
+  }
+  }
+}

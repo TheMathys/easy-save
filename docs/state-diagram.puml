@@ -1,0 +1,53 @@
+@startuml state-diagram
+title Diagramme d'États - Cycle de vie d'un Job de Sauvegarde (BackupState)
+
+[*] --> Inactive : Job créé /\nconfiguration chargée
+
+state Inactive : Le job est en attente\nd'exécution ou a été\narrêté/annulé.
+state Active : Le job est en cours\nd'exécution (copie/chiffrement\ndes fichiers).
+state Paused : Le job est temporairement\nsuspendu par l'utilisateur.\nLa progression est figée.
+state Completed : Le job a terminé\nla sauvegarde avec\nsuccès (100%).
+state Error : Une erreur critique\na interrompu\nla sauvegarde.
+
+Inactive --> Active : ExecuteAsync() appelé /\nénumérer fichiers éligibles,\ncommencer la copie
+Active --> Paused : PauseJobAsync() /\nattente ManualResetEvent
+Paused --> Active : ResumeJobAsync() /\nreprendre la copie
+Active --> Inactive : StopJobAsync() /\nlog "StoppedByUser"
+Paused --> Inactive : StopJobAsync() (après resume) /\nlog "StoppedByUser"
+Active --> Inactive : Logiciel métier détecté /\nlog "BusinessSoftwareDetected",\nannulation parallèle
+Active --> Inactive : CancellationToken annulé /\narrêt gracieux
+Active --> Completed : Tous les fichiers copiés /\nécrire état final,\nmettre à jour LastFullBackup
+Active --> Error : Exception non gérée /\nécrire log erreur
+Completed --> Inactive : Nouveau cycle démarré /\nréinitialisation
+Error --> Inactive : Nouveau cycle démarré /\nréinitialisation
+Inactive --> Inactive : Configuration modifiée /\nrafraîchissement
+
+Completed --> [*]
+Error --> [*]
+
+note right of Active
+    Pendant l'état Active :
+    - Copie fichier par fichier
+    - Progression temps réel (%)
+    - Estimation ETA
+    - Vérification logiciel métier
+      après chaque fichier
+    - Sémaphore gros fichiers
+end note
+
+note left of Paused
+    La pause est effective
+    après la fin du transfert
+    du fichier en cours
+    (intégrité préservée)
+end note
+
+note bottom of Inactive
+    Raisons possibles :
+    - Job jamais exécuté
+    - Arrêt utilisateur (StopJobAsync)
+    - Logiciel métier détecté
+    - Annulation (CancellationToken)
+end note
+
+@enduml

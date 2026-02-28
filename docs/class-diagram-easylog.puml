@@ -1,0 +1,71 @@
+@startuml class-diagram-easylog
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+title Diagramme de Classes - EasyLog (Bibliothèque de journalisation)
+
+package "EasyLog" #FFE4E4 {
+
+    interface ILogWriter {
+        + WriteAllTextAsync<T>(logEntry : T, cancellationToken : CancellationToken) : Task
+    }
+
+    class DailyLogWriter <<sealed>> {
+        - _baseDirectory : string
+        - _jsonOptions : JsonSerializerOptions
+        - _lock : SemaphoreSlim
+        --
+        + DailyLogWriter(baseDirectory : string)
+        + WriteAllTextAsync<T>(logEntry : T, cancellationToken : CancellationToken) : Task
+        + WriteAllTextAsync<T>(logEntry : T) : Task
+        + Dispose() : void
+    }
+
+    class XmlDailyLogWriter <<sealed>> {
+        - _baseDirectory : string
+        - _lock : SemaphoreSlim
+        --
+        + XmlDailyLogWriter(baseDirectory : string)
+        + WriteAllTextAsync<T>(logEntry : T, cancellationToken : CancellationToken) : Task
+        + WriteAllTextAsync<T>(logEntry : T) : Task
+        + Dispose() : void
+        - {static} CreateLogEntryElement<T>(logEntry : T) : XElement
+    }
+}
+
+' ============================================================
+' REALISATIONS
+' ============================================================
+ILogWriter <|.. DailyLogWriter
+ILogWriter <|.. XmlDailyLogWriter
+
+' ============================================================
+' INTERFACES STANDARD
+' ============================================================
+IDisposable <|.. DailyLogWriter
+IDisposable <|.. XmlDailyLogWriter
+
+' ============================================================
+' NOTES
+' ============================================================
+note bottom of DailyLogWriter
+    Écrit les logs au format JSON
+    dans un fichier quotidien :
+    **yyyy-MM-dd.json**
+    (tableau JSON avec un objet par entrée)
+end note
+
+note bottom of XmlDailyLogWriter
+    Écrit les logs au format XML
+    dans un fichier quotidien :
+    **yyyy-MM-dd.xml**
+    (élément racine <logEntries>)
+end note
+
+note top of ILogWriter
+    Interface publique de la bibliothèque.
+    Utilisée par EasySave.Infrastructure
+    et EasySave.LogServer.
+end note
+
+@enduml

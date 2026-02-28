@@ -12,7 +12,7 @@ namespace EasySave.Gui.Services;
 public sealed class ConfigurationHolder : IConfigurationHolder
 {
     private readonly IConfigurationRepository _repository;
-    private readonly string _baseDirectory;
+    private readonly Func<string> _getBaseDirectory;
     private BackupConfiguration _current;
 
     /// <summary>
@@ -21,10 +21,18 @@ public sealed class ConfigurationHolder : IConfigurationHolder
     /// <param name="repository">Repository used to load and save configuration.</param>
     /// <param name="paths">Helper containing the base directory for configuration files.</param>
     public ConfigurationHolder(IConfigurationRepository repository, EasySavePaths paths)
+        : this(repository, () => paths?.BaseDirectory ?? throw new ArgumentNullException(nameof(paths)))
+    {
+    }
+
+    /// <summary>
+    /// Initializes with a delegate to resolve the base directory at runtime (e.g. for mutable paths).
+    /// </summary>
+    public ConfigurationHolder(IConfigurationRepository repository, Func<string> getBaseDirectory)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _baseDirectory = paths?.BaseDirectory ?? throw new ArgumentNullException(nameof(paths));
-        _current = BuildDefault(_baseDirectory);
+        _getBaseDirectory = getBaseDirectory ?? throw new ArgumentNullException(nameof(getBaseDirectory));
+        _current = BuildDefault(_getBaseDirectory());
     }
 
     /// <inheritdoc />
@@ -37,7 +45,7 @@ public sealed class ConfigurationHolder : IConfigurationHolder
     public async Task ReloadAsync(CancellationToken cancellationToken = default)
     {
         BackupConfiguration? loaded = await _repository.LoadAsync(cancellationToken).ConfigureAwait(false);
-        _current = loaded ?? BuildDefault(_baseDirectory);
+        _current = loaded ?? BuildDefault(_getBaseDirectory());
         ConfigurationChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -55,8 +63,12 @@ public sealed class ConfigurationHolder : IConfigurationHolder
         {
             LogAndStateDirectory = baseDirectory,
             LogFileFormat = LogFileFormat.Json,
+            LogDestination = LogDestination.Local,
             Jobs = Array.Empty<BackupJob>(),
-            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+            LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+            UseDarkTheme = false,
+            LargeFileThresholdKb = null,
+            PriorityExtensions = Array.Empty<string>()
         };
     }
 }

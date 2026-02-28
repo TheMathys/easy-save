@@ -11,8 +11,6 @@ namespace EasySave.Infrastructure.Persistence
     /// </summary>
     public sealed class JsonConfigurationRepository : IConfigurationRepository
     {
-        private readonly string _configDirectory;
-        private readonly string _configFilePath;
         private readonly SemaphoreSlim _configUpdateLock = new(1, 1);
 
         /// <summary>
@@ -24,6 +22,8 @@ namespace EasySave.Infrastructure.Persistence
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        private readonly Func<string> _getConfigDirectory;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonConfigurationRepository"/> class.
         /// </summary>
@@ -31,9 +31,20 @@ namespace EasySave.Infrastructure.Persistence
         /// Directory where the configuration file is stored.
         /// </param>
         public JsonConfigurationRepository(string configDirectory)
+            : this(() => configDirectory!)
         {
-            _configDirectory = configDirectory ?? throw new ArgumentNullException(nameof(configDirectory));
-            _configFilePath = Path.Combine(_configDirectory, "backup-config.json");
+            if (configDirectory == null)
+                throw new ArgumentNullException(nameof(configDirectory));
+        }
+
+        /// <summary>
+        /// Initializes a new instance with a delegate to resolve the config directory at runtime.
+        /// Used when the path can change (e.g. GUI changing base path without losing data).
+        /// </summary>
+        /// <param name="getConfigDirectory">Delegate returning the current config directory.</param>
+        public JsonConfigurationRepository(Func<string> getConfigDirectory)
+        {
+            _getConfigDirectory = getConfigDirectory ?? throw new ArgumentNullException(nameof(getConfigDirectory));
         }
 
         /// <summary>
@@ -48,13 +59,15 @@ namespace EasySave.Infrastructure.Persistence
         /// </returns>
         public async Task<BackupConfiguration?> LoadAsync(CancellationToken cancellationToken = default)
         {
-            if (!File.Exists(_configFilePath))
+            string configDirectory = _getConfigDirectory();
+            string configFilePath = Path.Combine(configDirectory, "backup-config.json");
+            if (!File.Exists(configFilePath))
                 return null;
 
             ConfigDto? dto;
             try
             {
-                var json = await File.ReadAllTextAsync(_configFilePath, cancellationToken).ConfigureAwait(false);
+                var json = await File.ReadAllTextAsync(configFilePath, cancellationToken).ConfigureAwait(false);
                 dto = JsonSerializer.Deserialize<ConfigDto>(json, JsonOptions);
             }
             catch (JsonException)
@@ -87,16 +100,36 @@ namespace EasySave.Infrastructure.Persistence
                     format = parsed;
             }
 
+            LogDestination logDestination = LogDestination.Local;
+            if (!string.IsNullOrWhiteSpace(dto.LogDestination) && Enum.TryParse<LogDestination>(dto.LogDestination, ignoreCase: true, out var destParsed))
+                logDestination = destParsed;
+
             List<string> encryptExtensions = dto.EncryptExtensions ?? [];
+            List<string> priorityExtensions = dto.PriorityExtensions ?? [];
+            int? largeFileThresholdKb = dto.LargeFileThresholdKb;
+            if (largeFileThresholdKb.HasValue && largeFileThresholdKb.Value <= 0)
+            {
+                largeFileThresholdKb = null;
+            }
+
+            bool useDarkTheme = dto.UseDarkTheme ?? false;
+            int textScalePercent = dto.TextScalePercent is >= 75 and <= 150 ? dto.TextScalePercent.Value : 100;
+
             return new BackupConfiguration
             {
-                LogAndStateDirectory = dto.LogAndStateDirectory ?? _configDirectory,
+                LogAndStateDirectory = dto.LogAndStateDirectory ?? configDirectory,
                 LogFileFormat = format,
+                LogDestination = logDestination,
+                CentralizedLogServerAddress = string.IsNullOrWhiteSpace(dto.CentralizedLogServerAddress) ? null : dto.CentralizedLogServerAddress.Trim(),
                 Jobs = jobs,
                 LastFullBackupUtcByJobId = lastFull,
                 EncryptExtensions = encryptExtensions,
+                PriorityExtensions = priorityExtensions,
                 EncryptionKeyPath = string.IsNullOrWhiteSpace(dto.EncryptionKeyPath) ? null : dto.EncryptionKeyPath.Trim(),
-                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim()
+                BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(dto.BusinessSoftwareProcessName) ? null : dto.BusinessSoftwareProcessName.Trim(),
+                LargeFileThresholdKb = largeFileThresholdKb,
+                UseDarkTheme = useDarkTheme,
+                TextScalePercent = textScalePercent
             };
         }
 
@@ -109,15 +142,23 @@ namespace EasySave.Infrastructure.Persistence
         /// </param>
         public async Task SaveAsync(BackupConfiguration backupConfiguration, CancellationToken cancellationToken = default)
         {
-            Directory.CreateDirectory(_configDirectory);
+            string configDirectory = _getConfigDirectory();
+            Directory.CreateDirectory(configDirectory);
+            string configFilePath = Path.Combine(configDirectory, "backup-config.json");
 
             var dto = new ConfigDto
             {
                 LogAndStateDirectory = backupConfiguration.LogAndStateDirectory,
                 LogFileFormat = backupConfiguration.LogFileFormat.ToString(),
+                LogDestination = backupConfiguration.LogDestination.ToString(),
+                CentralizedLogServerAddress = backupConfiguration.CentralizedLogServerAddress,
                 EncryptExtensions = backupConfiguration.EncryptExtensions?.ToList() ?? new List<string>(),
+                PriorityExtensions = backupConfiguration.PriorityExtensions?.ToList() ?? new List<string>(),
                 EncryptionKeyPath = backupConfiguration.EncryptionKeyPath,
                 BusinessSoftwareProcessName = backupConfiguration.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = backupConfiguration.LargeFileThresholdKb,
+                UseDarkTheme = backupConfiguration.UseDarkTheme,
+                TextScalePercent = backupConfiguration.TextScalePercent,
                 Jobs = backupConfiguration.Jobs.Select(j => new JobDto
                 {
                     Id = j.Id,
@@ -135,7 +176,7 @@ namespace EasySave.Infrastructure.Persistence
             };
 
             var json = JsonSerializer.Serialize(dto, JsonOptions);
-            await File.WriteAllTextAsync(_configFilePath, json, cancellationToken).ConfigureAwait(false);
+            await File.WriteAllTextAsync(configFilePath, json, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -163,11 +204,17 @@ namespace EasySave.Infrastructure.Persistence
                 {
                     LogAndStateDirectory = config.LogAndStateDirectory,
                     LogFileFormat = config.LogFileFormat,
+                    LogDestination = config.LogDestination,
+                    CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                     Jobs = config.Jobs,
                     LastFullBackupUtcByJobId = dict,
                     EncryptExtensions = config.EncryptExtensions,
+                    PriorityExtensions = config.PriorityExtensions,
                     EncryptionKeyPath = config.EncryptionKeyPath,
-                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName
+                    BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                    LargeFileThresholdKb = config.LargeFileThresholdKb,
+                    UseDarkTheme = config.UseDarkTheme,
+                    TextScalePercent = config.TextScalePercent
                 };
                 await SaveAsync(updated, cancellationToken).ConfigureAwait(false);
             }
@@ -184,9 +231,15 @@ namespace EasySave.Infrastructure.Persistence
         {
             public string? LogAndStateDirectory { get; set; }
             public string? LogFileFormat { get; set; }
+            public string? LogDestination { get; set; }
+            public string? CentralizedLogServerAddress { get; set; }
             public List<string>? EncryptExtensions { get; set; }
+            public List<string>? PriorityExtensions { get; set; }
             public string? EncryptionKeyPath { get; set; }
             public string? BusinessSoftwareProcessName { get; set; }
+            public int? LargeFileThresholdKb { get; set; }
+            public bool? UseDarkTheme { get; set; }
+            public int? TextScalePercent { get; set; }
             public List<JobDto>? Jobs { get; set; }
             public Dictionary<int, DateTime>? LastFullBackupUtcByJobId { get; set; }
         }

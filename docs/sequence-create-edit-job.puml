@@ -1,0 +1,121 @@
+@startuml sequence-create-edit-job
+title Diagramme de Séquence - Création / Édition d'un Job
+
+actor "Utilisateur" as User
+participant "CreateEditJobViewModel" as CreateVM
+participant "IConfigurationHolder" as ConfigHolder
+participant "IConfigurationRepository" as ConfigRepo
+participant "IFolderPickerService" as FolderPicker
+participant "ILocalizationProvider" as Localization
+
+== Scénario 1 : Création d'un nouveau job ==
+
+User -> CreateVM : NewJob()
+activate CreateVM
+CreateVM -> CreateVM : Réinitialiser le formulaire\n(Name, SourcePath, TargetPath, etc.)
+CreateVM -> Localization : GetString("Gui_EditModeCreate")
+Localization --> CreateVM : "Mode création"
+CreateVM -> CreateVM : StatusText = "Mode création"
+deactivate CreateVM
+
+User -> CreateVM : PickSourceFolder()
+activate CreateVM
+CreateVM -> FolderPicker : PickFolderAsync("Choisir dossier source")
+activate FolderPicker
+FolderPicker --> CreateVM : "/chemin/source"
+deactivate FolderPicker
+CreateVM -> CreateVM : SourcePath = "/chemin/source"
+deactivate CreateVM
+
+User -> CreateVM : PickTargetFolder()
+activate CreateVM
+CreateVM -> FolderPicker : PickFolderAsync("Choisir dossier cible")
+activate FolderPicker
+FolderPicker --> CreateVM : "/chemin/cible"
+deactivate FolderPicker
+CreateVM -> CreateVM : TargetPath = "/chemin/cible"
+deactivate CreateVM
+
+User -> CreateVM : Remplir Name, Type, Exclusions
+User -> CreateVM : SaveJob()
+activate CreateVM
+
+CreateVM -> CreateVM : Valider champs requis\n(Name, SourcePath, TargetPath)
+
+alt Champs vides
+    CreateVM -> Localization : GetString("Gui_RequiredFields")
+    CreateVM -> CreateVM : StatusText = "Champs requis"
+else Champs valides
+    CreateVM -> ConfigHolder : Current
+    ConfigHolder --> CreateVM : BackupConfiguration
+
+    CreateVM -> CreateVM : Calculer newId =\nmax(jobs.Id) + 1
+    CreateVM -> CreateVM : Créer nouveau BackupJob
+    CreateVM -> CreateVM : Construire nouvelle\nBackupConfiguration\navec le job ajouté
+
+    CreateVM -> ConfigHolder : SaveAsync(newConfig, ct)
+    activate ConfigHolder
+    ConfigHolder -> ConfigRepo : SaveAsync(configuration, ct)
+    activate ConfigRepo
+    ConfigRepo -> ConfigRepo : Sérialiser en JSON
+    ConfigRepo -> ConfigRepo : Écrire backup-config.json
+    ConfigRepo --> ConfigHolder
+    deactivate ConfigRepo
+    ConfigHolder -> ConfigHolder : _current = configuration
+    ConfigHolder -> ConfigHolder : ConfigurationChanged.Invoke()
+    ConfigHolder --> CreateVM
+    deactivate ConfigHolder
+
+    note right of ConfigHolder
+        L'événement ConfigurationChanged
+        déclenche le rafraîchissement
+        de tous les onglets (Jobs, Settings)
+    end note
+
+    CreateVM -> Localization : GetString("JobCreated", newId)
+    CreateVM -> CreateVM : StatusText = "Job créé #newId"
+    CreateVM -> CreateVM : NewJob() [reset formulaire]
+end
+
+deactivate CreateVM
+
+== Scénario 2 : Édition d'un job existant ==
+
+User -> CreateVM : Sélectionner un job existant\n(SelectedExistingJob = job)
+activate CreateVM
+
+CreateVM -> ConfigHolder : Current
+ConfigHolder --> CreateVM : BackupConfiguration
+
+CreateVM -> CreateVM : Charger les données du job\ndans le formulaire\n(LoadJobIntoForm)
+CreateVM -> Localization : GetString("Gui_EditModeEdit", job.Id)
+CreateVM -> CreateVM : StatusText = "Mode édition #id"
+deactivate CreateVM
+
+User -> CreateVM : Modifier les champs
+User -> CreateVM : SaveJob()
+activate CreateVM
+
+CreateVM -> CreateVM : Valider champs requis
+
+CreateVM -> ConfigHolder : Current
+ConfigHolder --> CreateVM : BackupConfiguration
+
+CreateVM -> CreateVM : Remplacer le job existant\ndans la liste des jobs
+
+CreateVM -> ConfigHolder : SaveAsync(updatedConfig, ct)
+activate ConfigHolder
+ConfigHolder -> ConfigRepo : SaveAsync(configuration, ct)
+activate ConfigRepo
+ConfigRepo --> ConfigHolder
+deactivate ConfigRepo
+ConfigHolder -> ConfigHolder : ConfigurationChanged.Invoke()
+ConfigHolder --> CreateVM
+deactivate ConfigHolder
+
+CreateVM -> Localization : GetString("TuiJobUpdated", editId)
+CreateVM -> CreateVM : StatusText = "Job mis à jour #id"
+
+deactivate CreateVM
+
+@enduml

@@ -1,0 +1,112 @@
+@startuml use-case-diagram
+title Diagramme de Cas d'Utilisation - EasySave (GUI)
+
+left to right direction
+
+actor "Utilisateur" as User
+actor "Logiciel métier" as BusinessSoft
+actor "Serveur de logs\ncentralisé" as LogServer
+actor "CryptoSoft\n(chiffrement)" as CryptoSoft
+
+rectangle "EasySave GUI" {
+
+    package "Gestion des jobs" {
+        usecase "Consulter la liste\ndes jobs" as UC_ListJobs
+        usecase "Voir les détails\nd'un job" as UC_ViewDetails
+        usecase "Créer un job\nde sauvegarde" as UC_CreateJob
+        usecase "Modifier un job\nexistant" as UC_EditJob
+        usecase "Supprimer un job" as UC_DeleteJob
+        usecase "Sélectionner le\ntype de sauvegarde" as UC_SelectType
+        usecase "Configurer les\nexclusions" as UC_Exclusions
+        usecase "Choisir les dossiers\n(source/cible)" as UC_PickFolders
+    }
+
+    package "Exécution des sauvegardes" {
+        usecase "Lancer une\nsauvegarde" as UC_RunBackup
+        usecase "Lancer plusieurs\nsauvegardes en parallèle" as UC_RunParallel
+        usecase "Mettre en pause\nune sauvegarde" as UC_Pause
+        usecase "Reprendre une\nsauvegarde" as UC_Resume
+        usecase "Arrêter une\nsauvegarde" as UC_Stop
+        usecase "Suivre la progression\nen temps réel" as UC_Progress
+        usecase "Copier les fichiers" as UC_CopyFiles
+        usecase "Chiffrer les fichiers\nconfigurés" as UC_Encrypt
+        usecase "Détecter le logiciel\nmétier" as UC_DetectBusiness
+        usecase "Limiter les gros\nfichiers simultanés" as UC_LargeFile
+    }
+
+    package "Journalisation" {
+        usecase "Écrire le journal\n(JSON/XML)" as UC_WriteLog
+        usecase "Écrire l'état\ntemps réel" as UC_WriteState
+        usecase "Envoyer les logs\nau serveur centralisé" as UC_SendCentralized
+    }
+
+    package "Configuration" {
+        usecase "Choisir le format\nde log (JSON/XML)" as UC_LogFormat
+        usecase "Configurer la destination\ndes logs" as UC_LogDest
+        usecase "Configurer le\nchiffrement" as UC_ConfigEncrypt
+        usecase "Configurer le\nlogiciel métier" as UC_ConfigBusiness
+        usecase "Configurer le seuil\ngros fichiers" as UC_ConfigLargeFile
+        usecase "Sauvegarder les\nparamètres" as UC_SaveSettings
+    }
+
+    package "Accessibilité & UI" {
+        usecase "Changer la langue\n(FR/EN)" as UC_Language
+        usecase "Basculer thème\nclair/sombre" as UC_Theme
+        usecase "Ajuster l'échelle\ndu texte" as UC_TextScale
+        usecase "Activer/désactiver\nl'audiodescription" as UC_AudioDesc
+        usecase "Régler le volume\naudiodescription" as UC_AudioVolume
+    }
+}
+
+' Relations utilisateur
+User --> UC_ListJobs
+User --> UC_ViewDetails
+User --> UC_CreateJob
+User --> UC_EditJob
+User --> UC_DeleteJob
+User --> UC_RunBackup
+User --> UC_RunParallel
+User --> UC_Pause
+User --> UC_Resume
+User --> UC_Stop
+User --> UC_Progress
+User --> UC_LogFormat
+User --> UC_LogDest
+User --> UC_ConfigEncrypt
+User --> UC_ConfigBusiness
+User --> UC_ConfigLargeFile
+User --> UC_SaveSettings
+User --> UC_Language
+User --> UC_Theme
+User --> UC_TextScale
+User --> UC_AudioDesc
+User --> UC_AudioVolume
+
+' Relations include
+UC_CreateJob ..> UC_SelectType : <<include>>
+UC_CreateJob ..> UC_PickFolders : <<include>>
+UC_CreateJob ..> UC_Exclusions : <<include>>
+UC_EditJob ..> UC_SelectType : <<include>>
+UC_EditJob ..> UC_PickFolders : <<include>>
+UC_EditJob ..> UC_Exclusions : <<include>>
+
+UC_RunBackup ..> UC_CopyFiles : <<include>>
+UC_RunBackup ..> UC_WriteLog : <<include>>
+UC_RunBackup ..> UC_WriteState : <<include>>
+UC_RunBackup ..> UC_Progress : <<include>>
+UC_RunBackup ..> UC_DetectBusiness : <<include>>
+
+UC_RunParallel ..> UC_RunBackup : <<include>>
+UC_RunParallel ..> UC_LargeFile : <<include>>
+
+' Relations extend
+UC_CopyFiles ..> UC_Encrypt : <<extend>>
+UC_WriteLog ..> UC_SendCentralized : <<extend>>
+UC_AudioDesc ..> UC_AudioVolume : <<extend>>
+
+' Acteurs secondaires
+BusinessSoft <-- UC_DetectBusiness
+CryptoSoft <-- UC_Encrypt
+LogServer <-- UC_SendCentralized
+
+@enduml

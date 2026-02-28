@@ -57,7 +57,9 @@ namespace EasySave.Core.Models
         /// <param name="destinationPath">Destination path of the backup.</param>
         /// <param name="fileSizeBytes">Size of the file transferred in bytes.</param>
         /// <param name="transferTimeMs">Time taken to transfer the file.</param>
-        /// <param name="encryptionTimeMs">Temps nécessaire au cryptage (ms): 0 = pas de cryptage, &gt;0 = temps en ms, &lt;0 = code erreur.</param>
+        /// <param name="encryptionTimeMs">
+        /// Time spent encrypting the file (ms): 0 = no encryption, &gt;0 = duration in ms, &lt;0 = error code.
+        /// </param>
         /// <param name="reason">Optional stop reason (e.g. BusinessSoftwareDetected) for stop-only entries.</param>
         public LogEntry(DateTime timeStamp, string backupName, string sourcePath, string destinationPath, long fileSizeBytes, TimeSpan transferTimeMs, long encryptionTimeMs = 0, string? reason = null)
         {

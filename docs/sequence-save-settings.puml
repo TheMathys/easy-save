@@ -1,0 +1,133 @@
+@startuml sequence-save-settings
+title Diagramme de Séquence - Sauvegarde des Paramètres
+
+actor "Utilisateur" as User
+participant "SettingsViewModel" as SettingsVM
+participant "IConfigurationHolder" as ConfigHolder
+participant "IConfigurationRepository" as ConfigRepo
+participant "ILocalizationProvider" as Localization
+participant "IFilePickerService" as FilePicker
+participant "IBusinessSoftwareDetector" as BizDetector
+participant "IAudiodescription" as AudioDesc
+
+== Chargement initial (SyncFromConfig) ==
+
+SettingsVM -> ConfigHolder : Current
+activate SettingsVM
+ConfigHolder --> SettingsVM : BackupConfiguration
+
+SettingsVM -> SettingsVM : Synchroniser tous les champs\n(LogFormat, LogDestination, Encrypt, etc.)
+
+SettingsVM -> BizDetector : GetRunningProcessNames()
+activate BizDetector
+BizDetector --> SettingsVM : IReadOnlyList<string>
+deactivate BizDetector
+SettingsVM -> SettingsVM : Peupler RunningProcessChoices
+deactivate SettingsVM
+
+== Changement de langue ==
+
+User -> SettingsVM : SelectedLanguage = "English"
+activate SettingsVM
+SettingsVM -> Localization : SetCulture("en")
+activate Localization
+Localization -> Localization : _currentCulture = CultureInfo("en")
+Localization -> Localization : CultureChanged.Invoke()
+note right : Tous les ViewModels\nréagissent à CultureChanged\npour rafraîchir les labels
+Localization --> SettingsVM
+deactivate Localization
+deactivate SettingsVM
+
+== Activation audiodescription ==
+
+User -> SettingsVM : AudioDescriptionEnabled = true
+activate SettingsVM
+SettingsVM -> AudioDesc : ServiceStatement(true)
+activate AudioDesc
+AudioDesc -> AudioDesc : Start()
+AudioDesc -> AudioDesc : Initialiser SpeechSynthesizer
+AudioDesc -> AudioDesc : Attacher PointerMoved
+AudioDesc --> SettingsVM
+deactivate AudioDesc
+deactivate SettingsVM
+
+== Réglage du volume ==
+
+User -> SettingsVM : VolumeValue = 75
+activate SettingsVM
+SettingsVM -> AudioDesc : SetVolume(75)
+activate AudioDesc
+AudioDesc -> AudioDesc : Volume = 75\n_synthesizer.Volume = 75
+AudioDesc --> SettingsVM
+deactivate AudioDesc
+deactivate SettingsVM
+
+== Sélection du fichier clé de chiffrement ==
+
+User -> SettingsVM : PickEncryptionKeyFile()
+activate SettingsVM
+SettingsVM -> FilePicker : PickFileAsync("Sélectionner clé")
+activate FilePicker
+FilePicker --> SettingsVM : "/chemin/key.dat"
+deactivate FilePicker
+SettingsVM -> SettingsVM : EncryptionKeyPath = "/chemin/key.dat"
+deactivate SettingsVM
+
+== Rafraîchir la liste des processus ==
+
+User -> SettingsVM : RefreshRunningProcesses()
+activate SettingsVM
+SettingsVM -> BizDetector : GetRunningProcessNames()
+activate BizDetector
+BizDetector --> SettingsVM : IReadOnlyList<string>
+deactivate BizDetector
+SettingsVM -> SettingsVM : Mettre à jour RunningProcessChoices
+deactivate SettingsVM
+
+== Sauvegarde des paramètres ==
+
+User -> SettingsVM : SaveSettings()
+activate SettingsVM
+
+SettingsVM -> SettingsVM : Construire LogFileFormat\n(JSON ou XML selon index)
+SettingsVM -> SettingsVM : Construire LogDestination\n(Local, Centralized, Both)
+SettingsVM -> SettingsVM : Parser EncryptExtensions\n(séparées par virgules)
+SettingsVM -> SettingsVM : Parser LargeFileThresholdKb
+SettingsVM -> SettingsVM : Calculer TextScalePercent\n(75, 100, 125, 150)
+
+SettingsVM -> ConfigHolder : Current
+ConfigHolder --> SettingsVM : BackupConfiguration (existante)
+
+SettingsVM -> SettingsVM : Construire nouvelle\nBackupConfiguration\navec paramètres mis à jour
+
+SettingsVM -> ConfigHolder : SaveAsync(updatedConfig, ct)
+activate ConfigHolder
+
+ConfigHolder -> ConfigRepo : SaveAsync(configuration, ct)
+activate ConfigRepo
+ConfigRepo -> ConfigRepo : Construire ConfigDto
+ConfigRepo -> ConfigRepo : JsonSerializer.Serialize(dto)
+ConfigRepo -> ConfigRepo : File.WriteAllTextAsync\n(backup-config.json)
+ConfigRepo --> ConfigHolder
+deactivate ConfigRepo
+
+ConfigHolder -> ConfigHolder : _current = configuration
+ConfigHolder -> ConfigHolder : ConfigurationChanged.Invoke()
+
+note right of ConfigHolder
+    L'événement ConfigurationChanged
+    notifie JobsTabViewModel,
+    CreateEditJobViewModel et
+    SettingsViewModel
+end note
+
+ConfigHolder --> SettingsVM
+deactivate ConfigHolder
+
+SettingsVM -> Localization : GetString("Gui_SettingsSaved", format)
+Localization --> SettingsVM : "Paramètres sauvegardés (JSON)"
+SettingsVM -> SettingsVM : StatusText = "Paramètres sauvegardés"
+
+deactivate SettingsVM
+
+@enduml

@@ -1,0 +1,13 @@
+var searchData=
+[
+  ['raisepropertychanged_0',['RaisePropertyChanged',['../class_easy_save_1_1_gui_1_1_view_models_1_1_view_model_base.html#a1a80b1c6913c89025ded351e5953225e',1,'EasySave::Gui::ViewModels::ViewModelBase']]],
+  ['reason_1',['Reason',['../class_easy_save_1_1_core_1_1_models_1_1_log_entry.html#ae9dc45c05545a842d888638c6e20e804',1,'EasySave.Core.Models.LogEntry.Reason'],['../class_easy_save_1_1_log_server_1_1_protocol_1_1_log_entry_dto.html#ab03872b667c8e21bf1bd555fec7b8895',1,'EasySave.LogServer.Protocol.LogEntryDto.Reason']]],
+  ['registerjob_2',['RegisterJob',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_priority_transfer_gate.html#a7fa11a8833fa5062e8b24920587f1c54',1,'EasySave.Core.Interfaces.IPriorityTransferGate.RegisterJob()'],['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_priority_transfer_gate.html#a00595553648d1ee22da7ce806613d071',1,'EasySave.Infrastructure.Backup.PriorityTransferGate.RegisterJob()']]],
+  ['reloadasync_3',['ReloadAsync',['../class_easy_save_1_1_gui_1_1_services_1_1_configuration_holder.html#ae696f6ad6ba42598ee157e94b1ddc9ba',1,'EasySave.Gui.Services.ConfigurationHolder.ReloadAsync()'],['../interface_easy_save_1_1_gui_1_1_services_1_1_i_configuration_holder.html#afaf200e53a55d7101635c79c55bb4035',1,'EasySave.Gui.Services.IConfigurationHolder.ReloadAsync()']]],
+  ['remainingfilescount_4',['RemainingFilesCount',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#a84aa728e707cefcbefa296e98797d30d',1,'EasySave::Core::Entities::BackupProgress']]],
+  ['remainingsizebytes_5',['RemainingSizeBytes',['../class_easy_save_1_1_core_1_1_entities_1_1_backup_progress.html#aafef6c5be92311c45cdde0f5b1f1c875',1,'EasySave::Core::Entities::BackupProgress']]],
+  ['resumejobasync_6',['ResumeJobAsync',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_backup_executor.html#af447f162f91e2be7805af7c56b856c8c',1,'EasySave.Core.Interfaces.IBackupExecutor.ResumeJobAsync()'],['../class_easy_save_1_1_infrastructure_1_1_backup_1_1_backup_executor.html#a523be1a763a3452dbea8d891ed3137cc',1,'EasySave.Infrastructure.Backup.BackupExecutor.ResumeJobAsync()']]],
+  ['runasync_7',['RunAsync',['../class_easy_save_1_1_log_server_1_1_sockets_1_1_log_socket_listener.html#a7950872af0cc25b8bdf25e6a32ce0e0e',1,'EasySave::LogServer::Sockets::LogSocketListener']]],
+  ['runjobids_8',['RunJobIds',['../class_easy_save_1_1_gui_1_1_view_models_1_1_jobs_tab_view_model.html#a034bd733e5ecd2def5b6628bde35552c',1,'EasySave::Gui::ViewModels::JobsTabViewModel']]],
+  ['runningprocesschoices_9',['RunningProcessChoices',['../class_easy_save_1_1_gui_1_1_view_models_1_1_settings_view_model.html#a835ceff316f1d25d701ce61e92181ac2',1,'EasySave::Gui::ViewModels::SettingsViewModel']]]
+];

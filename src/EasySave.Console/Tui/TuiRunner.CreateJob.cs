@@ -10,7 +10,9 @@ using EasySave.Core.Interfaces;
 
 namespace EasySave.Console.Tui
 {
-    /// <summary>Option Créer un travail (option 1) et helpers pour le type de sauvegarde.</summary>
+    /// <summary>
+    /// Handles the \"Create job\" menu option (1) and helper methods for backup type selection.
+    /// </summary>
     public static partial class TuiRunner
     {
         private static BackupType ReadBackupType()
@@ -120,8 +122,12 @@ namespace EasySave.Console.Tui
             {
                 config = new BackupConfiguration
                 {
+                    LogAndStateDirectory = ".",
                     Jobs = new List<BackupJob>(),
-                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>()
+                    LastFullBackupUtcByJobId = new Dictionary<int, DateTime>(),
+                    LargeFileThresholdKb = null,
+                    EncryptExtensions = Array.Empty<string>(),
+                    PriorityExtensions = Array.Empty<string>()
                 };
             }
 
@@ -184,8 +190,16 @@ namespace EasySave.Console.Tui
             BackupConfiguration updatedConfig = new BackupConfiguration
             {
                 LogAndStateDirectory = config.LogAndStateDirectory,
+                LogFileFormat = config.LogFileFormat,
+                LogDestination = config.LogDestination,
+                CentralizedLogServerAddress = config.CentralizedLogServerAddress,
                 Jobs = jobs,
-                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId
+                LastFullBackupUtcByJobId = config.LastFullBackupUtcByJobId,
+                EncryptExtensions = config.EncryptExtensions,
+                PriorityExtensions = config.PriorityExtensions,
+                EncryptionKeyPath = config.EncryptionKeyPath,
+                BusinessSoftwareProcessName = config.BusinessSoftwareProcessName,
+                LargeFileThresholdKb = config.LargeFileThresholdKb
             };
 
             await configRepository.SaveAsync(updatedConfig, CancellationToken.None);

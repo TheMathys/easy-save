@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['iaudiodescription_0',['IAudiodescription',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_audiodescription.html',1,'EasySave::Gui::Services']]],
+  ['ibackupexecutor_1',['IBackupExecutor',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_backup_executor.html',1,'EasySave::Core::Interfaces']]],
+  ['ibackupprogressaggregator_2',['IBackupProgressAggregator',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_backup_progress_aggregator.html',1,'EasySave::Gui::Services']]],
+  ['ibackupstrategy_3',['IBackupStrategy',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_backup_strategy.html',1,'EasySave::Core::Interfaces']]],
+  ['ibackupstrategyfactory_4',['IBackupStrategyFactory',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_backup_strategy_factory.html',1,'EasySave::Core::Interfaces']]],
+  ['ibusinesssoftwaredetector_5',['IBusinessSoftwareDetector',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_business_software_detector.html',1,'EasySave::Core::Interfaces']]],
+  ['icentralizedlogclient_6',['ICentralizedLogClient',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_centralized_log_client.html',1,'EasySave::Core::Interfaces']]],
+  ['iconfigurationholder_7',['IConfigurationHolder',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_configuration_holder.html',1,'EasySave::Gui::Services']]],
+  ['iconfigurationrepository_8',['IConfigurationRepository',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_configuration_repository.html',1,'EasySave::Core::Interfaces']]],
+  ['iconfirmationservice_9',['IConfirmationService',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_confirmation_service.html',1,'EasySave::Gui::Services']]],
+  ['ifileencryptor_10',['IFileEncryptor',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_file_encryptor.html',1,'EasySave::Core::Interfaces']]],
+  ['ifilepickerservice_11',['IFilePickerService',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_file_picker_service.html',1,'EasySave::Gui::Services']]],
+  ['ifilesystemservice_12',['IFileSystemService',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_file_system_service.html',1,'EasySave::Core::Interfaces']]],
+  ['ifolderpickerservice_13',['IFolderPickerService',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_folder_picker_service.html',1,'EasySave::Gui::Services']]],
+  ['ilocalizationprovider_14',['ILocalizationProvider',['../interface_easy_save_1_1_gui_1_1_services_1_1_i_localization_provider.html',1,'EasySave::Gui::Services']]],
+  ['ilogentryhandler_15',['ILogEntryHandler',['../interface_easy_save_1_1_log_server_1_1_protocol_1_1_i_log_entry_handler.html',1,'EasySave::LogServer::Protocol']]],
+  ['ilogwriter_16',['ILogWriter',['../interface_easy_log_1_1_i_log_writer.html',1,'EasyLog']]],
+  ['iprioritytransfergate_17',['IPriorityTransferGate',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_priority_transfer_gate.html',1,'EasySave::Core::Interfaces']]],
+  ['istatewriter_18',['IStateWriter',['../interface_easy_save_1_1_core_1_1_interfaces_1_1_i_state_writer.html',1,'EasySave::Core::Interfaces']]]
+];

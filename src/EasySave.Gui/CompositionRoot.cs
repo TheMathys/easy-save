@@ -7,6 +7,7 @@ using EasySave.Gui.ViewModels;
 using EasySave.Infrastructure.Backup;
 using EasySave.Infrastructure.Encryption;
 using EasySave.Infrastructure.FileSystem;
+using EasySave.Infrastructure.Logging;
 using EasySave.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,27 +35,31 @@ public static class CompositionRoot
         string normalizedBasePath = Path.GetFullPath(basePath);
         ServiceCollection services = new ServiceCollection();
 
-        // Paths and persistence
-        services.AddSingleton(new EasySavePaths(normalizedBasePath));
+        // Mutable paths so the user can change config/log/state location at runtime without losing data
+        services.AddSingleton(new MutableEasySavePaths(normalizedBasePath));
+
+        // Paths and persistence (delegates resolve current path at each operation)
         services.AddSingleton<IConfigurationRepository>(sp =>
-            new JsonConfigurationRepository(sp.GetRequiredService<EasySavePaths>().BaseDirectory));
+            new JsonConfigurationRepository(() => sp.GetRequiredService<MutableEasySavePaths>().BaseDirectory));
         services.AddSingleton<IFileSystemService>(_ => new FileSystemService());
         services.AddSingleton<IStateWriter>(sp =>
-        {
-            EasySavePaths paths = sp.GetRequiredService<EasySavePaths>();
-            return new JsonStateWriter(paths.StateFilePath);
-        });
+            new JsonStateWriter(() => sp.GetRequiredService<MutableEasySavePaths>().StateFilePath));
 
         // Logging
-        services.AddSingleton<DailyLogWriter>(sp => new DailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
-        services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(sp.GetRequiredService<EasySavePaths>().LogDirectory));
-        services.AddSingleton<ILogWriter>(sp =>
+        services.AddSingleton<DailyLogWriter>(sp => new DailyLogWriter(() => sp.GetRequiredService<MutableEasySavePaths>().LogDirectory));
+        services.AddSingleton<XmlDailyLogWriter>(sp => new XmlDailyLogWriter(() => sp.GetRequiredService<MutableEasySavePaths>().LogDirectory));
+        services.AddSingleton<ConfigurableLogWriter>(sp =>
         {
             IConfigurationRepository configRepo = sp.GetRequiredService<IConfigurationRepository>();
             DailyLogWriter jsonWriter = sp.GetRequiredService<DailyLogWriter>();
             XmlDailyLogWriter xmlWriter = sp.GetRequiredService<XmlDailyLogWriter>();
             return new ConfigurableLogWriter(configRepo, jsonWriter, xmlWriter);
         });
+        services.AddSingleton<ICentralizedLogClient, CentralizedLogClient>();
+        services.AddSingleton<ILogWriter>(sp => new DestinationLogWriter(
+            sp.GetRequiredService<IConfigurationRepository>(),
+            sp.GetRequiredService<ConfigurableLogWriter>(),
+            sp.GetRequiredService<ICentralizedLogClient>()));
 
         // Backup execution
         services.AddSingleton<IBackupStrategyFactory>(_ => new BackupStrategyFactory());
@@ -71,10 +76,16 @@ public static class CompositionRoot
 
         // GUI services (abstractions for SOLID)
         services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
-        services.AddSingleton<IConfigurationHolder, ConfigurationHolder>();
+        services.AddSingleton<IConfigurationHolder>(sp => new ConfigurationHolder(
+            sp.GetRequiredService<IConfigurationRepository>(),
+            () => sp.GetRequiredService<MutableEasySavePaths>().BaseDirectory));
         services.AddSingleton<IFolderPickerService, FolderPickerService>();
         services.AddSingleton<IConfirmationService, MessageBoxConfirmationService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
+        services.AddSingleton<IAudiodescription, Audiodescription>();
+
+        // Progress aggregation: one per JobsTabViewModel (Adapter pattern for backup progress -> GUI list).
+        services.AddTransient<IBackupProgressAggregator, BackupProgressAggregator>();
 
         // ViewModels (one per screen / tab)
         services.AddTransient<JobsTabViewModel>();
